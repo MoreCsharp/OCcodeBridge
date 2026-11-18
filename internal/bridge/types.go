@@ -303,26 +303,29 @@ type LogEntry struct {
 	CacheWriteTokens            int64          `json:"cache_write_tokens,omitempty"`
 	CacheWriteReported          bool           `json:"cache_write_reported,omitempty"`
 	Allowance                   map[string]any `json:"allowance,omitempty"`
-	ID                          string         `json:"id"`
-	Time                        time.Time      `json:"time"`
-	Model                       string         `json:"model"`
-	UpstreamModel               string         `json:"upstream_model"`
-	ServedModel                 string         `json:"served_model,omitempty"`
-	Degraded                    bool           `json:"degraded,omitempty"`
-	Stream                      bool           `json:"stream"`
-	StreamEnd                   string         `json:"stream_end,omitempty"`
-	Status                      int            `json:"status"`
-	Provider                    string         `json:"provider"`
-	ProviderSource              string         `json:"provider_source"`
-	DurationMS                  int64          `json:"duration_ms"`
-	TTFTMS                      int64          `json:"ttft_ms"`
-	PromptTokens                int64          `json:"prompt_tokens"`
-	CompletionTokens            int64          `json:"completion_tokens"`
-	CachedTokens                int64          `json:"cached_tokens"`
-	ReasoningTokens             int64          `json:"reasoning_tokens"`
-	Credential                  string         `json:"credential"`
-	Attempts                    []Attempt      `json:"attempts"`
-	Error                       string         `json:"error,omitempty"`
+	// AllowanceRaw is the upstream frame fragment the allowance was read from,
+	// kept verbatim (bounded) for the log detail and omitted when absent.
+	AllowanceRaw     string    `json:"allowance_raw,omitempty"`
+	ID               string    `json:"id"`
+	Time             time.Time `json:"time"`
+	Model            string    `json:"model"`
+	UpstreamModel    string    `json:"upstream_model"`
+	ServedModel      string    `json:"served_model,omitempty"`
+	Degraded         bool      `json:"degraded,omitempty"`
+	Stream           bool      `json:"stream"`
+	StreamEnd        string    `json:"stream_end,omitempty"`
+	Status           int       `json:"status"`
+	Provider         string    `json:"provider"`
+	ProviderSource   string    `json:"provider_source"`
+	DurationMS       int64     `json:"duration_ms"`
+	TTFTMS           int64     `json:"ttft_ms"`
+	PromptTokens     int64     `json:"prompt_tokens"`
+	CompletionTokens int64     `json:"completion_tokens"`
+	CachedTokens     int64     `json:"cached_tokens"`
+	ReasoningTokens  int64     `json:"reasoning_tokens"`
+	Credential       string    `json:"credential"`
+	Attempts         []Attempt `json:"attempts"`
+	Error            string    `json:"error,omitempty"`
 }
 
 func jsonBytes(v any) []byte      { b, _ := json.Marshal(v); return b }

@@ -3,10 +3,12 @@ package bridge
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
 	// Blank imports register every vendor package this build ships.
@@ -147,15 +149,41 @@ func vendorContext(deadline time.Time) (context.Context, context.CancelFunc) {
 	return context.WithDeadline(context.Background(), deadline)
 }
 
+// allowanceRawLimit bounds the raw allowance fragment kept on one log entry: the
+// detail view shows the upstream values verbatim, and a verbose frame must not
+// grow every stored log line.
+const allowanceRawLimit = 2048
+
 // observeVendorFrame records vendor specific facts (such as a reported allowance)
 // carried by one response frame. A frame without facts keeps the log unchanged.
 func (s *Service) observeVendorFrame(up upstreamStream, entry *LogEntry, frame map[string]any) {
 	if entry == nil || up.vendor == nil || frame == nil {
 		return
 	}
-	if observation := up.vendor.ObserveResponse(frame); observation != nil && observation.Allowance != nil {
+	observation := up.vendor.ObserveResponse(frame)
+	if observation == nil {
+		return
+	}
+	if observation.Allowance != nil {
 		entry.Allowance = observation.Allowance
 	}
+	if raw := allowanceRawText(observation.Raw); raw != "" {
+		entry.AllowanceRaw = raw
+	}
+}
+
+// allowanceRawText keeps the raw allowance fragment for the log detail, cut on a
+// rune boundary so the console never receives half a character.
+func allowanceRawText(raw json.RawMessage) string {
+	text := strings.TrimSpace(string(raw))
+	if len(text) <= allowanceRawLimit {
+		return text
+	}
+	cut := allowanceRawLimit
+	for cut > 0 && !utf8.RuneStart(text[cut]) {
+		cut--
+	}
+	return text[:cut] + "…"
 }
 
 // classifyResponseError runs the vendor's own window-limit check first and falls
