@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // sessionIDLength is how many hex characters of the digest become the session

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // plan is one row of the CLI's built-in plan table (Rr/Or in cli.mjs): the API's

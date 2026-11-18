@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // usageEndpoint is the console usage call. It deliberately does not sit on

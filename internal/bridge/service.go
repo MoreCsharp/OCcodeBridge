@@ -15,7 +15,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 var secretPattern = regexp.MustCompile(`(?i)(?:bearer\s+|sk[-_])[a-z0-9_.-]+`)
@@ -302,7 +302,7 @@ func (s *Service) refreshRegistrations() error {
 
 func registration() any {
 	// Static registration would keep models advertised after every account is disabled.
-	return map[string]any{"schema_version": 6, "metadata": map[string]any{"Name": "OCcodeBridge", "Version": Version, "Author": "xiao-qiu-qiu", "GitHubRepository": "https://github.com/xiao-qiu-qiu/OCcodeBridge", "Description": "OpenCode Go / CommandCode subscription adapter with reliable streaming, usage windows and request logs", "ConfigFields": []map[string]any{{"Name": "data_dir", "Type": "string", "Description": "Persistent plugin state directory"}}}, "capabilities": map[string]any{"auth_provider": true, "model_provider": true, "executor": true, "executor_model_scope": "oauth", "executor_input_formats": []string{"chat-completions"}, "executor_output_formats": []string{"chat-completions"}, "management_api": true, "quota_provider": true}}
+	return map[string]any{"schema_version": 6, "metadata": map[string]any{"Name": "OCcodeBridge", "Version": Version, "Author": "MoreCsharp", "GitHubRepository": "https://github.com/MoreCsharp/OCcodeBridge", "Description": "OpenCode Go / CommandCode subscription adapter with reliable streaming, usage windows and request logs", "ConfigFields": []map[string]any{{"Name": "data_dir", "Type": "string", "Description": "Persistent plugin state directory"}}}, "capabilities": map[string]any{"auth_provider": true, "model_provider": true, "executor": true, "executor_model_scope": "oauth", "executor_input_formats": []string{"chat-completions"}, "executor_output_formats": []string{"chat-completions"}, "management_api": true, "quota_provider": true}}
 }
 func (s *Service) modelRegistration() any {
 	return s.modelRegistrationForVendor("")

@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 func TestClassifyLimitErrorReportsUpgradeRequiredAsPermanent(t *testing.T) {

@@ -1,4 +1,4 @@
-module github.com/xiao-qiu-qiu/OCcodeBridge
+module github.com/MoreCsharp/OCcodeBridge
 
 go 1.26.0
 

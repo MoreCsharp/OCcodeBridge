@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // userAgent is sent on every vendor call. api.commandcode.ai answers 403 to a

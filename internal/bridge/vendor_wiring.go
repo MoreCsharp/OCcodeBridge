@@ -10,10 +10,10 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 	// Blank imports register every vendor package this build ships.
-	_ "github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors/commandcode"
-	_ "github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors/opencodego"
+	_ "github.com/MoreCsharp/OCcodeBridge/internal/vendors/commandcode"
+	_ "github.com/MoreCsharp/OCcodeBridge/internal/vendors/opencodego"
 )
 
 // knownVendor reports whether this build implements the vendor id.

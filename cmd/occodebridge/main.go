@@ -71,7 +71,7 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/bridge"
+	"github.com/MoreCsharp/OCcodeBridge/internal/bridge"
 )
 
 const abiVersion = 1

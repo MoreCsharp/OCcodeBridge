@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 func TestVendorIdentity(t *testing.T) {

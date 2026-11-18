@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // modelEndpoint is the catalog path appended to BaseURL.

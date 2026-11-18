@@ -5,7 +5,7 @@ package commandcode
 import (
 	"net/http"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // ID is the vendor id stored on credentials and used as the model prefix.

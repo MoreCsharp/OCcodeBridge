@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // APIBase is the host root of the CLI's management endpoints. They are not part

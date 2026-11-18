@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // fixture reads an upstream response body from testdata.

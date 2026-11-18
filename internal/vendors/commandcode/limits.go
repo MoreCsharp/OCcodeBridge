@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // upgradeRequiredReason is what the console shows for a plan without API access:

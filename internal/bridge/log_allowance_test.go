@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // rawObservationVendor reports a fixed observation so a test can supply a raw

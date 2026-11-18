@@ -6,11 +6,11 @@
 
 把 OpenCode Go 与 CommandCode 订阅套餐接入 CPA，并在 CPA 里直接看到 5 小时 / 每周 / 每月额度。
 
-[![Release](https://img.shields.io/github/v/release/xiao-qiu-qiu/OCcodeBridge?color=f0a03c)](https://github.com/xiao-qiu-qiu/OCcodeBridge/releases)
-[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-64748b)](https://github.com/xiao-qiu-qiu/OCcodeBridge/releases)
-[![License](https://img.shields.io/github/license/xiao-qiu-qiu/OCcodeBridge?color=16a34a)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/MoreCsharp/OCcodeBridge?color=f0a03c)](https://github.com/MoreCsharp/OCcodeBridge/releases)
+[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-64748b)](https://github.com/MoreCsharp/OCcodeBridge/releases)
+[![License](https://img.shields.io/github/license/MoreCsharp/OCcodeBridge?color=16a34a)](LICENSE)
 
-[下载](https://github.com/xiao-qiu-qiu/OCcodeBridge/releases) · [反馈问题](https://github.com/xiao-qiu-qiu/OCcodeBridge/issues)
+[下载](https://github.com/MoreCsharp/OCcodeBridge/releases) · [反馈问题](https://github.com/MoreCsharp/OCcodeBridge/issues)
 
 </div>
 
@@ -46,7 +46,7 @@ OCcodeBridge 是 [CLIProxyAPI（CPA）](https://github.com/router-for-me/CLIProx
 
 需要支持动态库插件（JSON ABI v1）的原版 CPA，已验证 v8.0.67。
 
-1. 从 [Releases](https://github.com/xiao-qiu-qiu/OCcodeBridge/releases) 下载对应平台的压缩包，用 `checksums.txt` 校验，然后把里面的文件放进 CPA 的插件目录：
+1. 从 [Releases](https://github.com/MoreCsharp/OCcodeBridge/releases) 下载对应平台的压缩包，用 `checksums.txt` 校验，然后把里面的文件放进 CPA 的插件目录：
 
    | 平台 | 文件 |
    | --- | --- |

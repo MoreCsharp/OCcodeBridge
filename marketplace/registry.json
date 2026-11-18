@@ -4,15 +4,22 @@
     {
       "id": "occodebridge",
       "name": "OCcodeBridge",
-      "logo": "https://raw.githubusercontent.com/xiao-qiu-qiu/OCcodeBridge/main/logo.png",
-      "description": "把订阅型编码套餐接入 CPA，通过可插拔厂商适配层对接不同上游，支持多凭据管理、模型映射、统一错误规则、额度耗尽自动暂停、流式与非流式调用及请求日志。实验性通用代理池默认关闭，支持标准 HTTP / HTTPS / SOCKS5 代理。 / Connect subscription coding plans to CPA through a pluggable vendor layer with multi-credential management, model mapping, shared error rules, automatic quota pause, streaming and non-streaming requests, and request logs. The experimental general-purpose proxy pool is off by default and supports standard HTTP / HTTPS / SOCKS5 proxies.",
-      "author": "xiao-qiu-qiu",
+      "logo": "https://raw.githubusercontent.com/MoreCsharp/OCcodeBridge/main/logo.png",
+      "description": "把 OpenCode Go 与 CommandCode 订阅套餐接入 CPA：多凭据管理、5 小时 / 每周 / 每月额度显示（含 CPA 认证文件页）、窗口用尽自动暂停、模型映射、统一错误规则与请求日志。 / Connect OpenCode Go and CommandCode subscription plans to CPA with multi-credential management, 5-hour / weekly / monthly quota display (including the CPA auth-files page), automatic pause when a window is exhausted, model mapping, shared error rules and request logs.",
+      "author": "MoreCsharp",
       "version": "0.1.0",
-      "repository": "https://github.com/xiao-qiu-qiu/OCcodeBridge",
-      "homepage": "https://github.com/xiao-qiu-qiu/OCcodeBridge",
+      "repository": "https://github.com/MoreCsharp/OCcodeBridge",
+      "homepage": "https://github.com/MoreCsharp/OCcodeBridge",
       "license": "MIT",
-      "tags": ["provider", "vendor", "streaming"],
-      "install": {"type": "github-release"}
+      "tags": [
+        "provider",
+        "quota",
+        "opencode",
+        "commandcode"
+      ],
+      "install": {
+        "type": "github-release"
+      }
     }
   ]
 }

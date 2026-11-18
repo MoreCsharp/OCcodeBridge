@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // vendorStatusFixture stands in for a vendor error type: it carries the upstream

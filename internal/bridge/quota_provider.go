@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 // These fields follow CPA's JSON ABI, independently of the plugin console's usage DTO.

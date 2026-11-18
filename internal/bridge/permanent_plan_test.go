@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 const planlessVendorID = "planless"

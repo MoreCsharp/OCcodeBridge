@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
 const usageKey = "sk-commandcode-fixture"
