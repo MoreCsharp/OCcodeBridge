@@ -48,7 +48,12 @@ test('CommandCode GOAT shows plan credits (not dollars), dollar extra credits an
   assert.match(markup, /积分按模型折算/, 'the tooltip explains that a credit is worth a different amount per model');
   assert.match(markup, /额外额度 <b>\$12\.50<\/b>（超窗口时会被自动扣用）/);
   assert.match(markup, /usage-meter bad/, 'a 95% window is highlighted as risky');
-  assert.equal(view.plan(view.item), 'CommandCode · GOAT · 本期至 01/31 08:00');
+  // The period end is shown in the browser's local time zone, so the expectation
+  // is built the same way instead of assuming the machine runs at UTC+8.
+  const end = new Date('2030-01-31T00:00:00Z');
+  const pad = (n) => String(n).padStart(2, '0');
+  const local = `${pad(end.getMonth() + 1)}/${pad(end.getDate())} ${pad(end.getHours())}:${pad(end.getMinutes())}`;
+  assert.equal(view.plan(view.item), `CommandCode · GOAT · 本期至 ${local}`);
 });
 
 test('missing values stay unknown and only reported windows get a bar', () => {
