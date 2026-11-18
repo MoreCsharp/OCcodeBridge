@@ -110,7 +110,7 @@ test('first visit presents once; dismissal persists across refresh and plugin up
   assert.equal(otherService.dialog.open, true);
 });
 
-test('已读旧公告的用户收到本次厂商公告，确认后刷新不再弹出', () => {
+test('已读旧公告的用户收到 0.1.0 首版公告，确认后刷新不再弹出', () => {
   const old = page({ noticeRevision: '1' });
   old.update('0.4.6');
   old.click('releaseNoticeDismiss');

@@ -672,11 +672,12 @@
     </div>
     <div class="release-notice-body" tabindex="0" role="region" aria-label="公告内容">
       <section class="release-notice-item release-notice-featured" aria-labelledby="releaseNoticeRoutingTitle">
-        <div class="release-notice-label"><span class="badge warn">P0 骨架 · 开发中</span></div>
-        <h3 id="releaseNoticeRoutingTitle">PlanBridge 改为独立厂商适配</h3>
-        <p>请求不再统一发往单一上游，而是由凭据的<strong>厂商</strong>决定：目前内置 OpenCode Go 与 CommandCode 两个厂商。</p>
-        <p>凭据必须选择厂商才会参与调度；模型的上游 ID 需要带厂商前缀，例如 <strong>opencode-go/模型名</strong>，插件发往上游时只发送去掉前缀的模型名。</p>
-        <p class="release-notice-callout"><strong>钉上游、联网工具、本地额度估算已移除。</strong>额度窗口、限流与模型目录改由厂商适配层提供，尚未实现的厂商会明确报错而不是静默回退。</p>
+        <div class="release-notice-label"><span class="badge warn">0.1.0 · 首个版本</span></div>
+        <h3 id="releaseNoticeRoutingTitle">一个插件，两家订阅套餐</h3>
+        <p>PlanBridge 0.1.0 支持 <strong>OpenCode Go</strong> 与 <strong>CommandCode</strong>：请求由凭据的<strong>厂商</strong>决定发往哪里，两家厂商的实现各自独立。</p>
+        <p>凭据必须选择厂商才会参与调度；上游模型 ID 需要带厂商前缀，例如 <strong>opencode-go/模型名</strong>，发往上游时只发送去掉前缀的模型名。</p>
+        <p>用量窗口按厂商读取，统一为 5 小时 / 每周 / 每天 / 每月；窗口用尽默认暂停调度，避免花到付费额外额度。OpenCode Go 响应里的 <strong>opencode.allowance</strong> 会作为「本次计入额度」记入请求日志。</p>
+        <p class="release-notice-callout"><strong>上游用量接口是非公开接口。</strong>本版本只用合成样本和本地假上游验证过，尚未用真实付费 key 全量核实；查询失败时卡片保留旧值并标明状态。</p>
       </section>
       <section class="release-notice-item" aria-labelledby="releaseNoticePolicyTitle">
         <h3 id="releaseNoticePolicyTitle">开始使用</h3>
