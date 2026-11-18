@@ -1,0 +1,380 @@
+package bridge
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+)
+
+const Version = "0.1.0"
+const PluginID = "planbridge"
+
+// Provider is the single CPA provider id this plugin registers; the subscription
+// vendor is a per-credential choice, not a second provider.
+const Provider = PluginID
+
+// localBackoffLabel is the label the UI shows, and filters by, for a request the
+// plugin suppressed locally. Such a request never reached an upstream, so it has
+// no provider of its own.
+const localBackoffLabel = "本地退避"
+
+// maxCredentialPriority bounds the value handed to CPA's scheduler.
+const maxCredentialPriority = 100
+
+// normalizedPriority treats zero, negative and absent alike as "no preference",
+// so the plugin only ever forwards a real ordering choice.
+func normalizedPriority(value *int) *int {
+	if value == nil || *value <= 0 {
+		return nil
+	}
+	n := *value
+	if n > maxCredentialPriority {
+		n = maxCredentialPriority
+	}
+	return &n
+}
+
+type APIError struct {
+	Status  int
+	Kind    string
+	Message string
+}
+
+func (e *APIError) Error() string           { return e.Message }
+func (e *APIError) StatusCode() int         { return e.Status }
+func (e *APIError) Code() string            { return e.Kind }
+func fail(status int, message string) error { return &APIError{status, "upstream_error", message} }
+
+type HostCall func(string, any, any) error
+type ExecutorRequest struct {
+	deadline                                               time.Time
+	AuthID, AuthProvider, Model, Format, SourceFormat, Alt string
+	Stream                                                 bool
+	Headers                                                http.Header
+	Query                                                  url.Values
+	OriginalRequest, Payload, StorageJSON                  []byte
+	Metadata, AuthMetadata                                 map[string]any
+	AuthAttributes                                         map[string]string
+	StreamID                                               string `json:"stream_id"`
+	HostCallbackID                                         string `json:"host_callback_id"`
+}
+type Response struct {
+	Payload  []byte
+	Headers  http.Header
+	Metadata map[string]any `json:",omitempty"`
+}
+type ManagementRequest struct {
+	Method, Path   string
+	Headers        http.Header
+	Query          url.Values
+	Body           []byte
+	HostCallbackID string `json:"host_callback_id"`
+}
+type ManagementResponse struct {
+	StatusCode int
+	Headers    http.Header
+	Body       []byte
+}
+type Credential struct {
+	Type   string `json:"type"`
+	ID     string `json:"id"`
+	Label  string `json:"label"`
+	APIKey string `json:"api_key"`
+	// Vendor selects the subscription upstream. It is required for scheduling:
+	// a credential without a known vendor is refused rather than guessed.
+	Vendor string `json:"vendor"`
+	// ZDR asks the vendor for zero data retention when it offers the switch.
+	ZDR      bool   `json:"zdr,omitempty"`
+	Disabled bool   `json:"disabled"`
+	ProxyURL string `json:"proxy_url,omitempty"`
+	// Priority is forwarded to CPA, which schedules higher values first.
+	// Absent (nil) means "no preference"; the plugin does not invent one.
+	Priority            *int               `json:"priority,omitempty"`
+	RequestScopedErrors []RequestErrorRule `json:"request_scoped_errors"`
+	ModelRevision       string             `json:"model_revision,omitempty"`
+	RoutingID           string             `json:"routing_id,omitempty"`
+	QuotaBlock          *QuotaBlock        `json:"quota_block,omitempty"`
+	QuotaIdentity       *QuotaIdentity     `json:"quota_identity,omitempty"`
+	QuotaRevision       string             `json:"quota_revision,omitempty"`
+	extraFields         map[string]json.RawMessage
+}
+type RequestErrorRule struct {
+	Status      int      `json:"status"`
+	Match       []string `json:"match,omitempty"`
+	MatchRegexr []string `json:"match-regexr,omitempty"`
+	Action      string   `json:"action"`
+}
+
+func requestErrorRules() []RequestErrorRule {
+	return []RequestErrorRule{
+		{Status: 500, Match: []string{"empty response content"}, Action: "stop"},
+		{Status: 429, Match: []string{rateLimitMarker}, Action: "stop"},
+		{Status: 429, Match: []string{quotaBlockMarker}, Action: "continue"},
+		{Status: 429, Match: []string{"[planbridge:egress_unavailable]"}, Action: "stop"},
+		{Status: 429, Match: []string{"[planbridge:ip_rate_limit]"}, Action: "stop"},
+	}
+}
+
+type Model struct {
+	ReasoningMapping *ReasoningMappingConfig `json:"reasoning_mapping,omitempty" yaml:"reasoning_mapping,omitempty"`
+	ID               string                  `json:"id" yaml:"id"`
+	// UpstreamID starts with a registered vendor id: "<vendor>/<model>".
+	UpstreamID string `json:"upstream_id" yaml:"upstream_id"`
+}
+type Config struct {
+	ReasoningMapping *ReasoningMappingConfig `json:"reasoning_mapping,omitempty" yaml:"reasoning_mapping,omitempty"` // Legacy global mapping; migrated during validation.
+	DataDir          string                  `json:"data_dir" yaml:"data_dir"`
+	// BaseURL overrides every vendor's inference base. Empty means "use the
+	// vendor's own base"; it exists for tests and self-hosted proxies only.
+	BaseURL                  string  `json:"base_url" yaml:"base_url"`
+	Models                   []Model `json:"models" yaml:"models"`
+	NonstreamMode            string  `json:"nonstream_mode" yaml:"nonstream_mode"`
+	ClientRetryCompatibility bool    `json:"client_retry_compatibility" yaml:"client_retry_compatibility"`
+	StreamIdleCutoffEnabled  bool    `json:"stream_idle_cutoff_enabled" yaml:"stream_idle_cutoff_enabled"`
+	StreamIdleTimeoutSeconds int     `json:"stream_idle_timeout_seconds" yaml:"stream_idle_timeout_seconds"`
+	TimeoutSeconds           int     `json:"timeout_seconds" yaml:"timeout_seconds"`
+	LogRetention             int     `json:"log_retention" yaml:"log_retention"`
+	Debug                    bool    `json:"debug" yaml:"debug"`
+	MaxResponseBytes         int     `json:"max_response_bytes" yaml:"max_response_bytes"`
+}
+
+// A fresh install ships no model mapping and no base URL override: the operator
+// adds the models their subscriptions actually offer, and each vendor owns its base.
+func defaultConfig() Config {
+	return Config{DataDir: "plugins/planbridge-data", NonstreamMode: "stream-aggregate", ClientRetryCompatibility: true, StreamIdleCutoffEnabled: false, StreamIdleTimeoutSeconds: 20, TimeoutSeconds: 600, LogRetention: 1000, MaxResponseBytes: 64 << 20}
+}
+
+// Scalar settings support partial updates, but supplied collections replace the
+// old value. Reusing slice elements or maps would move rules between models or
+// retain deleted rules when JSON explicitly supplies an empty object.
+// Fields this build no longer knows (provider policy, routing drafts, capability
+// filters, server tools) are ignored, so an older settings file still loads.
+func decodeConfigJSON(raw []byte, cfg *Config) error {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		return err
+	}
+	next := *cfg
+	for key := range fields {
+		switch {
+		case strings.EqualFold(key, "models"):
+			next.Models = nil
+		case strings.EqualFold(key, "reasoning_mapping"):
+			next.ReasoningMapping = nil
+		}
+	}
+	decoder := json.NewDecoder(bytes.NewReader(raw))
+	decoder.UseNumber()
+	if err := decoder.Decode(&next); err != nil {
+		return err
+	}
+	*cfg = next
+	return nil
+}
+
+func (c *Config) validate() error {
+	if c.ReasoningMapping != nil {
+		if err := c.ReasoningMapping.validate(); err != nil {
+			return err
+		}
+	}
+	if c.BaseURL != "" {
+		if err := validateBaseURLOverride(c.BaseURL); err != nil {
+			return err
+		}
+	}
+	if c.TimeoutSeconds < 10 || c.TimeoutSeconds > 1800 {
+		return fail(400, "timeout_seconds must be between 10 and 1800")
+	}
+	if c.StreamIdleTimeoutSeconds < 1 || c.StreamIdleTimeoutSeconds > 1800 {
+		return fail(400, "stream_idle_timeout_seconds must be between 1 and 1800")
+	}
+	if c.LogRetention < 50 || c.LogRetention > 10000 {
+		return fail(400, "log_retention must be between 50 and 10000")
+	}
+	if c.MaxResponseBytes < 65536 || c.MaxResponseBytes > 64<<20 {
+		return fail(400, "max_response_bytes must be between 64 KiB and 64 MiB")
+	}
+	if c.NonstreamMode != "native" && c.NonstreamMode != "native-fallback" && c.NonstreamMode != "stream-aggregate" {
+		return fail(400, "invalid nonstream_mode")
+	}
+	seen := map[string]bool{}
+	for i := range c.Models {
+		m := &c.Models[i]
+		if strings.TrimSpace(m.ID) == "" || seen[m.ID] {
+			return fail(400, "model aliases must be nonempty and unique")
+		}
+		seen[m.ID] = true
+		if m.ReasoningMapping == nil {
+			m.ReasoningMapping = defaultModelReasoningMapping(m.UpstreamID)
+			if c.ReasoningMapping != nil && strings.Contains(strings.ToLower(m.UpstreamID), "deepseek") {
+				migrated := c.ReasoningMapping.clone()
+				m.ReasoningMapping = &migrated
+			}
+		}
+		if err := m.ReasoningMapping.validate(); err != nil {
+			return err
+		}
+		if strings.TrimSpace(m.UpstreamID) == "" || strings.ContainsAny(m.ID+m.UpstreamID, "\r\n\t") {
+			return fail(400, "model identifiers must be nonempty and contain no control whitespace")
+		}
+		// The leading segment selects the vendor, so it must be one this build knows.
+		if id, model := vendors.SplitUpstreamID(m.UpstreamID); model == "" || !knownVendor(id) {
+			return fail(400, "upstream_id must start with a known vendor id: "+strings.Join(vendors.IDs(), ", "))
+		}
+	}
+	c.ReasoningMapping = nil
+	return nil
+}
+
+// validateBaseURLOverride accepts only an http(s) base without credentials, query
+// or fragment: an override may point traffic at a test server or a proxy, but it
+// must not carry anything else into the URL.
+func validateBaseURLOverride(raw string) error {
+	u, err := url.Parse(raw)
+	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return fail(400, "base_url override must be an http(s) URL without credentials, query or fragment")
+	}
+	return nil
+}
+
+type Attempt struct {
+	ErrorKind           string `json:"error_kind,omitempty"`
+	UpstreamHTTPStatus  int    `json:"upstream_http_status,omitempty"`
+	UpstreamErrorStatus int    `json:"upstream_error_status,omitempty"`
+	UpstreamSkipped     bool   `json:"upstream_skipped,omitempty"`
+	Status              int    `json:"status"`
+	Mode                string `json:"mode"`
+	Provider            string `json:"provider"`
+	ProviderSource      string `json:"provider_source"`
+	DurationMS          int64  `json:"duration_ms"`
+	Error               string `json:"error,omitempty"`
+	ServedModel         string `json:"served_model,omitempty"`
+	Degraded            bool   `json:"degraded,omitempty"`
+}
+type LogEntry struct {
+	StreamDiagnostics           *StreamDiagnostics   `json:"stream_diagnostics,omitempty"`
+	ErrorPhase                  string               `json:"error_phase,omitempty"`
+	DownstreamStarted           *bool                `json:"downstream_started,omitempty"`
+	EffectiveFrameCount         int                  `json:"effective_frame_count"`
+	LastEffectiveFrameAt        *time.Time           `json:"last_effective_frame_at,omitempty"`
+	CooldownDisposition         string               `json:"cooldown_disposition,omitempty"`
+	StreamErrorDetailsSupported *bool                `json:"stream_error_details_supported,omitempty"`
+	PromptUsageReported         *bool                `json:"prompt_usage_reported,omitempty"`
+	CompletionUsageReported     *bool                `json:"completion_usage_reported,omitempty"`
+	ReasoningMapping            *ReasoningMappingLog `json:"reasoning_mapping,omitempty"`
+	CompletedAt                 *time.Time           `json:"completed_at,omitempty"`
+	UpstreamAttempts            *int                 `json:"upstream_attempt_count,omitempty"`
+	ReasoningEffort             string               `json:"reasoning_effort,omitempty"`
+	RequestCount                int64                `json:"request_count,omitempty"`
+	LastTime                    *time.Time           `json:"last_time,omitempty"`
+	LastRequestID               string               `json:"last_request_id,omitempty"`
+	BackoffWindowID             string               `json:"backoff_window_id,omitempty"`
+	OutputTokensPerSecond       *float64             `json:"output_tokens_per_second"`
+	ErrorKind                   string               `json:"error_kind,omitempty"`
+	UpstreamHTTPStatus          int                  `json:"upstream_http_status,omitempty"`
+	UpstreamErrorStatus         int                  `json:"upstream_error_status,omitempty"`
+	UpstreamSkipped             bool                 `json:"upstream_skipped,omitempty"`
+	RetryAt                     *time.Time           `json:"retry_at,omitempty"`
+	RateLimitScope              string               `json:"rate_limit_scope,omitempty"`
+	promptReported              bool
+	completionReported          bool
+	CredentialID                string         `json:"credential_id,omitempty"`
+	UsageReported               bool           `json:"usage_reported,omitempty"`
+	CacheWriteTokens            int64          `json:"cache_write_tokens,omitempty"`
+	CacheWriteReported          bool           `json:"cache_write_reported,omitempty"`
+	Allowance                   map[string]any `json:"allowance,omitempty"`
+	ID                          string         `json:"id"`
+	Time                        time.Time      `json:"time"`
+	Model                       string         `json:"model"`
+	UpstreamModel               string         `json:"upstream_model"`
+	ServedModel                 string         `json:"served_model,omitempty"`
+	Degraded                    bool           `json:"degraded,omitempty"`
+	Stream                      bool           `json:"stream"`
+	StreamEnd                   string         `json:"stream_end,omitempty"`
+	Status                      int            `json:"status"`
+	Provider                    string         `json:"provider"`
+	ProviderSource              string         `json:"provider_source"`
+	DurationMS                  int64          `json:"duration_ms"`
+	TTFTMS                      int64          `json:"ttft_ms"`
+	PromptTokens                int64          `json:"prompt_tokens"`
+	CompletionTokens            int64          `json:"completion_tokens"`
+	CachedTokens                int64          `json:"cached_tokens"`
+	ReasoningTokens             int64          `json:"reasoning_tokens"`
+	Credential                  string         `json:"credential"`
+	Attempts                    []Attempt      `json:"attempts"`
+	Error                       string         `json:"error,omitempty"`
+}
+
+func jsonBytes(v any) []byte      { b, _ := json.Marshal(v); return b }
+func str(v any) string            { s, _ := v.(string); return s }
+func object(v any) map[string]any { m, _ := v.(map[string]any); return m }
+func number(v any) int64 {
+	switch n := v.(type) {
+	case int:
+		return int64(n)
+	case int64:
+		return n
+	case float64:
+		return int64(n)
+	case json.Number:
+		if i, err := n.Int64(); err == nil {
+			return i
+		}
+		if f, err := n.Float64(); err == nil {
+			return int64(f)
+		}
+	}
+	return 0
+}
+func decodeObject(b []byte) (map[string]any, error) {
+	var j map[string]any
+	decoder := json.NewDecoder(bytes.NewReader(b))
+	// Requests and response extensions may carry int64 IDs, seeds or schema
+	// constants. Preserve their JSON values rather than rounding via float64.
+	decoder.UseNumber()
+	if err := decoder.Decode(&j); err != nil || j == nil {
+		return nil, fail(502, "upstream returned invalid JSON")
+	}
+	var trailing any
+	if err := decoder.Decode(&trailing); err != io.EOF {
+		return nil, fail(502, "upstream returned invalid JSON")
+	}
+	return j, nil
+}
+func errorMessage(j map[string]any) string {
+	v := j["error"]
+	if m := object(v); m != nil {
+		return str(m["message"])
+	}
+	if s := str(v); s != "" {
+		return s
+	}
+	return "upstream request failed"
+}
+func statusOf(err error) int {
+	if err == nil {
+		return 200
+	}
+	if e, ok := err.(interface{ StatusCode() int }); ok && e.StatusCode() > 0 {
+		return e.StatusCode()
+	}
+	return 502
+}
+func safeError(err error) string {
+	if err == nil {
+		return ""
+	}
+	s := err.Error()
+	if len(s) > 500 {
+		s = s[:500]
+	}
+	return fmt.Sprintf("%s", secretPattern.ReplaceAllString(s, "[REDACTED]"))
+}

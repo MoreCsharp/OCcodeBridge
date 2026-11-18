@@ -1,0 +1,170 @@
+package bridge
+
+import (
+	"net/url"
+	"sort"
+	"sync"
+	"time"
+)
+
+// Management registration happens after plugin configuration/host setup. The
+// sampler belongs to this plugin instance and is drained on hot unload.
+func (s *Service) startUsageSampler() {
+	s.mu.Lock()
+	if s.stopped || s.usageSamplerStarted {
+		s.mu.Unlock()
+		return
+	}
+	s.usageSamplerStarted = true
+	s.active.Add(1)
+	s.mu.Unlock()
+	go func() {
+		defer s.active.Done()
+		ticker := time.NewTicker(15 * time.Second)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-s.stopCh:
+				return
+			case <-s.usageWake:
+			case <-ticker.C:
+			}
+			s.sampleUsage()
+		}
+	}()
+	s.wakeUsageSampler()
+}
+
+func (s *Service) wakeUsageSampler() {
+	select {
+	case s.usageWake <- struct{}{}:
+	default:
+	}
+}
+
+func backgroundUsageTTL(value credentialUsage) time.Duration {
+	switch value.Status {
+	case "unauthorized", "rate_limited":
+		return 5 * time.Minute
+	default:
+		return usageTTL
+	}
+}
+
+// Query each known account once, irrespective of pagination or how many API
+// keys it owns. Unknown identities are resolved per key before being grouped.
+func (s *Service) usageSamplingTargets(now time.Time) []string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	ids := make([]string, 0, len(s.creds))
+	for id, c := range s.creds {
+		if !s.revoked[id] && c.APIKey != "" {
+			ids = append(ids, id)
+		}
+	}
+	sort.Strings(ids)
+	groups := map[string][]string{}
+	for _, id := range ids {
+		c := s.creds[id]
+		group := "credential:" + id
+		if account := s.quotaAccountHashLocked(c); account != "" {
+			group = "account:" + account
+		}
+		groups[group] = append(groups[group], id)
+	}
+	var targets []string
+	for _, members := range groups {
+		chosen, chosenRank := "", 3
+		var chosenEntry *usageCacheEntry
+		busy := false
+		for _, id := range members {
+			c := s.creds[id]
+			entry := s.usageCache[id]
+			if entry != nil && entry.fingerprint != usageFingerprint(c) {
+				entry = nil
+			}
+			if entry != nil && entry.done != nil {
+				busy = true
+				break
+			}
+			// Prefer a working key, then an untried key. Failed siblings retain
+			// their own backoff and rotate by the oldest actual attempt.
+			rank := 1
+			if entry != nil && entry.value.Status == "ok" {
+				rank = 0
+			} else if entry != nil && entry.value.CheckedAt != nil {
+				rank = 2
+				if now.Sub(*entry.value.CheckedAt) < backgroundUsageTTL(entry.value) && !quotaRecoveryCheckDue(c, entry.value, now) {
+					continue
+				}
+			}
+			prefer := rank < chosenRank
+			if rank == chosenRank && entry != nil && chosenEntry != nil && entry.value.CheckedAt != nil {
+				// A newer successful account snapshot avoids a redundant fetch;
+				// among failures, the least recently attempted key gets its turn.
+				prefer = chosenEntry.value.CheckedAt == nil || rank == 0 && entry.value.CheckedAt.After(*chosenEntry.value.CheckedAt) || rank == 2 && entry.value.CheckedAt.Before(*chosenEntry.value.CheckedAt)
+			}
+			if prefer {
+				chosen, chosenRank, chosenEntry = id, rank, entry
+			}
+		}
+		if busy || chosen == "" {
+			continue
+		}
+		if chosenEntry != nil && chosenEntry.value.CheckedAt != nil && now.Sub(*chosenEntry.value.CheckedAt) < backgroundUsageTTL(chosenEntry.value) && !quotaRecoveryCheckDue(s.creds[chosen], chosenEntry.value, now) {
+			continue
+		}
+		targets = append(targets, chosen)
+	}
+	sort.Strings(targets)
+	return targets
+}
+
+func (s *Service) sampleUsage() {
+	// Filesystem failures retain the in-memory block and retry without requiring
+	// an operator or a new upstream rejection. This never calls host.auth.save.
+	_ = s.reconcileQuotaScheduling()
+	jobs := make(chan string)
+	var workers sync.WaitGroup
+	for n := 0; n < cap(s.usageSlots); n++ {
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			for id := range jobs {
+				// Empty callback ID uses the bounded background request path;
+				// configured credential proxies and the shared pool still apply.
+				_, _ = s.credentialUsage(ManagementRequest{Query: url.Values{"id": {id}}})
+			}
+		}()
+	}
+	for _, id := range s.usageSamplingTargets(time.Now()) {
+		select {
+		case jobs <- id:
+		case <-s.stopCh:
+			close(jobs)
+			workers.Wait()
+			return
+		}
+	}
+	close(jobs)
+	workers.Wait()
+}
+
+// Caller holds mu. Share only with identities already verified using their own
+// unchanged keys. A new/replaced key must authenticate before receiving a copy.
+func (s *Service) shareAccountUsageLocked(sourceID string, value credentialUsage) {
+	if value.Status != "ok" || value.accountHash == "" {
+		return
+	}
+	for id, entry := range s.usageCache {
+		c, exists := s.creds[id]
+		if id == sourceID || !exists || s.revoked[id] || entry.done != nil || entry.fingerprint != usageFingerprint(c) || entry.value.Status != "ok" || entry.value.accountHash != value.accountHash {
+			continue
+		}
+		if entry.value.UpdatedAt != nil && value.UpdatedAt != nil && entry.value.UpdatedAt.After(*value.UpdatedAt) {
+			continue
+		}
+		entry.value = value
+		entry.value.ID = id
+	}
+}

@@ -1,0 +1,224 @@
+package bridge
+
+import (
+	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"sync/atomic"
+	"testing"
+	"time"
+)
+
+func TestSchedulingOldHostAndProxySecretRedaction(t *testing.T) {
+	s := registeredService(t, "")
+	var callbacks []string
+	s.SetHost(func(method string, _, _ any) error {
+		callbacks = append(callbacks, method)
+		return errors.New("unsupported callback")
+	})
+	config := `{"enabled":false,"endpoints":[{"id":"p1","enabled":true,"proxy_url":"http://private-user:private-password@localhost:8080","group":"shared","rpm":60,"max_inflight":4}]}`
+	if _, err := s.saveEgressConfig([]byte(config)); err != nil {
+		t.Fatal(err)
+	}
+	result, err := s.egressManagementResponse()
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := string(result.(ManagementResponse).Body)
+	if strings.Contains(body, "private-user") || strings.Contains(body, "private-password") || !strings.Contains(body, `"has_auth":true`) {
+		t.Fatalf("bad public config: %s", body)
+	}
+	result, err = s.schedulingResponse()
+	if err != nil || result.(ManagementResponse).StatusCode != 200 {
+		t.Fatalf("old host rejected: %v", err)
+	}
+	body = string(result.(ManagementResponse).Body)
+	if !strings.Contains(body, `"available":false`) || strings.Contains(body, `"local_delay_supported"`) || strings.Contains(body, `"request_cancel_observable"`) {
+		t.Fatal("old host availability was lost or obsolete capabilities were returned")
+	}
+	if len(callbacks) != 1 || callbacks[0] != "host.auth.list" {
+		t.Fatalf("scheduling performed an obsolete capabilities probe: %v", callbacks)
+	}
+}
+
+func TestSchedulingQuotaManualStateAndHostProjection(t *testing.T) {
+	s := NewService()
+	c := Credential{ID: "quota", APIKey: "quota-key"}
+	now := time.Now().UTC()
+	c.QuotaBlock = &QuotaBlock{KeyHash: quotaKeyHash(c), Source: "usage", BlockedAt: now, ObservedAt: now, Limits: []QuotaBlockLimit{{Type: "weekly"}}}
+	quotaTestAuth(t, s, c)
+	quotaTestAuth(t, s, Credential{ID: "manual", APIKey: "manual-key", Disabled: true})
+	s.SetHost(func(method string, _, out any) error {
+		if method != "host.auth.list" {
+			t.Fatalf("unexpected scheduling callback: %s", method)
+		}
+		return json.Unmarshal([]byte(`{"files":[{"name":"quota.json","provider":"cline-pass","disabled":true,"status":"disabled"},{"name":"manual.json","provider":"cline-pass","disabled":true,"status":"disabled"}]}`), out)
+	})
+	result, err := s.schedulingResponse()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var state struct {
+		QuotaAutoPause bool `json:"quota_auto_pause"`
+		Accounts       []struct {
+			ID           string `json:"id"`
+			Enabled      bool   `json:"enabled"`
+			QuotaBlocked bool   `json:"quota_blocked"`
+			QuotaReason  string `json:"quota_reason"`
+			Host         struct {
+				Disabled bool `json:"disabled"`
+			} `json:"host"`
+		} `json:"accounts"`
+		Host struct {
+			Available bool `json:"available"`
+		} `json:"host"`
+	}
+	response := result.(ManagementResponse)
+	if response.StatusCode != 200 || json.Unmarshal(response.Body, &state) != nil || !state.QuotaAutoPause || !state.Host.Available || len(state.Accounts) != 2 {
+		t.Fatalf("invalid scheduling state: %s", response.Body)
+	}
+	for _, account := range state.Accounts {
+		if !account.Host.Disabled {
+			t.Fatal("account host runtime disabled state was dropped")
+		}
+		if account.ID == c.ID {
+			if !account.Enabled || !account.QuotaBlocked || account.QuotaReason != "每周额度耗尽" {
+				t.Fatal("quota projection was confused with manual disable")
+			}
+		} else if account.Enabled || account.QuotaBlocked {
+			t.Fatal("manual disable was confused with quota pause")
+		}
+	}
+	if s.creds[c.ID].Disabled || !s.creds["manual"].Disabled {
+		t.Fatal("reading host runtime state changed manual enable/disable")
+	}
+}
+
+func TestSchedulingModelCooldownDoesNotHideOtherModels(t *testing.T) {
+	s := NewService()
+	quotaTestAuth(t, s, Credential{ID: "one", APIKey: "fixture-key"})
+	s.cfg.Models = []Model{{ID: "flash", UpstreamID: "opencode-go/deepseek-v4.1-flash"}, {ID: "kimi", UpstreamID: "opencode-go/kimi-k3"}}
+	now := time.Now().UTC()
+	s.SetHost(func(method string, _, out any) error {
+		if method != "host.auth.list" {
+			t.Fatalf("unexpected callback: %s", method)
+		}
+		return json.Unmarshal(jsonBytes(map[string]any{"files": []map[string]any{{
+			"name": "one.json", "provider": Provider, "unavailable": true,
+			"model_states_available": true, "model_states": map[string]any{
+				"opencode-go/flash": map[string]any{"unavailable": true, "next_retry_after": now.Add(time.Hour), "status_message": "upstream temporary failure"},
+				"expired":           map[string]any{"unavailable": true, "next_retry_after": now.Add(-time.Hour)},
+			},
+		}}}), out)
+	})
+	result, err := s.schedulingResponse()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var state struct {
+		Accounts []struct {
+			ModelCooldowns []struct {
+				Model string `json:"model"`
+			} `json:"model_cooldowns"`
+		} `json:"accounts"`
+		Summary map[string]int `json:"summary"`
+	}
+	if err := json.Unmarshal(result.(ManagementResponse).Body, &state); err != nil {
+		t.Fatal(err)
+	}
+	if state.Summary["available"] != 1 || len(state.Accounts) != 1 || len(state.Accounts[0].ModelCooldowns) != 1 || state.Accounts[0].ModelCooldowns[0].Model != "flash" {
+		t.Fatalf("model cooldown was expanded to the account: %s", result.(ManagementResponse).Body)
+	}
+	models := s.cfg.Models
+	rows := []map[string]any{{"model": "flash"}, {"model": "kimi"}}
+	if schedulingAccountAvailable(&schedulingHostAuth{ModelStatesAvailable: true}, models, rows, nil) {
+		t.Fatal("all configured models are cooling")
+	}
+	if schedulingAccountAvailable(&schedulingHostAuth{ModelStatesAvailable: true, CredentialCooldown: true}, models, nil, nil) {
+		t.Fatal("credential cooldown was ignored")
+	}
+	if schedulingAccountAvailable(&schedulingHostAuth{ModelStatesAvailable: true, CredentialBlocked: true}, models, nil, nil) {
+		t.Fatal("terminal authentication failure was ignored")
+	}
+	if schedulingAccountAvailable(&schedulingHostAuth{Unavailable: true}, models, nil, nil) {
+		t.Fatal("legacy host availability must remain conservative")
+	}
+}
+
+func TestSchedulingSharedUpstreamKeepsHostAliasScope(t *testing.T) {
+	models := []Model{{ID: "alias-a", UpstreamID: "shared"}, {ID: "alias-b", UpstreamID: "shared"}}
+	runtime := &schedulingHostAuth{ModelStatesAvailable: true, ModelStates: map[string]schedulingModelState{
+		"alias-a": {Unavailable: true, NextRetryAfter: time.Now().Add(time.Hour)},
+	}}
+	rows := schedulingModelCooldowns(runtime, models, time.Now())
+	if !schedulingAccountAvailable(runtime, models, rows, nil) || len(rows) != 1 || rows[0]["model"] != "alias-a" {
+		t.Fatal("host alias cooldown blocked another alias with the same upstream")
+	}
+	if schedulingAccountAvailable(runtime, models, nil, []map[string]any{{"model": "shared"}}) {
+		t.Fatal("shared upstream team-rate window did not cover both aliases")
+	}
+}
+
+func TestSchedulingCredentialManualTogglePreservesQuotaBlock(t *testing.T) {
+	s := NewService()
+	c := Credential{ID: "one", APIKey: "quota-key"}
+	now := time.Now().UTC()
+	c.QuotaBlock = &QuotaBlock{KeyHash: quotaKeyHash(c), Source: "usage", BlockedAt: now, ObservedAt: now, Limits: []QuotaBlockLimit{{Type: "weekly"}}}
+	quotaTestAuth(t, s, c)
+	for _, enabled := range []bool{false, true} {
+		result, err := s.schedulingSetCredential(ManagementRequest{Body: jsonBytes(map[string]any{"id": c.ID, "enabled": enabled})})
+		if err != nil || result.(ManagementResponse).StatusCode != 200 {
+			t.Fatalf("manual toggle failed: %v", err)
+		}
+		current := s.creds[c.ID]
+		if current.Disabled != !enabled || current.QuotaBlock == nil {
+			t.Fatal("manual toggle erased the independent quota block")
+		}
+		if quotaTestParse(t, s, c.ID, quotaTestRead(t, s, c.ID))["Disabled"] != true || s.creds[c.ID].Disabled != !enabled {
+			t.Fatal("host quota projection rewrote manual enable/disable")
+		}
+	}
+}
+
+func TestManagementRequestsHonorCredentialProxyWithoutSharedPool(t *testing.T) {
+	var proxyCalls, hostHTTP atomic.Int32
+	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		proxyCalls.Add(1)
+		if r.Header.Get("Authorization") != "Bearer proxy-fixture-key" {
+			t.Error("missing origin credential")
+		}
+		if r.Header.Get("Proxy-Authorization") == "" {
+			t.Error("missing proxy authentication")
+		}
+		if strings.HasSuffix(r.URL.Path, "/chat/completions") {
+			w.Header().Set("Content-Type", "text/event-stream")
+			_, _ = w.Write(simpleSSE())
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"data":[]}`))
+		}
+	}))
+	defer proxy.Close()
+	s := probeService(t)
+	s.cfg.BaseURL = "http://opencode.fixture.invalid/v1"
+	c := s.creds["probe-account"]
+	c.APIKey, c.ProxyURL = "proxy-fixture-key", strings.Replace(proxy.URL, "http://", "http://proxy-user:proxy-password@", 1)
+	s.creds[c.ID] = c
+	s.SetHost(func(method string, _, _ any) error {
+		if strings.HasPrefix(method, "host.http.") {
+			hostHTTP.Add(1)
+		}
+		return errors.New("unsupported callback")
+	})
+	// A management request (here the model test) uses the credential's proxy
+	// instead of the host path, even when the shared pool stays off.
+	result := callModelTest(t, s)
+	if !strings.Contains(string(result.Body), `"ok":true`) {
+		t.Fatalf("proxied probe failed: %s", result.Body)
+	}
+	if proxyCalls.Load() != 1 || hostHTTP.Load() != 0 {
+		t.Fatalf("proxy=%d host=%d", proxyCalls.Load(), hostHTTP.Load())
+	}
+}
