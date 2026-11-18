@@ -75,7 +75,7 @@ func (w *streamReadWatchdog) expired(now time.Time) error {
 		}
 	}
 	if !now.Before(w.deadline) {
-		return requestTimedOut("Cline upstream request timed out")
+		return requestTimedOut("upstream request timed out")
 	}
 	if !w.downstream && w.idleTimeout > 0 && !w.lastOutput.IsZero() && !now.Before(w.lastOutput.Add(w.idleTimeout)) {
 		return streamIdleTimeout(w.idleTimeout)

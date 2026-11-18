@@ -343,17 +343,17 @@ func unwrap(body []byte) (map[string]any, error) {
 	if j["success"] == true {
 		d := object(j["data"])
 		if d == nil {
-			return nil, upstreamProtocolFailure("Cline success response has no data object")
+			return nil, upstreamProtocolFailure("upstream success response has no data object")
 		}
 		j = d
 	}
 	if len(list(j["choices"])) == 0 {
-		return nil, upstreamProtocolFailure("Cline response has no choices")
+		return nil, upstreamProtocolFailure("upstream response has no choices")
 	}
 	return j, nil
 }
 
-// degradedModelPattern matches the model name Cline reports for a request it
+// degradedModelPattern matches the model name an upstream reports for a request it
 // served from a degraded pool rather than the one asked for: a suffix such as
 // "vmc/deepseek-v4p1-flash-1017-contributor-fallbacks". The pool is a routing
 // decision on the model tier, not on the provider: the same request can report
@@ -363,7 +363,7 @@ var degradedModelPattern = regexp.MustCompile(`(?i)contributor-fallbacks?$|/fall
 
 // observeServedModel records the model the upstream actually served and
 // whether that was a degraded pool. The response's own "model" field is the
-// only place Cline reports it, and the executor overwrites that field with the
+// only place the upstream reports it, and the executor overwrites that field with the
 // client's model name before anything downstream sees it, so it has to be read
 // off each raw frame here.
 func observeServedModel(j map[string]any, entry *LogEntry, attempt *Attempt) {

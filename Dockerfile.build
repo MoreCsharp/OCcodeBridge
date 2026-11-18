@@ -12,7 +12,7 @@ COPY internal ./internal
 
 ENV CGO_ENABLED=1 GOOS=linux GOARCH=amd64
 RUN mkdir /out && go build -trimpath -buildvcs=false -buildmode=c-shared \
-    -ldflags='-s -w' -o /out/planbridge.so ./cmd/passbridge
+    -ldflags='-s -w' -o /out/planbridge.so ./cmd/planbridge
 
 FROM scratch AS artifact
 COPY --from=build /out/planbridge.so /planbridge.so

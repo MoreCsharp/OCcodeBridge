@@ -47,7 +47,7 @@ jobs:
         run: |
           docker run --rm --platform linux/amd64 -v "$PWD:/src" -w /src \
             -e CGO_ENABLED=1 -e GOOS=linux -e GOARCH=amd64 \
-            golang:1.26-bookworm go test ./internal/bridge
+            golang:1.26-bookworm go test ./...
       - name: Build Debian 12 shared library
         run: docker build --platform linux/amd64 --file Dockerfile.build --output type=local,dest=dist .
       - name: Package Linux amd64
@@ -77,7 +77,7 @@ jobs:
           docker run --rm --platform linux/arm64 -v "$PWD:/src" -w /src \
             -e CGO_ENABLED=1 -e GOOS=linux -e GOARCH=arm64 \
             golang:1.26-bookworm sh -ec \
-            'go test ./internal/bridge && go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags="-s -w" -o dist/planbridge.so ./cmd/passbridge'
+            'go test ./... && go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags="-s -w" -o dist/planbridge.so ./cmd/planbridge'
       - name: Package Linux arm64
         shell: bash
         run: |
@@ -118,10 +118,10 @@ jobs:
           GOARCH: ${{ matrix.goarch }}
         run: |
           set -euo pipefail
-          go test ./internal/bridge
+          go test ./...
           mkdir -p dist
           go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags='-s -w' \
-            -o dist/planbridge.dylib ./cmd/passbridge
+            -o dist/planbridge.dylib ./cmd/planbridge
       - name: Package macOS library
         shell: bash
         run: |
@@ -167,10 +167,10 @@ jobs:
           CC: gcc
         run: |
           gcc --version
-          go test ./internal/bridge
+          go test ./...
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force -Path dist | Out-Null
-          go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags='-s -w' -o dist/planbridge.dll ./cmd/passbridge
+          go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags='-s -w' -o dist/planbridge.dll ./cmd/planbridge
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Package Windows amd64
         shell: pwsh

@@ -59,7 +59,7 @@ func TestConfigFidelityRejectedPUTPreservesStateAndDisk(t *testing.T) {
 	}{
 		{
 			name: "unknown-vendor-prefix",
-			body: `{"models":[{"id":"deepseek-flash","upstream_id":"cline-pass/deepseek-v4.1-flash"}]}`,
+			body: `{"models":[{"id":"deepseek-flash","upstream_id":"retired-vendor/deepseek-v4.1-flash"}]}`,
 		},
 		{
 			name: "duplicate-alias",

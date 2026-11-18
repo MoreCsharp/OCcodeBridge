@@ -160,7 +160,7 @@ func (s *Service) openUpstream(payload any, deadline time.Time, diagnostics ...*
 			return out, failure
 		}
 	case <-timer.C:
-		return out, requestTimedOut("Cline upstream request timed out")
+		return out, requestTimedOut("upstream request timed out")
 	case <-s.stopCh:
 		return out, bridgeUnavailable("PlanBridge is shutting down")
 	}
