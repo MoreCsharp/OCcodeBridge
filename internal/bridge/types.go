@@ -139,18 +139,21 @@ type Config struct {
 	Models                   []Model           `json:"models" yaml:"models"`
 	NonstreamMode            string            `json:"nonstream_mode" yaml:"nonstream_mode"`
 	ClientRetryCompatibility bool              `json:"client_retry_compatibility" yaml:"client_retry_compatibility"`
-	StreamIdleCutoffEnabled  bool              `json:"stream_idle_cutoff_enabled" yaml:"stream_idle_cutoff_enabled"`
-	StreamIdleTimeoutSeconds int               `json:"stream_idle_timeout_seconds" yaml:"stream_idle_timeout_seconds"`
-	TimeoutSeconds           int               `json:"timeout_seconds" yaml:"timeout_seconds"`
-	LogRetention             int               `json:"log_retention" yaml:"log_retention"`
-	Debug                    bool              `json:"debug" yaml:"debug"`
-	MaxResponseBytes         int               `json:"max_response_bytes" yaml:"max_response_bytes"`
+	// PauseOnWindowLimit pauses scheduling when a usage window is exhausted. It
+	// defaults to true: exhausting a window can silently spend paid extra credits.
+	PauseOnWindowLimit       bool `json:"pause_on_window_limit" yaml:"pause_on_window_limit"`
+	StreamIdleCutoffEnabled  bool `json:"stream_idle_cutoff_enabled" yaml:"stream_idle_cutoff_enabled"`
+	StreamIdleTimeoutSeconds int  `json:"stream_idle_timeout_seconds" yaml:"stream_idle_timeout_seconds"`
+	TimeoutSeconds           int  `json:"timeout_seconds" yaml:"timeout_seconds"`
+	LogRetention             int  `json:"log_retention" yaml:"log_retention"`
+	Debug                    bool `json:"debug" yaml:"debug"`
+	MaxResponseBytes         int  `json:"max_response_bytes" yaml:"max_response_bytes"`
 }
 
 // A fresh install ships no model mapping and no base URL override: the operator
 // adds the models their subscriptions actually offer, and each vendor owns its base.
 func defaultConfig() Config {
-	return Config{DataDir: "plugins/planbridge-data", NonstreamMode: "stream-aggregate", ClientRetryCompatibility: true, StreamIdleCutoffEnabled: false, StreamIdleTimeoutSeconds: 20, TimeoutSeconds: 600, LogRetention: 1000, MaxResponseBytes: 64 << 20}
+	return Config{DataDir: "plugins/planbridge-data", NonstreamMode: "stream-aggregate", ClientRetryCompatibility: true, PauseOnWindowLimit: true, StreamIdleCutoffEnabled: false, StreamIdleTimeoutSeconds: 20, TimeoutSeconds: 600, LogRetention: 1000, MaxResponseBytes: 64 << 20}
 }
 
 // Scalar settings support partial updates, but supplied collections replace the

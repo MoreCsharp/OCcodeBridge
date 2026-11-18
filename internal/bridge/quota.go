@@ -441,6 +441,12 @@ func (s *Service) clearPermanentQuota(credentialID string) error {
 	return s.saveQuotaGroup(group)
 }
 
+// quotaUnresetRecheck is the fallback interval for a block whose window has no
+// reset time: polling still clears it once the window is below 100%, and this
+// bound guarantees a fresh sample instead of waiting for a vendor timestamp.
+const quotaUnresetRecheck = 10 * time.Minute
+
+// quotaUsageHasRoom reports whether a usage sample may clear a block.
 func quotaUsageHasRoom(block *QuotaBlock, value credentialUsage, started time.Time) bool {
 	if block == nil || block.Permanent || value.Status != "ok" || value.PlanError != "" || value.UpdatedAt == nil || !started.After(block.ObservedAt) {
 		return false
@@ -500,10 +506,12 @@ func (s *Service) observeQuotaUsage(source Credential, value credentialUsage, st
 		blocks = append(blocks, c.QuotaBlock)
 	}
 	exhausted := &QuotaBlock{Source: "usage", BlockedAt: *value.UpdatedAt, ObservedAt: *value.UpdatedAt}
-	for _, limit := range value.Limits {
-		kind := canonicalQuotaType(limit.Type)
-		if kind != "" && kind != "quota" && limit.PercentUsed != nil && *limit.PercentUsed >= 100 {
-			exhausted.Limits = append(exhausted.Limits, QuotaBlockLimit{kind, limit.ResetsAt})
+	if s.config().PauseOnWindowLimit {
+		for _, limit := range value.Limits {
+			kind := canonicalQuotaType(limit.Type)
+			if kind != "" && kind != "quota" && usageWindowExhausted(limit) {
+				exhausted.Limits = append(exhausted.Limits, QuotaBlockLimit{kind, limit.ResetsAt})
+			}
 		}
 	}
 	if len(exhausted.Limits) > 0 {
@@ -522,14 +530,30 @@ func (s *Service) observeQuotaUsage(source Credential, value credentialUsage, st
 	return s.saveQuotaGroup(group)
 }
 
+// usageWindowExhausted reports a window that is fully used, from the reported
+// amount when present and from the percentage otherwise.
+func usageWindowExhausted(limit usageLimit) bool {
+	used, ok := quotaUsedFraction(limit)
+	return ok && used >= 1
+}
+
 // A reset must trigger a fresh fetch even if the old cached sample's TTL remains.
 func quotaRecoveryCheckDue(c Credential, value credentialUsage, now time.Time) bool {
 	c = normalizeQuotaCredential(c)
-	if c.QuotaBlock == nil {
+	if c.QuotaBlock == nil || c.QuotaBlock.Permanent {
 		return false
 	}
+	fallback := c.QuotaBlock.ObservedAt.Add(quotaUnresetRecheck)
 	for _, limit := range c.QuotaBlock.Limits {
-		if limit.ResetsAt != nil && !now.Before(*limit.ResetsAt) && (value.CheckedAt == nil || value.CheckedAt.Before(*limit.ResetsAt)) {
+		if limit.ResetsAt != nil {
+			if !now.Before(*limit.ResetsAt) && (value.CheckedAt == nil || value.CheckedAt.Before(*limit.ResetsAt)) {
+				return true
+			}
+			continue
+		}
+		// A window the vendor gave no reset time for must not stay blocked on a
+		// stale sample: re-check on the fallback interval and let polling decide.
+		if !now.Before(fallback) && (value.CheckedAt == nil || value.CheckedAt.Before(fallback)) {
 			return true
 		}
 	}

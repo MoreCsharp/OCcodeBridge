@@ -44,7 +44,7 @@ func (s *Service) wakeUsageSampler() {
 
 func backgroundUsageTTL(value credentialUsage) time.Duration {
 	switch value.Status {
-	case "unauthorized", "rate_limited":
+	case "unauthorized", "rate_limited", "plan_unsupported":
 		return 5 * time.Minute
 	default:
 		return usageTTL

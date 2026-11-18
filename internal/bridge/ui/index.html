@@ -625,6 +625,17 @@
             </form>
             <p class="inline-state" id="retryCompatibilityState" role="status"></p>
           </div>
+          <div class="panel" id="windowLimitPausePanel">
+            <div class="panel-head"><div><h2 id="windowLimitPauseHeading">窗口额度保护</h2><p class="panel-hint">用量窗口用尽时自动暂停该凭据，避免超窗口后自动扣用额外额度</p></div></div>
+            <form class="form-stack" id="windowLimitPauseForm" aria-labelledby="windowLimitPauseHeading">
+              <div class="field">
+                <label class="retry-compat-switch" for="pauseOnWindowLimit"><span>窗口用尽时暂停调度</span><input id="pauseOnWindowLimit" type="checkbox" role="switch" checked></label>
+              </div>
+              <p class="panel-hint">默认开启，旧配置缺少该字段时按开启处理。关闭后用量轮询不再主动暂停，但上游返回窗口超限 429 时仍会暂停。</p>
+              <div class="form-foot"><button class="button primary" id="saveWindowLimitPause" type="submit" data-icon="save">保存设置</button></div>
+            </form>
+            <p class="inline-state" id="windowLimitPauseState" role="status"></p>
+          </div>
           <div class="panel" id="streamIdlePanel">
             <div class="panel-head">
               <h2 id="streamIdleHeading">流式卡住时提前截流</h2>
@@ -1758,6 +1769,7 @@
         $('nonstreamMode').value = ['native', 'native-fallback', 'stream-aggregate'].includes(config?.nonstream_mode) ? config.nonstream_mode : 'stream-aggregate';
         dropdowns.get('nonstreamMode').sync();
         $('clientRetryCompatibility').checked = config?.client_retry_compatibility !== false;
+        $('pauseOnWindowLimit').checked = config?.pause_on_window_limit !== false;
         $('streamIdleCutoffEnabled').checked = config?.stream_idle_cutoff_enabled === true;
         $('streamIdleTimeoutSeconds').value = present(config?.stream_idle_timeout_seconds) ? config.stream_idle_timeout_seconds : 20;
         $('timeoutSeconds').value = present(config?.timeout_seconds) ? config.timeout_seconds : 600;
@@ -2182,6 +2194,15 @@
       try { state.config = await api('/config', { method: 'PUT', body: next }); $('retryCompatibilityState').textContent = '设置已保存'; }
       catch (error) { $('retryCompatibilityState').textContent = `保存失败：${error.message}`; }
       finally { $('saveRetryCompatibility').disabled = false; }
+    });
+    $('windowLimitPauseForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const next = { pause_on_window_limit: $('pauseOnWindowLimit').checked };
+      $('saveWindowLimitPause').disabled = true;
+      $('windowLimitPauseState').textContent = '正在保存…';
+      try { state.config = await api('/config', { method: 'PUT', body: next }); $('windowLimitPauseState').textContent = '设置已保存'; }
+      catch (error) { $('windowLimitPauseState').textContent = `保存失败：${error.message}`; }
+      finally { $('saveWindowLimitPause').disabled = false; }
     });
     $('streamIdleForm').addEventListener('submit', async (event) => {
       event.preventDefault();
