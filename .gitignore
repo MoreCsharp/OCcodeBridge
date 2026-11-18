@@ -10,3 +10,15 @@ __pycache__/
 .env
 *credentials*.json
 *.jsonl
+
+# 开发过程文档与本地验收脚本（只留本地，不进仓库）
+/AGENTS.md
+/CHANGELOG.md
+/docs/
+/cmd/occodebridge/README.md
+/internal/vendors/README.md
+/internal/vendors/opencodego/README.md
+/scripts/e2e-native.ps1
+/scripts/e2e-linux.py
+/scripts/fake-opencode-upstream.py
+/scripts/check.ps1
