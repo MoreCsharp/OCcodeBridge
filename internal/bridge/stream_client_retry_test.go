@@ -92,9 +92,9 @@ func checkStreamRetryCompatibilityBoundaries(t *testing.T, retryableErr error) {
 			if !errors.As(tc.err, &upstream) {
 				t.Fatalf("expected a classified upstream fault: %v", tc.err)
 			}
-			marker := "[planbridge:cpa_compat:server misbehaving]"
+			marker := "[occodebridge:cpa_compat:server misbehaving]"
 			if upstream.Kind == upstreamNetworkKind {
-				marker = "[planbridge:cpa_compat:connection aborted]"
+				marker = "[occodebridge:cpa_compat:connection aborted]"
 			}
 			if body.Error.Type != "server_error" || body.Error.Code != "500" || body.Error.Message != legacyMessage || !strings.Contains(body.Error.Message, marker) || strings.ContainsAny(h.clientError, "\r\n") {
 				t.Fatalf("client retry classification or single-line framing lost: %q", h.clientError)
@@ -203,7 +203,7 @@ func TestExecuteStreamEgressEOFPreservesDiagnosticsAndOnlyClosesOnce(t *testing.
 	var wire struct {
 		Error struct{ Type, Code, Message string }
 	}
-	if err := json.Unmarshal([]byte(h.clientError), &wire); err != nil || wire.Error.Type != "server_error" || wire.Error.Code != "500" || wire.Error.Message != "HTTP 502: upstream connection interrupted (upstream_network_error): [planbridge:cpa_compat:connection aborted]" {
+	if err := json.Unmarshal([]byte(h.clientError), &wire); err != nil || wire.Error.Type != "server_error" || wire.Error.Code != "500" || wire.Error.Message != "HTTP 502: upstream connection interrupted (upstream_network_error): [occodebridge:cpa_compat:connection aborted]" {
 		t.Fatalf("host did not receive the EOF retry error: %q (%v)", h.clientError, err)
 	}
 	if details.HTTPStatus != 502 || details.Code != upstreamNetworkKind || details.Scope != "request" || !details.RequestScoped || details.Phase != "after_output" || details.RetryAt != nil {

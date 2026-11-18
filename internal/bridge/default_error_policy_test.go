@@ -37,7 +37,7 @@ func TestDefaultErrorPolicyUnknownAndProtectedWire(t *testing.T) {
 			if status != tc.status {
 				t.Fatalf("wire status=%d message=%q", status, message)
 			}
-			if !tc.cooldown && !strings.Contains(message, "[planbridge:cpa_compat:") {
+			if !tc.cooldown && !strings.Contains(message, "[occodebridge:cpa_compat:") {
 				t.Fatalf("unknown failure lacks host exemption: %q", message)
 			}
 			if tc.cooldown && containsHostTransportMarker(message) {

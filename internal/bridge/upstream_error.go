@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const rateLimitMarker = "[planbridge:team_tpm_limit]"
+const rateLimitMarker = "[occodebridge:team_tpm_limit]"
 const transportIncompleteKind = "upstream_transport_incomplete"
 const upstreamStreamIdleTimeoutKind = "upstream_stream_idle_timeout"
 

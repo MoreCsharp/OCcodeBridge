@@ -11,10 +11,10 @@ function errorRuleExplanation(rule) {
   const texts = rule.conditions.filter((condition) => condition.type === 'contains').map((condition) => condition.text);
   const known = [
     [500, 'empty response content', '空响应', '上游未返回有效响应内容。'],
-    [429, '[planbridge:team_tpm_limit]', '上游共享团队限流', '上游共享团队的 token 速率达到上限；切换账号仍可能命中同一限制。'],
-    [429, '[planbridge:quota_block]', '账号额度阻断', '账号被额度保护暂停调度；可继续尝试其他额度可用的账号。'],
-    [429, '[planbridge:egress_unavailable]', '代理池无可用出口', '代理池暂无可用出口，或出口的并发、速率预算已满。'],
-    [429, '[planbridge:ip_rate_limit]', '出口 IP 限流', '当前出口 IP 触发上游频率限制；同一出口上的其他账号也可能受影响。'],
+    [429, '[occodebridge:team_tpm_limit]', '上游共享团队限流', '上游共享团队的 token 速率达到上限；切换账号仍可能命中同一限制。'],
+    [429, '[occodebridge:quota_block]', '账号额度阻断', '账号被额度保护暂停调度；可继续尝试其他额度可用的账号。'],
+    [429, '[occodebridge:egress_unavailable]', '代理池无可用出口', '代理池暂无可用出口，或出口的并发、速率预算已满。'],
+    [429, '[occodebridge:ip_rate_limit]', '出口 IP 限流', '当前出口 IP 触发上游频率限制；同一出口上的其他账号也可能受影响。'],
   ].filter(([status, marker]) => Number(rule.status) === status && texts.includes(marker));
   if (known.length) return { name: known.map((item) => item[2]).join(' / '), detail: known.map((item) => item[3]).join(' ') };
   const status = Number(rule.status);

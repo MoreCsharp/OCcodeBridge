@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 // ErrUnauthorized reports that the upstream rejected the API key. Callers can

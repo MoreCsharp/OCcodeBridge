@@ -1,7 +1,7 @@
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 
-# Build PlanBridge as a CPA native plugin on Windows (dist\planbridge.dll).
+# Build OCcodeBridge as a CPA native plugin on Windows (dist\occodebridge.dll).
 #
 # A CPA native plugin must be linked as a shared library (-buildmode=c-shared),
 # so it needs a C toolchain. This script never downloads or installs one: it
@@ -11,11 +11,11 @@ Set-StrictMode -Version Latest
 #   pwsh -NoProfile -File scripts/build-windows.ps1            # build only
 #   pwsh -NoProfile -File scripts/build-windows.ps1 -Zip       # build and package
 #
-# -Zip writes dist\planbridge_<version>_windows_amd64.zip with planbridge.dll at
+# -Zip writes dist\occodebridge_<version>_windows_amd64.zip with occodebridge.dll at
 # its root, the same name the release workflow publishes.
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$outputPath = Join-Path $repoRoot 'dist\planbridge.dll'
+$outputPath = Join-Path $repoRoot 'dist\occodebridge.dll'
 $packageZip = $args -contains '-Zip'
 $compilerArgument = ''
 for ($index = 0; $index -lt $args.Count; $index++) {
@@ -67,10 +67,10 @@ function Resolve-Compiler([string]$Explicit) {
     throw @'
 No C compiler found.
 
-dist/planbridge.dll cannot be produced without a C toolchain: the CPA native
+dist/occodebridge.dll cannot be produced without a C toolchain: the CPA native
 plugin ABI requires "go build -buildmode=c-shared". This repository expects the
 local portable winlibs MinGW-w64 install (D:\code\cpaexp\.tools\winlibs-*), a
-gcc on PATH, or -Compiler <path to gcc.exe> / $env:CC. PlanBridge deliberately
+gcc on PATH, or -Compiler <path to gcc.exe> / $env:CC. OCcodeBridge deliberately
 does not download or install compilers.
 '@
 }
@@ -104,7 +104,7 @@ try {
     Write-Output "Building $outputPath (version $version)"
     Write-Output "CC=$($compiler.Path)"
     Write-Output "compiler=$($compiler.Version)"
-    & go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags='-s -w' -o $outputPath ./cmd/planbridge
+    & go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags='-s -w' -o $outputPath ./cmd/occodebridge
     if ($LASTEXITCODE -ne 0) {
         throw "go build -buildmode=c-shared failed with exit code $LASTEXITCODE."
     }
@@ -117,13 +117,13 @@ try {
     Write-Output ("Built {0} ({1} bytes) sha256={2}" -f $artifact.FullName, $artifact.Length, $hash)
 
     if ($packageZip) {
-        $archive = Join-Path $repoRoot ("dist\planbridge_{0}_windows_amd64.zip" -f $version)
+        $archive = Join-Path $repoRoot ("dist\occodebridge_{0}_windows_amd64.zip" -f $version)
         if (Test-Path -LiteralPath $archive) { Remove-Item -LiteralPath $archive -Force }
         Compress-Archive -LiteralPath $artifact.FullName -DestinationPath $archive
         $zip = [IO.Compression.ZipFile]::OpenRead($archive)
         try {
-            if ($zip.Entries.Count -ne 1 -or $zip.Entries[0].FullName -ne 'planbridge.dll') {
-                throw 'The package must contain planbridge.dll at its root.'
+            if ($zip.Entries.Count -ne 1 -or $zip.Entries[0].FullName -ne 'occodebridge.dll') {
+                throw 'The package must contain occodebridge.dll at its root.'
             }
         } finally {
             $zip.Dispose()

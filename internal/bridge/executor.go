@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 type upstreamStream struct {
@@ -162,7 +162,7 @@ func (s *Service) openUpstream(payload any, deadline time.Time, diagnostics ...*
 	case <-timer.C:
 		return out, requestTimedOut("upstream request timed out")
 	case <-s.stopCh:
-		return out, bridgeUnavailable("PlanBridge is shutting down")
+		return out, bridgeUnavailable("OCcodeBridge is shutting down")
 	}
 	out.deadline = deadline
 	out.callbackID = callbackID
@@ -177,7 +177,7 @@ func (s *Service) openUpstream(payload any, deadline time.Time, diagnostics ...*
 	s.mu.Unlock()
 	if stopped {
 		s.closeUpstream(out.StreamID)
-		return out, bridgeUnavailable("PlanBridge is shutting down")
+		return out, bridgeUnavailable("OCcodeBridge is shutting down")
 	}
 	return out, nil
 }
@@ -565,7 +565,7 @@ func (s *Service) executeStream(r ExecutorRequest) (any, error) {
 		}
 		defer func() {
 			if recover() != nil {
-				err = fail(500, "PlanBridge stream processing failed")
+				err = fail(500, "OCcodeBridge stream processing failed")
 			}
 			if !started && err == nil {
 				err = upstreamProtocolFailure("upstream stream ended before any completion frame")

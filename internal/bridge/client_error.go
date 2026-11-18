@@ -161,7 +161,7 @@ func (s *Service) hostErrorDetails(err error, stream bool) (string, int) {
 	if policy.Stop {
 		if policy.Explicit {
 			message = "Plugin error rule stops this request"
-			for _, marker := range []string{rateLimitMarker, quotaBlockMarker, "[planbridge:egress_unavailable]", "[planbridge:ip_rate_limit]"} {
+			for _, marker := range []string{rateLimitMarker, quotaBlockMarker, "[occodebridge:egress_unavailable]", "[occodebridge:ip_rate_limit]"} {
 				if strings.Contains(safeError(err), marker) {
 					message = marker + " " + message
 				}
@@ -193,9 +193,9 @@ func (s *Service) hostErrorDetails(err error, stream bool) (string, int) {
 	case upstreamStreamIdleTimeoutKind:
 		marker = "i/o timeout"
 	case upstreamNetworkKind, upstreamCallbackKind:
-		marker = "[planbridge:cpa_compat:connection aborted]"
+		marker = "[occodebridge:cpa_compat:connection aborted]"
 	default:
-		marker = "[planbridge:cpa_compat:server misbehaving]"
+		marker = "[occodebridge:cpa_compat:server misbehaving]"
 	}
 	if !strings.Contains(strings.ToLower(message), strings.ToLower(marker)) {
 		message += ": " + marker

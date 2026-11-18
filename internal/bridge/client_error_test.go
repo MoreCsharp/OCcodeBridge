@@ -124,7 +124,7 @@ func TestHostErrorDetailsAvoidsCooldownBeforeStreamHandoff(t *testing.T) {
 		for _, status := range []int{502, 504} {
 			err := fail(status, "unclassified local failure")
 			message, gotStatus := s.HostErrorDetails(err)
-			if gotStatus != 0 || !strings.Contains(message, "[planbridge:cpa_compat:server misbehaving]") {
+			if gotStatus != 0 || !strings.Contains(message, "[occodebridge:cpa_compat:server misbehaving]") {
 				t.Fatalf("unclassified fault missed default exemption: status=%d message=%q", gotStatus, message)
 			}
 		}

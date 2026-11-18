@@ -1,4 +1,4 @@
-// Package vendors defines the contract between the PlanBridge request path and a
+// Package vendors defines the contract between the OCcodeBridge request path and a
 // subscription vendor (OpenCode Go, CommandCode). It deliberately does not import
 // internal/bridge: the bridge adapts its own types to these, so a vendor package
 // can be developed and tested without touching executor, quota or UI code.

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 // unimplementedVendorID is a vendor that exists only to test the bridge's

@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const quotaBlockMarker = "[planbridge:quota_block]"
+const quotaBlockMarker = "[occodebridge:quota_block]"
 
 // A quota block is either a real window exhaustion, which usage polling can
 // clear, or a plan without API access, which it cannot.

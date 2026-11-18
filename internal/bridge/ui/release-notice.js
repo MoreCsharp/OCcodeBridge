@@ -6,8 +6,8 @@ const releaseNoticeModule = (() => {
   const versionLabel = document.getElementById('releaseNoticeVersion');
   const service = location.origin + location.pathname.replace(/\/+$/, '');
   const noticeRevision = dialog.dataset.noticeRevision?.trim() || '1';
-  const storageKey = `planbridge:notice:${service}:${encodeURIComponent(noticeRevision)}`;
-  const legacyPrefix = `planbridge:release-notice:${service}:`;
+  const storageKey = `occodebridge:notice:${service}:${encodeURIComponent(noticeRevision)}`;
+  const legacyPrefix = `occodebridge:release-notice:${service}:`;
   let currentVersion = '';
   let dismissed = false;
   let presented = false;

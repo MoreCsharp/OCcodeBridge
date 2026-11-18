@@ -1,10 +1,10 @@
 $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 
-# One-shot repository check for PlanBridge: format, vet, build, Go tests, console tests.
+# One-shot repository check for OCcodeBridge: format, vet, build, Go tests, console tests.
 #
 # Nothing here needs a C compiler, network access or a real API key: the cgo
-# entry point in cmd/planbridge is excluded when CGO_ENABLED=0, so the business
+# entry point in cmd/occodebridge is excluded when CGO_ENABLED=0, so the business
 # packages stay testable anywhere. Use scripts/build-windows.ps1 for the native
 # plugin build.
 #

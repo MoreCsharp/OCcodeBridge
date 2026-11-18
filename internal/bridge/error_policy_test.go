@@ -30,7 +30,7 @@ func errorPolicyRequestCases() []errorPolicyRequestCase {
 		{"protocol", "server misbehaving", upstreamProtocolFailure("invalid SSE response"), 0},
 		{"callback", "connection aborted", hostHTTPFault(errors.New("HTTP/2 INTERNAL_ERROR"), nil, "upstream stream interrupted"), 0},
 		{"network", "connection aborted", upstreamNetworkFailure("eof", "upstream stream closed before [DONE]"), 0},
-		{"shutdown", "server misbehaving", bridgeUnavailable("PlanBridge is shutting down"), 0},
+		{"shutdown", "server misbehaving", bridgeUnavailable("OCcodeBridge is shutting down"), 0},
 		{"cancel", "context canceled", requestCanceled("client disconnected"), 0},
 		{"deadline", "context deadline exceeded", requestTimedOut("upstream deadline elapsed"), 0},
 		{"response_limit", "message_too_big", responseLimitFailure("upstream response exceeds configured limit"), 413},
@@ -67,7 +67,7 @@ func TestErrorPolicyRequestWireBoundaries(t *testing.T) {
 					if err := json.Unmarshal([]byte(message), &body); err != nil || body.Error.Type != "invalid_request_error" || body.Error.Code != "message_too_big" || !strings.HasPrefix(body.Error.Message, "HTTP 413:") {
 						t.Fatalf("response limit is not a deterministic client fault: %q (%v)", message, err)
 					}
-				} else if tc.name != "cancel" && tc.name != "deadline" && !strings.Contains(message, "[planbridge:cpa_compat:") {
+				} else if tc.name != "cancel" && tc.name != "deadline" && !strings.Contains(message, "[occodebridge:cpa_compat:") {
 					t.Fatalf("missing explicit compatibility tag: %q", message)
 				}
 				s.closeOutputStream("fixture", "", &LogEntry{ErrorPhase: "after_output"}, wrapped)

@@ -11,11 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 const Version = "0.1.0"
-const PluginID = "planbridge"
+const PluginID = "occodebridge"
 
 // Provider is the single CPA provider id this plugin registers; the subscription
 // vendor is a per-credential choice, not a second provider.
@@ -118,8 +118,8 @@ func requestErrorRules() []RequestErrorRule {
 		{Status: 500, Match: []string{"empty response content"}, Action: "stop"},
 		{Status: 429, Match: []string{rateLimitMarker}, Action: "stop"},
 		{Status: 429, Match: []string{quotaBlockMarker}, Action: "continue"},
-		{Status: 429, Match: []string{"[planbridge:egress_unavailable]"}, Action: "stop"},
-		{Status: 429, Match: []string{"[planbridge:ip_rate_limit]"}, Action: "stop"},
+		{Status: 429, Match: []string{"[occodebridge:egress_unavailable]"}, Action: "stop"},
+		{Status: 429, Match: []string{"[occodebridge:ip_rate_limit]"}, Action: "stop"},
 	}
 }
 
@@ -153,7 +153,7 @@ type Config struct {
 // A fresh install ships no model mapping and no base URL override: the operator
 // adds the models their subscriptions actually offer, and each vendor owns its base.
 func defaultConfig() Config {
-	return Config{DataDir: "plugins/planbridge-data", NonstreamMode: "stream-aggregate", ClientRetryCompatibility: true, PauseOnWindowLimit: true, StreamIdleCutoffEnabled: false, StreamIdleTimeoutSeconds: 20, TimeoutSeconds: 600, LogRetention: 1000, MaxResponseBytes: 64 << 20}
+	return Config{DataDir: "plugins/occodebridge-data", NonstreamMode: "stream-aggregate", ClientRetryCompatibility: true, PauseOnWindowLimit: true, StreamIdleCutoffEnabled: false, StreamIdleTimeoutSeconds: 20, TimeoutSeconds: 600, LogRetention: 1000, MaxResponseBytes: 64 << 20}
 }
 
 // Scalar settings support partial updates, but supplied collections replace the

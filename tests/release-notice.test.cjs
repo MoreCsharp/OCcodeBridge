@@ -8,7 +8,7 @@ const source = fs.readFileSync(path.join(__dirname, '../internal/bridge/ui/relea
 const markup = fs.readFileSync(path.join(__dirname, '../internal/bridge/ui/index.html'), 'utf8');
 const publishedRevision = markup.match(/<dialog id="releaseNoticeDialog" data-notice-revision="([^"]+)"/)[1];
 
-function page({ store = new Map(), blockedStorage = false, pathname = '/v0/resource/plugins/planbridge/console', authOpen = false, noticeRevision = publishedRevision } = {}) {
+function page({ store = new Map(), blockedStorage = false, pathname = '/v0/resource/plugins/occodebridge/console', authOpen = false, noticeRevision = publishedRevision } = {}) {
   const pending = [];
   const nodes = new Map();
   const documentEvents = new Map();
@@ -105,7 +105,7 @@ test('first visit presents once; dismissal persists across refresh and plugin up
   const upgraded = page({ store: first.store });
   upgraded.update('0.20.0');
   assert.equal(upgraded.dialog.open, false);
-  const otherService = page({ store: first.store, pathname: '/other/v0/resource/plugins/planbridge/console' });
+  const otherService = page({ store: first.store, pathname: '/other/v0/resource/plugins/occodebridge/console' });
   otherService.update('0.18.0');
   assert.equal(otherService.dialog.open, true);
 });
@@ -140,14 +140,14 @@ test('only an explicitly published new notice revision prompts existing readers 
 });
 
 test('initial revision inherits this service legacy dismissals; later revisions do not', () => {
-  const legacyKey = 'planbridge:release-notice:https://cpa.example/v0/resource/plugins/planbridge/console:0.18.0';
+  const legacyKey = 'occodebridge:release-notice:https://cpa.example/v0/resource/plugins/occodebridge/console:0.18.0';
   const store = new Map([[legacyKey, '1']]);
   const migrated = page({ store, noticeRevision: '1' });
   migrated.update('1.0');
   assert.equal(migrated.dialog.open, false);
   assert.equal(migrated.unread(), false);
   const [newKey] = [...store.keys()].filter(key => key !== legacyKey);
-  assert.ok(newKey.startsWith('planbridge:notice:'));
+  assert.ok(newKey.startsWith('occodebridge:notice:'));
   store.delete(legacyKey);
   const refreshed = page({ store, noticeRevision: '1' });
   refreshed.update('2.0');
@@ -228,7 +228,7 @@ test('blocked storage still acknowledges within this page and cross-tab acknowle
 });
 
 test('cross-tab legacy dismissal migrates only the initial revision and ignores other services', () => {
-  const legacyKey = 'planbridge:release-notice:https://cpa.example/v0/resource/plugins/planbridge/console:0.18.0';
+  const legacyKey = 'occodebridge:release-notice:https://cpa.example/v0/resource/plugins/occodebridge/console:0.18.0';
   for (const noticeRevision of ['1', '2']) {
     const pending = page({ authOpen: true, noticeRevision });
     pending.update('1.0');

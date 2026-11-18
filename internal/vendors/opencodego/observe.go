@@ -3,7 +3,7 @@ package opencodego
 import (
 	"encoding/json"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 // ObserveResponse reads the allowance Go reports for one request: how much of the

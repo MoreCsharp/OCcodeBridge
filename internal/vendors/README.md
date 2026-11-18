@@ -1,6 +1,6 @@
 # internal/vendors 契约
 
-`internal/vendors` 是 PlanBridge 与订阅厂商之间的唯一边界。**本包及其子包不得 import `internal/bridge`**，这样每个厂商包可以由不同的人并行开发、测试，而互不影响。
+`internal/vendors` 是 OCcodeBridge 与订阅厂商之间的唯一边界。**本包及其子包不得 import `internal/bridge`**，这样每个厂商包可以由不同的人并行开发、测试，而互不影响。
 
 ## 谁负责什么
 
@@ -26,7 +26,7 @@ type Vendor interface {
 
 - `ID()`：凭据上保存的厂商 id（`opencode-go` / `commandcode`），也是模型 UpstreamID 的前缀。目录必须叫 `vendors` 而不是 `vendor`：Go 会拒绝导入名为 `vendor` 的子目录。
 - `BaseURL()`：推理 base，例如 `https://opencode.ai/inference/go/v1`；路径由 bridge 追加（`/chat/completions`、`/models`）。`Config.BaseURLOverrides[ID()]` 非空时只覆盖该厂商的推理 base（只用于测试与自建代理），用量与目录接口始终用厂商自己的地址。
-- `Headers(Request)`：只返回厂商拥有的头。`User-Agent`、`Content-Type` 由 bridge 补齐（UA 固定为 `PlanBridge/<Version>`），vendor 返回同名头则以 vendor 为准。
+- `Headers(Request)`：只返回厂商拥有的头。`User-Agent`、`Content-Type` 由 bridge 补齐（UA 固定为 `OCcodeBridge/<Version>`），vendor 返回同名头则以 vendor 为准。
 - `ListModels`：返回目录，`Model.UpstreamID` 必须带前缀（用 `vendors.UpstreamID(ID(), id)`）。只返回可用的模型；不支持的端点模型要么不返回，要么把 `Endpoints` 如实填好，由 bridge 过滤。
 - `FetchUsage`：返回 `Usage`。**缺字段必须留 nil，不得补 0**，否则界面会把"未知"显示成"已用尽"。`AccountID` 用于把同一订阅的多个 key 归并成一个样本。
 - `ClassifyLimitError`：只在**窗口额度耗尽**或**套餐无法访问 API** 时返回 `*LimitBlock`；普通瞬时限流、鉴权失败一律返回 nil。`Permanent: true` 表示用量轮询也无法恢复（例如 CommandCode 的 403 `upgrade_required`），bridge 会持久停用而不是冷却。

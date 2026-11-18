@@ -15,7 +15,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 var secretPattern = regexp.MustCompile(`(?i)(?:bearer\s+|sk[-_])[a-z0-9_.-]+`)
@@ -203,11 +203,11 @@ func (s *Service) Handle(method string, raw json.RawMessage) (any, error) {
 	case "executor.identifier", "auth.identifier", "quota.identifier":
 		return map[string]any{"identifier": Provider}, nil
 	case "quota.describe":
-		return map[string]any{"supported_providers": []string{Provider}, "display_name": "PlanBridge", "supports_reset": false}, nil
+		return map[string]any{"supported_providers": []string{Provider}, "display_name": "OCcodeBridge", "supports_reset": false}, nil
 	case "quota.fetch":
 		return s.fetchQuota(raw)
 	case "quota.reset":
-		return map[string]any{"success": false, "message": "PlanBridge does not support resetting upstream quota"}, nil
+		return map[string]any{"success": false, "message": "OCcodeBridge does not support resetting upstream quota"}, nil
 	case "model.static":
 		return s.modelRegistration(), nil
 	case "model.for_auth":
@@ -215,7 +215,7 @@ func (s *Service) Handle(method string, raw json.RawMessage) (any, error) {
 	case "auth.parse":
 		return s.parseAuth(raw)
 	case "auth.login.start":
-		return nil, fail(400, "Import a subscription API key from PlanBridge credentials; interactive OAuth is not used")
+		return nil, fail(400, "Import a subscription API key from OCcodeBridge credentials; interactive OAuth is not used")
 	case "auth.login.poll":
 		return map[string]any{"Status": "error", "Message": "Use API key import"}, nil
 	case "auth.refresh":
@@ -232,9 +232,9 @@ func (s *Service) Handle(method string, raw json.RawMessage) (any, error) {
 	case "executor.count_tokens":
 		// Stock CPA treats a missing count endpoint as availability-neutral;
 		// 501 would cool down an otherwise usable credential/model.
-		return nil, &APIError{404, countTokensUnavailableKind, "PlanBridge does not expose an exact token counting endpoint"}
+		return nil, &APIError{404, countTokensUnavailableKind, "OCcodeBridge does not expose an exact token counting endpoint"}
 	case "executor.http_request":
-		return nil, fail(400, "Use the PlanBridge model executor")
+		return nil, fail(400, "Use the OCcodeBridge model executor")
 	case "management.register":
 		return s.registerManagement(raw)
 	case "management.handle":
@@ -271,7 +271,7 @@ func (s *Service) begin() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if s.stopped {
-		return bridgeUnavailable("PlanBridge is shutting down")
+		return bridgeUnavailable("OCcodeBridge is shutting down")
 	}
 	s.active.Add(1)
 	return nil
@@ -302,7 +302,7 @@ func (s *Service) refreshRegistrations() error {
 
 func registration() any {
 	// Static registration would keep models advertised after every account is disabled.
-	return map[string]any{"schema_version": 6, "metadata": map[string]any{"Name": "PlanBridge", "Version": Version, "Author": "xiao-qiu-qiu", "GitHubRepository": "https://github.com/xiao-qiu-qiu/PlanBridge", "Description": "OpenCode Go / CommandCode subscription adapter with reliable streaming, usage windows and request logs", "ConfigFields": []map[string]any{{"Name": "data_dir", "Type": "string", "Description": "Persistent plugin state directory"}}}, "capabilities": map[string]any{"auth_provider": true, "model_provider": true, "executor": true, "executor_model_scope": "oauth", "executor_input_formats": []string{"chat-completions"}, "executor_output_formats": []string{"chat-completions"}, "management_api": true, "quota_provider": true}}
+	return map[string]any{"schema_version": 6, "metadata": map[string]any{"Name": "OCcodeBridge", "Version": Version, "Author": "xiao-qiu-qiu", "GitHubRepository": "https://github.com/xiao-qiu-qiu/OCcodeBridge", "Description": "OpenCode Go / CommandCode subscription adapter with reliable streaming, usage windows and request logs", "ConfigFields": []map[string]any{{"Name": "data_dir", "Type": "string", "Description": "Persistent plugin state directory"}}}, "capabilities": map[string]any{"auth_provider": true, "model_provider": true, "executor": true, "executor_model_scope": "oauth", "executor_input_formats": []string{"chat-completions"}, "executor_output_formats": []string{"chat-completions"}, "management_api": true, "quota_provider": true}}
 }
 func (s *Service) modelRegistration() any {
 	return s.modelRegistrationForVendor("")
@@ -344,7 +344,7 @@ func (s *Service) resolveModel(model string) (string, error) {
 			return m.UpstreamID, nil
 		}
 	}
-	return "", fail(400, "model is not enabled in PlanBridge: "+model)
+	return "", fail(400, "model is not enabled in OCcodeBridge: "+model)
 }
 func authData(c Credential, filename string) any {
 	// Metadata and stored auth JSON must agree, including after hot reload.
@@ -388,7 +388,7 @@ func (s *Service) parseAuth(raw json.RawMessage) (any, error) {
 		return map[string]any{"Handled": false}, nil
 	}
 	if c.APIKey == "" {
-		return nil, fail(401, "PlanBridge credential has no api_key")
+		return nil, fail(401, "OCcodeBridge credential has no api_key")
 	}
 	if c.ID == "" {
 		c.ID = strings.TrimSuffix(r.FileName, ".json")
@@ -452,7 +452,7 @@ func (s *Service) refreshAuth(raw json.RawMessage) (any, error) {
 	revoked := s.revoked[c.ID]
 	s.mu.RUnlock()
 	if revoked {
-		return nil, fail(401, "PlanBridge credential was removed")
+		return nil, fail(401, "OCcodeBridge credential was removed")
 	}
 	if filename == "" {
 		filename = c.ID + ".json"
@@ -480,7 +480,7 @@ func (s *Service) selectedCredential(r ExecutorRequest) (Credential, error) {
 	revoked := s.revoked[c.ID] || s.revoked[r.AuthID]
 	s.mu.RUnlock()
 	if c.APIKey == "" || c.Disabled || revoked {
-		return c, fail(401, "PlanBridge credential is missing or disabled")
+		return c, fail(401, "OCcodeBridge credential is missing or disabled")
 	}
 	// The vendor decides the upstream, so a credential without one cannot be
 	// scheduled; the console asks the operator to pick it.
@@ -492,9 +492,9 @@ func (s *Service) selectedCredential(r ExecutorRequest) (Credential, error) {
 		if block.RetryAt != nil {
 			retryAt = *block.RetryAt
 		}
-		message := quotaBlockMarker + " PlanBridge account quota exhausted; waiting for a successful usage check"
+		message := quotaBlockMarker + " OCcodeBridge account quota exhausted; waiting for a successful usage check"
 		if block.Permanent {
-			message = quotaBlockMarker + " PlanBridge plan does not provide API access; re-check the credential after the plan changes"
+			message = quotaBlockMarker + " OCcodeBridge plan does not provide API access; re-check the credential after the plan changes"
 		}
 		return c, &upstreamError{APIError: &APIError{429, "quota_blocked", message}, Local: true, Scope: "account", RetryAt: retryAt}
 	}

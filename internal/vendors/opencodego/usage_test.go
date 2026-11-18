@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 // fetchFixture serves one usage fixture and runs FetchUsage against it.

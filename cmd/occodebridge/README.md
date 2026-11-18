@@ -1,9 +1,9 @@
-# PlanBridge C ABI 入口
+# OCcodeBridge C ABI 入口
 
 本目录将 `internal/bridge.Service` 接到 CLIProxyAPI 的原生插件 ABI v1（已在官方 v8.0.67 上做过原生验收）。编译目标是动态库，例如 Linux amd64：
 
 ```bash
-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags="-s -w" -o planbridge.so ./cmd/planbridge
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags="-s -w" -o occodebridge.so ./cmd/occodebridge
 ```
 
 Windows 用 `scripts/build-windows.ps1`，macOS 与 Linux arm64 的构建参数见发布工作流。

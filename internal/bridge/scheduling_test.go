@@ -54,7 +54,7 @@ func TestSchedulingQuotaManualStateAndHostProjection(t *testing.T) {
 		if method != "host.auth.list" {
 			t.Fatalf("unexpected scheduling callback: %s", method)
 		}
-		return json.Unmarshal([]byte(`{"files":[{"name":"quota.json","provider":"planbridge","disabled":true,"status":"disabled"},{"name":"manual.json","provider":"planbridge","disabled":true,"status":"disabled"}]}`), out)
+		return json.Unmarshal([]byte(`{"files":[{"name":"quota.json","provider":"occodebridge","disabled":true,"status":"disabled"},{"name":"manual.json","provider":"occodebridge","disabled":true,"status":"disabled"}]}`), out)
 	})
 	result, err := s.schedulingResponse()
 	if err != nil {

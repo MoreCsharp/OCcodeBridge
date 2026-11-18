@@ -83,7 +83,7 @@ func (f *affinityFixture) watch() ([]runtimeAuth, error) {
 	var entries []runtimeAuth
 	for _, file := range files {
 		// CPA recursively ignores .bak files, including private recovery copies.
-		if file.IsDir() && file.Name() == ".planbridge-affinity-backups" {
+		if file.IsDir() && file.Name() == ".occodebridge-affinity-backups" {
 			continue
 		}
 		if file.IsDir() || !strings.HasSuffix(file.Name(), ".json") {
@@ -181,7 +181,7 @@ func assertAffinityRuntime(t *testing.T, f *affinityFixture, want map[string]str
 
 func assertAffinityBackup(t *testing.T, f *affinityFixture) {
 	t.Helper()
-	root := filepath.Join(f.s.authDir, ".planbridge-affinity-backups")
+	root := filepath.Join(f.s.authDir, ".occodebridge-affinity-backups")
 	dirs, err := os.ReadDir(root)
 	if err != nil || len(dirs) != 1 {
 		t.Fatalf("backup directories = %d, err = %v, want one", len(dirs), err)
@@ -305,7 +305,7 @@ func TestClearAffinityRejectsBeforeWriting(t *testing.T) {
 			if f.calls != wantCalls {
 				t.Fatalf("host list calls = %d, want %d", f.calls, wantCalls)
 			}
-			if _, err := os.Stat(filepath.Join(f.s.authDir, ".planbridge-affinity-backups")); !os.IsNotExist(err) {
+			if _, err := os.Stat(filepath.Join(f.s.authDir, ".occodebridge-affinity-backups")); !os.IsNotExist(err) {
 				t.Fatalf("rejected request created backups: %v", err)
 			}
 		})
@@ -366,7 +366,7 @@ func TestClearAffinityRollbackPreservesExternalEdit(t *testing.T) {
 		t.Fatal("rollback overwrote the external edit")
 	}
 	assertAffinityFields(t, f.original["migrated-b.json"], files["migrated-b.json"])
-	if !bytes.Contains(response.Body, []byte(".planbridge-affinity-backups")) {
+	if !bytes.Contains(response.Body, []byte(".occodebridge-affinity-backups")) {
 		t.Fatal("partial rollback response omitted recovery location")
 	}
 	assertAffinityBackup(t, f)

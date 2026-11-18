@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 // modelsPath is appended to BaseURL for the catalog.

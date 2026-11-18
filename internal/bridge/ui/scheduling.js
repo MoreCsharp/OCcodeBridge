@@ -76,8 +76,8 @@ function credentialModelCooldowns(account) {
 function schedulingReason(message) {
   const text = String(message || '');
   if (/TransferEncodingError|Not enough data to satisfy transfer length header/i.test(text)) return '上游响应截断';
-  if (/\[planbridge:team_tpm_limit\]/.test(text)) return '上游团队限流';
-  if (/\[planbridge:ip_rate_limit\]/.test(text)) return '出口 IP 限流';
+  if (/\[occodebridge:team_tpm_limit\]/.test(text)) return '上游团队限流';
+  if (/\[occodebridge:ip_rate_limit\]/.test(text)) return '出口 IP 限流';
   if (/empty response content/i.test(text)) return '上游返回空内容';
   if (/context canceled|client disconnected/i.test(text)) return '客户端已断开';
   const firstLine = text.split(/\r?\n/)[0];

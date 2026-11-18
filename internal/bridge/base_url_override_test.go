@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 func TestInferenceBaseOverridesOnlyItsOwnVendor(t *testing.T) {

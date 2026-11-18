@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 // fixture reads an upstream response body from testdata.

@@ -18,15 +18,15 @@ const modules = {
 for (const [marker, file] of Object.entries(modules)) {
   html = html.replace(marker, fs.readFileSync(path.join(root, file), 'utf8'));
 }
-html = html.replace('__PLANBRIDGE_API_BASE__', '/v0/management/planbridge');
-html = html.replace('__PLANBRIDGE_LOGO_DATA__', 'data:image/png;base64,');
+html = html.replace('__OCCODEBRIDGE_API_BASE__', '/v0/management/occodebridge');
+html = html.replace('__OCCODEBRIDGE_LOGO_DATA__', 'data:image/png;base64,');
 
 const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]);
 if (!scripts.length) {
   console.error('no inline script found');
   process.exit(1);
 }
-const file = path.join(os.tmpdir(), `planbridge-inline-${process.pid}.js`);
+const file = path.join(os.tmpdir(), `occodebridge-inline-${process.pid}.js`);
 fs.writeFileSync(file, scripts.join('\n;\n'));
 try {
   execFileSync(process.execPath, ['--check', file], { stdio: 'inherit' });

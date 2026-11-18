@@ -8,7 +8,7 @@
 
 兼容 CPA 管理前端 v1.27.0 的新登录存储格式，也保留旧版 CPA 和 CPAMP 的读取方式。该版管理前端升级时会清除旧登录记录，需要先在管理中心重新登录并勾选「记住密码」，插件才能自动复用。具体变更见[上游登录存储更新](https://github.com/router-for-me/Cli-Proxy-API-Management-Center/commit/1650cf2f726685da188237eda9e5345d0bd15354)。
 
-支持通过子目录反向代理访问：例如管理页位于 `/my-cpa/v0/resource/plugins/planbridge/console` 时，管理请求会自动使用 `/my-cpa/v0/management/planbridge/`。多级子目录同样适用，保存的管理密钥也按当前子目录隔离。
+支持通过子目录反向代理访问：例如管理页位于 `/my-cpa/v0/resource/plugins/occodebridge/console` 时，管理请求会自动使用 `/my-cpa/v0/management/occodebridge/`。多级子目录同样适用，保存的管理密钥也按当前子目录隔离。
 
 手动输入的密钥通过验证后才会保存，默认保留到标签页会话结束。勾选「在此浏览器记住管理密钥」后保存在当前站点的 `localStorage`，按服务地址和代理路径区分。「清除密钥」或收到 401 时会删除插件保存的对应密钥。
 
@@ -19,10 +19,10 @@
 | 位置 | 内容 |
 | --- | --- |
 | CPA 的 `auth-dir` | API Key、厂商、优先级等凭据数据 |
-| 插件数据目录，默认 `plugins/planbridge-data` | 模型映射、设置、日志和统计 |
+| 插件数据目录，默认 `plugins/occodebridge-data` | 模型映射、设置、日志和统计 |
 | 插件目录，默认 `plugins` | 插件动态库 |
 
-「重新分配会话」会让 CPA 清除本插件账号的旧绑定，后续请求按当前优先级重新选择账号，正在生成的回复继续完成。凭据恢复副本保存在 `auth-dir/.planbridge-affinity-backups/`，其中包含密钥，随凭据目录一起保管。
+「重新分配会话」会让 CPA 清除本插件账号的旧绑定，后续请求按当前优先级重新选择账号，正在生成的回复继续完成。凭据恢复副本保存在 `auth-dir/.occodebridge-affinity-backups/`，其中包含密钥，随凭据目录一起保管。
 
 ## 厂商与模型映射
 
@@ -57,7 +57,7 @@ base_url_overrides:
 {"base_url_overrides":{"commandcode":"https://proxy.example/commandcode/provider/v1"}}
 ```
 
-键必须是已知厂商 ID（`opencode-go`、`commandcode`），值只能是不带凭据、查询串或 fragment 的 `http(s)` 地址，否则保存返回 400。键存在时整张表替换，键不存在时保留已保存的值，所以 `PUT /v0/management/planbridge/config` 可以只提交其他字段。
+键必须是已知厂商 ID（`opencode-go`、`commandcode`），值只能是不带凭据、查询串或 fragment 的 `http(s)` 地址，否则保存返回 400。键存在时整张表替换，键不存在时保留已保存的值，所以 `PUT /v0/management/occodebridge/config` 可以只提交其他字段。
 
 旧版的全局 `base_url` 字段不再读取，也不会写回：它曾同时改写两家上游，遗留的旧上游地址会被直接忽略，请改用 `base_url_overrides`。`base_url_overrides` 只影响推理地址；厂商的用量与模型目录接口始终使用各厂商自己的地址。
 
@@ -94,7 +94,7 @@ models:
         medium: high
 ```
 
-管理接口为 `PUT /v0/management/planbridge/models/reasoning`，请求示例：
+管理接口为 `PUT /v0/management/occodebridge/models/reasoning`，请求示例：
 
 ```json
 {
@@ -130,9 +130,9 @@ models:
 
 停止不等于永久禁用，继续仍受可用候选和重试限制影响。表中行为以 CPA 实际收到的状态码和错误文本命中规则为前提。原版 CPA 的字符串流错误会丢失状态，调度匹配时可能视为无状态错误；对外默认封装为 500，也不代表匹配到了 500 规则。文案中的 `HTTP 502` 不会恢复规则匹配的状态。冷却时长由错误类型、上游 `Retry-After` 和 CPA 配置决定；插件自身的额度暂停与限流保护独立生效。
 
-「恢复默认规则」只修改草稿，保存后恢复五条默认规则。清空规则并保存会清除所有插件账号的单凭据规则，由 CPA 使用适用的继承规则或默认错误处理。统一管理只作用于 PlanBridge 凭据，使用原版 CPA 的 `request_scoped_errors` 接口。已有凭据中的该字段继续保留，显式保存统一规则时按所保存规则更新；CPA 单凭据页面的修改可能被插件后续刷新覆盖。
+「恢复默认规则」只修改草稿，保存后恢复五条默认规则。清空规则并保存会清除所有插件账号的单凭据规则，由 CPA 使用适用的继承规则或默认错误处理。统一管理只作用于 OCcodeBridge 凭据，使用原版 CPA 的 `request_scoped_errors` 接口。已有凭据中的该字段继续保留，显式保存统一规则时按所保存规则更新；CPA 单凭据页面的修改可能被插件后续刷新覆盖。
 
-管理 API 前缀为 `/v0/management/planbridge`：`GET /error-rules` 查询当前规则、默认规则和同步结果；`PUT /error-rules` 接收 `{"rules":[...]}`；`POST /error-rules/sync` 接收 `{}`，重新同步；`POST /error-rules/reset` 接收 `{}`，直接恢复并同步默认规则。规则使用 `status`、`action`、`match`（文本数组）和 `match-regexr`（正则数组）。部分账号同步失败仍返回 200，通过 `sync.failed` 列出；统一配置保存失败返回错误并保留旧配置。
+管理 API 前缀为 `/v0/management/occodebridge`：`GET /error-rules` 查询当前规则、默认规则和同步结果；`PUT /error-rules` 接收 `{"rules":[...]}`；`POST /error-rules/sync` 接收 `{}`，重新同步；`POST /error-rules/reset` 接收 `{}`，直接恢复并同步默认规则。规则使用 `status`、`action`、`match`（文本数组）和 `match-regexr`（正则数组）。部分账号同步失败仍返回 200，通过 `sync.failed` 列出；统一配置保存失败返回错误并保留旧配置。
 
 ## 请求与模型测试
 
@@ -142,7 +142,7 @@ models:
 
 请求超时新装默认 600 秒，可在「请求与日志设置」调整，范围为 10–1800 秒。升级保留已有值，旧设置为 180 秒时需要手动修改。
 
-「配置概览 → 请求与日志设置」中的「最大响应大小 (MiB)」可调整响应上限，范围为 0.0625–64 MiB（1 MiB = 1,048,576 字节），转换后的字节数须为整数。配置字段 `max_response_bytes` 以字节整数保存，范围为 65,536–67,108,864；新装或旧配置缺少该字段时默认 64 MiB。已保存的值继续保留，旧用户原有 16 MiB 上限需要在此手动调整并保存。`PUT /v0/management/planbridge/config` 支持单独提交该字段，例如 `{"max_response_bytes":67108864}`，其他设置保持原值；闲置截流开关仍默认关闭。
+「配置概览 → 请求与日志设置」中的「最大响应大小 (MiB)」可调整响应上限，范围为 0.0625–64 MiB（1 MiB = 1,048,576 字节），转换后的字节数须为整数。配置字段 `max_response_bytes` 以字节整数保存，范围为 65,536–67,108,864；新装或旧配置缺少该字段时默认 64 MiB。已保存的值继续保留，旧用户原有 16 MiB 上限需要在此手动调整并保存。`PUT /v0/management/occodebridge/config` 支持单独提交该字段，例如 `{"max_response_bytes":67108864}`，其他设置保持原值；闲置截流开关仍默认关闭。
 
 非流式模式可选：
 
@@ -160,7 +160,7 @@ models:
 
 免新增冷却与此开关独立。插件按错误来源和结构化状态分类，对已归为请求范围的响应截断、闲置截流、网络/HTTP 回调失败、响应协议错误及上游 5xx，使用原版 CPA 的传输错误兼容路径，避免因本次故障新增账号/模型冷却。鉴权、402、429、套餐额度和团队限流优先保留原处置，包括被外层 502 包裹的明确受保护状态。该行为以插件实际分类和宿主识别为前提，不泛指所有 LiteLLM 错误或所有瞬时故障。CPA 与客户端分别按自身预算重试。详见 [兼容性说明](cpa-compatibility.md)。
 
-已核对的原版 CPA v8.0.13、v8.0.29 流错误接口只传字符串。插件对上述已分类的请求故障使用 EOF/timeout 识别词或明确的 `[planbridge:cpa_compat:...]` 标签，并在对应 RPC 错误中省略内部 `http_status`（0 表示缺失）；除下述 Chat Completions 兼容结构外，下游由 CPA 默认封装为 500，已开始的 HTTP 200 通过 SSE error 结束，插件日志保留内部状态。此类 RPC 故障不再匹配自定义的 500/502 状态规则。兼容标签仅用于宿主分类，不表示已经确认底层断流原因。
+已核对的原版 CPA v8.0.13、v8.0.29 流错误接口只传字符串。插件对上述已分类的请求故障使用 EOF/timeout 识别词或明确的 `[occodebridge:cpa_compat:...]` 标签，并在对应 RPC 错误中省略内部 `http_status`（0 表示缺失）；除下述 Chat Completions 兼容结构外，下游由 CPA 默认封装为 500，已开始的 HTTP 200 通过 SSE error 结束，插件日志保留内部状态。此类 RPC 故障不再匹配自定义的 500/502 状态规则。兼容标签仅用于宿主分类，不表示已经确认底层断流原因。
 
 开启「重试兼容」时，原始请求路径为 `/v1/chat/completions`、已开始输出（`after_output`），且明确归为请求范围的 5xx、未命中显式规则或冷却/停止策略的流错误，使用单行 JSON：`error.type="server_error"`、`error.code="500"`。适用错误仅为 `upstream_service_error`，或内部网络子类型为 `eof` 的 `upstream_network_error`；EOF 依据传输错误类型、流完整性检查或已验证的结构化回调识别，不按报错文字猜测，其他网络故障沿用原编码。`message` 保留原兼容摘要和宿主分类标签。`500` 是供客户端识别的兼容业务码；已开始的 HTTP 200、日志原始状态/异常及 `error_details` 的真实 code/status 保持原语义。其他接口、缺少路径或关闭开关时沿用原编码。
 
@@ -185,7 +185,7 @@ models:
 | `stream_idle_cutoff_enabled` | `false` | 布尔值 |
 | `stream_idle_timeout_seconds` | `20` | 整数 1–1800 秒，关闭开关时也需有效 |
 
-首次安装或旧配置缺少字段时使用对应默认值：开关关闭、阈值 20 秒。显式保存的 `true`、`false` 和自定义秒数（例如 10 秒、200 秒）升级及重启后继续保留，不会随默认值变化而改写；此前已保存开启的配置仍保持开启。`PUT /v0/management/planbridge/config` 支持只提交这两个字段；与请求设置、重试兼容的独立保存互不覆盖。无效秒数返回 400，内存与已保存配置保持原值。例如，保存默认关闭、阈值 20 秒的设置：
+首次安装或旧配置缺少字段时使用对应默认值：开关关闭、阈值 20 秒。显式保存的 `true`、`false` 和自定义秒数（例如 10 秒、200 秒）升级及重启后继续保留，不会随默认值变化而改写；此前已保存开启的配置仍保持开启。`PUT /v0/management/occodebridge/config` 支持只提交这两个字段；与请求设置、重试兼容的独立保存互不覆盖。无效秒数返回 400，内存与已保存配置保持原值。例如，保存默认关闭、阈值 20 秒的设置：
 
 ```json
 {"stream_idle_cutoff_enabled": false, "stream_idle_timeout_seconds": 20}
@@ -195,11 +195,11 @@ models:
 
 向下游发送时暂停空闲预算，发送结束后继续剩余预算；不会把下游背压误算为上游无输出，也不会因一次元数据发送而重新获得完整等待窗口。请求总时长上限始终继续计时。非空的空格/换行仍按有效增量处理，本次修复不改变有效帧定义。
 
-`debug`（JSON / YAML 布尔值）默认 `false`，旧配置缺少该字段时也关闭。通过 `PUT /v0/management/planbridge/config` 部分更新 `{"debug":true}` 开启，提交 `{"debug":false}` 关闭，保存后重启保留。关闭时停止额外的流诊断采集，在途请求完成时也不写入 `stream_diagnostics`；闲置截流、核心错误、状态和用量照常记录。
+`debug`（JSON / YAML 布尔值）默认 `false`，旧配置缺少该字段时也关闭。通过 `PUT /v0/management/occodebridge/config` 部分更新 `{"debug":true}` 开启，提交 `{"debug":false}` 关闭，保存后重启保留。关闭时停止额外的流诊断采集，在途请求完成时也不写入 `stream_diagnostics`；闲置截流、核心错误、状态和用量照常记录。
 
 开启 debug 后，新 SSE 请求日志的 `stream_diagnostics` 记录本次阈值、扣除下游发送后的空闲时间、最后读到上游字节/完整帧的时间、首末有效输出类型，以及下游发送累计/最长等待。仅记录时间、计数和固定类型标签，不记录对话、思考正文或工具参数。`last_upstream_byte_at` 是插件读回调返回数据的时间，不是网卡收包时间；旧日志没有这些字段，不倒推为零等待。
 
-`GET /v0/management/planbridge/logs` 顶层返回当前 `debug` 布尔值。关闭时所有返回项隐藏 `stream_diagnostics`，磁盘中的既有历史保留，再次开启后可显示；关闭期间完成的请求不补采诊断。
+`GET /v0/management/occodebridge/logs` 顶层返回当前 `debug` 布尔值。关闭时所有返回项隐藏 `stream_diagnostics`，磁盘中的既有历史保留，再次开启后可显示；关闭期间完成的请求不补采诊断。
 
 开启提前截流后，对所有上游 SSE 请求生效，包括向客户端流式输出、`stream-aggregate` 非流式聚合及 `native-fallback` 回退到 SSE 的阶段。`native` 原生非流式阶段不适用。它按实际输出空闲判断，不预知 LiteLLM 是否会失败。
 
@@ -234,7 +234,7 @@ models:
 插件区分团队 token 限流、普通请求频率限制和套餐耗尽，分别记录为 `upstream_team_rate_limited`、`upstream_rate_limited` 和 `upstream_quota_exhausted`。
 团队限流会按凭据和上游模型开启短期退避，同一上游的多个别名共享窗口。优先采用上游等待时间，缺失时等待 60 秒。窗口内直接返回限流，到期放行一次恢复探测；插件重载后重新探测。
 
-团队限流错误带 `[planbridge:team_tpm_limit]` 标识，供 CPA 请求级 `stop` 规则识别。该链路在 CPA v8.0.4 验证；普通 429、认证失败及套餐耗尽继续沿用宿主策略。通过原版 CPA 字符串流错误接口传递时按默认 500 封装，状态规则需以宿主实际收到的错误为准。
+团队限流错误带 `[occodebridge:team_tpm_limit]` 标识，供 CPA 请求级 `stop` 规则识别。该链路在 CPA v8.0.4 验证；普通 429、认证失败及套餐耗尽继续沿用宿主策略。通过原版 CPA 字符串流错误接口传递时按默认 500 封装，状态规则需以宿主实际收到的错误为准。
 
 排查时可查看日志中的 `error_kind`、`retry_at`、`rate_limit_scope`、`upstream_skipped` 和 `stream_end`，区分上游限流、本地拦截与流中断。
 

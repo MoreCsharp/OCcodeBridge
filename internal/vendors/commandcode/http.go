@@ -7,13 +7,13 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 // userAgent is sent on every vendor call. api.commandcode.ai answers 403 to a
 // request without a User-Agent (observed on the public /models endpoint), so the
 // vendor sets its own instead of leaving the header to the egress layer.
-const userAgent = "PlanBridge"
+const userAgent = "OCcodeBridge"
 
 // statusError carries the upstream HTTP status. The bridge reads it through its
 // own StatusCode interface, so a rejected key shows as unauthorized instead of a

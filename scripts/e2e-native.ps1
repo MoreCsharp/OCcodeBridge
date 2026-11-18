@@ -2,10 +2,10 @@ $ErrorActionPreference='Stop'
 Set-StrictMode -Version Latest
 
 # Native acceptance: run one real CLIProxyAPI host with the freshly built
-# PlanBridge DLL and drive a complete request through it.
+# OCcodeBridge DLL and drive a complete request through it.
 #
 # Everything happens under one isolated runtime directory (default
-# D:\code\cpaexp\.runtime\planbridge-e2e, override with PLANBRIDGE_E2E_ROOT):
+# D:\code\cpaexp\.runtime\occodebridge-e2e, override with OCCODEBRIDGE_E2E_ROOT):
 # the CPA binary, its config/auth/logs, the plugin data directory, and a local
 # fake OpenCode Go upstream. No request leaves 127.0.0.1, no real key is used,
 # and both processes are stopped at the end.
@@ -13,14 +13,14 @@ Set-StrictMode -Version Latest
 #   pwsh -NoProfile -File scripts/e2e-native.ps1
 #
 # The CPA executable is reused when bin\cli-proxy-api.exe already exists; set
-# PLANBRIDGE_CPA_EXE to seed it from a verified build, or leave it unset to build
-# ./cmd/server from PLANBRIDGE_CPA_SOURCE (default D:\code\cpaexp\CLIProxyAPI).
+# OCCODEBRIDGE_CPA_EXE to seed it from a verified build, or leave it unset to build
+# ./cmd/server from OCCODEBRIDGE_CPA_SOURCE (default D:\code\cpaexp\CLIProxyAPI).
 # Requires Python 3 on PATH for the fake upstream, and a C toolchain for the DLL
 # build that scripts/build-windows.ps1 performs.
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$runtimeRoot = if ($env:PLANBRIDGE_E2E_ROOT) { $env:PLANBRIDGE_E2E_ROOT } else { 'D:\code\cpaexp\.runtime\planbridge-e2e' }
-$cpaSource = if ($env:PLANBRIDGE_CPA_SOURCE) { $env:PLANBRIDGE_CPA_SOURCE } else { 'D:\code\cpaexp\CLIProxyAPI' }
+$runtimeRoot = if ($env:OCCODEBRIDGE_E2E_ROOT) { $env:OCCODEBRIDGE_E2E_ROOT } else { 'D:\code\cpaexp\.runtime\occodebridge-e2e' }
+$cpaSource = if ($env:OCCODEBRIDGE_CPA_SOURCE) { $env:OCCODEBRIDGE_CPA_SOURCE } else { 'D:\code\cpaexp\CLIProxyAPI' }
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 
 $binDir = Join-Path $runtimeRoot 'bin'
@@ -33,9 +33,9 @@ $configPath = Join-Path $runtimeRoot 'config.yaml'
 $capturePath = Join-Path $stateDir 'upstream-capture.jsonl'
 $cpaExe = Join-Path $binDir 'cli-proxy-api.exe'
 
-$clientKey = 'planbridge-e2e-client-' + [guid]::NewGuid().ToString('N')
-$managementKey = 'planbridge-e2e-mgmt-' + [guid]::NewGuid().ToString('N')
-$credentialKey = 'planbridge-e2e-upstream-' + [guid]::NewGuid().ToString('N')
+$clientKey = 'occodebridge-e2e-client-' + [guid]::NewGuid().ToString('N')
+$managementKey = 'occodebridge-e2e-mgmt-' + [guid]::NewGuid().ToString('N')
+$credentialKey = 'occodebridge-e2e-upstream-' + [guid]::NewGuid().ToString('N')
 $alias = 'e2e-deepseek-flash'
 $upstreamModel = 'deepseek-v4.1-flash'
 
@@ -109,17 +109,17 @@ function Resolve-CpaExecutable {
         Write-Line "reusing CPA executable $cpaExe"
         return
     }
-    if ($env:PLANBRIDGE_CPA_EXE) {
-        if (-not (Test-Path -LiteralPath $env:PLANBRIDGE_CPA_EXE)) {
-            throw "PLANBRIDGE_CPA_EXE does not exist: $($env:PLANBRIDGE_CPA_EXE)"
+    if ($env:OCCODEBRIDGE_CPA_EXE) {
+        if (-not (Test-Path -LiteralPath $env:OCCODEBRIDGE_CPA_EXE)) {
+            throw "OCCODEBRIDGE_CPA_EXE does not exist: $($env:OCCODEBRIDGE_CPA_EXE)"
         }
         New-Item -ItemType Directory -Force -Path $binDir | Out-Null
-        Copy-Item -LiteralPath $env:PLANBRIDGE_CPA_EXE -Destination $cpaExe -Force
-        Write-Line "seeded CPA executable from $($env:PLANBRIDGE_CPA_EXE)"
+        Copy-Item -LiteralPath $env:OCCODEBRIDGE_CPA_EXE -Destination $cpaExe -Force
+        Write-Line "seeded CPA executable from $($env:OCCODEBRIDGE_CPA_EXE)"
         return
     }
     if (-not (Test-Path -LiteralPath (Join-Path $cpaSource 'go.mod'))) {
-        throw "no CPA executable at $cpaExe, PLANBRIDGE_CPA_EXE is unset, and $cpaSource is not a CPA source tree"
+        throw "no CPA executable at $cpaExe, OCCODEBRIDGE_CPA_EXE is unset, and $cpaSource is not a CPA source tree"
     }
     Write-Line "building CPA from source $cpaSource"
     New-Item -ItemType Directory -Force -Path $binDir | Out-Null
@@ -127,7 +127,7 @@ function Resolve-CpaExecutable {
     try {
         & go build -trimpath -buildvcs=false -o $cpaExe ./cmd/server
         if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $cpaExe)) {
-            throw "building CPA from $cpaSource failed (exit $LASTEXITCODE); a matching release build can be reused with PLANBRIDGE_CPA_EXE"
+            throw "building CPA from $cpaSource failed (exit $LASTEXITCODE); a matching release build can be reused with OCCODEBRIDGE_CPA_EXE"
         }
     } finally {
         Pop-Location
@@ -179,7 +179,7 @@ function New-ConfigYaml([int]$cpaPort, [int]$upstreamPort) {
         '    enabled: true',
         ('    dir: "{0}"' -f ($pluginDir -replace '\\', '/')),
         '    configs:',
-        '        planbridge:',
+        '        occodebridge:',
         '            enabled: true',
         '            priority: 0',
         ('            data_dir: "{0}"' -f ($dataDir -replace '\\', '/')),
@@ -228,8 +228,8 @@ try {
     Write-Line '== build the plugin DLL'
     & pwsh -NoProfile -File (Join-Path $PSScriptRoot 'build-windows.ps1')
     if ($LASTEXITCODE -ne 0) { throw "scripts/build-windows.ps1 failed with exit code $LASTEXITCODE" }
-    Copy-Item -LiteralPath (Join-Path $repoRoot 'dist\planbridge.dll') -Destination (Join-Path $pluginDir 'planbridge.dll') -Force
-    $dll = Get-Item -LiteralPath (Join-Path $pluginDir 'planbridge.dll')
+    Copy-Item -LiteralPath (Join-Path $repoRoot 'dist\occodebridge.dll') -Destination (Join-Path $pluginDir 'occodebridge.dll') -Force
+    $dll = Get-Item -LiteralPath (Join-Path $pluginDir 'occodebridge.dll')
     Write-Line ("plugin dll: {0} bytes sha256={1}" -f $dll.Length, (Get-FileHash -LiteralPath $dll.FullName -Algorithm SHA256).Hash.ToLowerInvariant())
 
     Write-Line '== resolve the CPA executable'
@@ -273,18 +273,18 @@ try {
 
     # 1. The host loaded the plugin: the console resource is served by the plugin
     #    resource route, and the plugin answers its own management API.
-    $console = Invoke-Http -Method GET -Url "$base/v0/resource/plugins/planbridge/console"
+    $console = Invoke-Http -Method GET -Url "$base/v0/resource/plugins/occodebridge/console"
     $consoleServed = $console.Status -eq 200 -and $console.Text.Contains('id="credentialsTab"')
-    $consoleOk = $consoleServed -and -not $console.Text.Contains('__PLANBRIDGE_API_BASE__')
-    Add-Result 'plugin.console' $consoleOk ("GET /v0/resource/plugins/planbridge/console -> {0}, {1} bytes, placeholders replaced={2}" -f $console.Status, $console.Text.Length, (-not $console.Text.Contains('__PLANBRIDGE_API_BASE__')))
+    $consoleOk = $consoleServed -and -not $console.Text.Contains('__OCCODEBRIDGE_API_BASE__')
+    Add-Result 'plugin.console' $consoleOk ("GET /v0/resource/plugins/occodebridge/console -> {0}, {1} bytes, placeholders replaced={2}" -f $console.Status, $console.Text.Length, (-not $console.Text.Contains('__OCCODEBRIDGE_API_BASE__')))
 
-    $status = Invoke-Http -Method GET -Url "$base/v0/management/planbridge/status" -Headers $managementHeaders
+    $status = Invoke-Http -Method GET -Url "$base/v0/management/occodebridge/status" -Headers $managementHeaders
     $pluginVersion = if ($status.Json) { [string]$status.Json.version } else { '' }
-    Add-Result 'plugin.loaded' ($status.Status -eq 200 -and $pluginVersion -eq '0.1.0') ("GET /v0/management/planbridge/status -> {0} version={1}" -f $status.Status, $pluginVersion)
+    Add-Result 'plugin.loaded' ($status.Status -eq 200 -and $pluginVersion -eq '0.1.0') ("GET /v0/management/occodebridge/status -> {0} version={1}" -f $status.Status, $pluginVersion)
 
     # 2. Import one credential through the plugin's own management API and add
     #    the model mapping a client asks for.
-    $imported = Invoke-Http -Method POST -Url "$base/v0/management/planbridge/credentials" -Headers $managementHeaders -Body @{
+    $imported = Invoke-Http -Method POST -Url "$base/v0/management/occodebridge/credentials" -Headers $managementHeaders -Body @{
         label              = 'e2e OpenCode Go'
         api_key            = $credentialKey
         vendor             = 'opencode-go'
@@ -293,7 +293,7 @@ try {
     $credentialId = if ($imported.Json) { [string]$imported.Json.id } else { '' }
     Add-Result 'credential.import' ($imported.Status -eq 201 -and $credentialId) ("POST /credentials -> {0} id={1}" -f $imported.Status, $credentialId)
 
-    $models = Invoke-Http -Method PUT -Url "$base/v0/management/planbridge/models" -Headers $managementHeaders -Body @{
+    $models = Invoke-Http -Method PUT -Url "$base/v0/management/occodebridge/models" -Headers $managementHeaders -Body @{
         models = @(@{ id = $alias; upstream_id = "opencode-go/$upstreamModel" })
     }
     Add-Result 'models.mapping' ($models.Status -eq 200) ("PUT /models -> {0} ({1})" -f $models.Status, $alias + ' -> opencode-go/' + $upstreamModel)
@@ -310,12 +310,12 @@ try {
     $authFiles = Wait-For -Seconds 30 -Probe {
         $response = Invoke-Http -Method GET -Url "$base/v0/management/auth-files" -Headers $managementHeaders -TimeoutSec 10
         if ($response.Status -ne 200 -or $null -eq $response.Json) { return $null }
-        $entry = @($response.Json.files | Where-Object { [string]$_.provider -eq 'planbridge' }) | Select-Object -First 1
+        $entry = @($response.Json.files | Where-Object { [string]$_.provider -eq 'occodebridge' }) | Select-Object -First 1
         if ($entry -and [string]$entry.auth_index) { return $entry }
         return $null
     }
     $authIndex = if ($authFiles) { [string]$authFiles.auth_index } else { '' }
-    Add-Result 'cpa.auth-record' ([bool]$authIndex) $(if ($authIndex) { "auth-files lists a planbridge record with auth_index" } else { 'no planbridge auth record appeared' })
+    Add-Result 'cpa.auth-record' ([bool]$authIndex) $(if ($authIndex) { "auth-files lists a occodebridge record with auth_index" } else { 'no occodebridge auth record appeared' })
 
     # 3. One non-stream and one stream client request through CPA.
     $chatBody = @{ model = $alias; messages = @(@{ role = 'user'; content = 'Reply with the fake upstream answer.' }) }
@@ -333,7 +333,7 @@ try {
     Add-Result 'chat.stream' $streamOk ("POST /v1/chat/completions (stream) -> {0}, contains answer={1}, [DONE]={2}" -f [int]$streamResponse.StatusCode, $streamText.Contains('FAKE-UPSTREAM-OK'), $streamText.Contains('[DONE]'))
 
     # 4. The plugin request log records the request and the plan allowance.
-    $logResponse = Invoke-Http -Method GET -Url "$base/v0/management/planbridge/logs?limit=10" -Headers $managementHeaders
+    $logResponse = Invoke-Http -Method GET -Url "$base/v0/management/occodebridge/logs?limit=10" -Headers $managementHeaders
     $entries = if ($logResponse.Json) { @($logResponse.Json.items) } else { @() }
     $successful = @($entries | Where-Object { [int]$_.status -eq 200 })
     $withAllowance = @($successful | Where-Object { $null -ne $_.PSObject.Properties['allowance'] })
@@ -365,7 +365,7 @@ try {
         $sentModel = [string]$captured[0].body.model
         Add-Result 'upstream.authorization' ($authorization -eq "Bearer $credentialKey") ("Authorization={0} matches the test key" -f (Mask-Secret ($authorization -replace '^Bearer ', '')))
         Add-Result 'upstream.session-header' ($session.Length -gt 0) ("x-opencode-session={0}" -f $session)
-        Add-Result 'upstream.user-agent' ($userAgent -like 'PlanBridge/0.1.0*') ("User-Agent=$userAgent")
+        Add-Result 'upstream.user-agent' ($userAgent -like 'OCcodeBridge/0.1.0*') ("User-Agent=$userAgent")
         Add-Result 'upstream.model-prefix' ($sentModel -eq $upstreamModel) ("body.model=$sentModel (vendor prefix removed)")
         $sessions = @($captured | ForEach-Object { [string]$_.headers.'x-opencode-session' } | Sort-Object -Unique)
         Add-Result 'upstream.stable-session' ($sessions.Count -eq 1 -and $sessions[0].Length -gt 0) ("same session id across requests={0}" -f ($sessions.Count -eq 1))
@@ -377,10 +377,10 @@ try {
     #    does not serve the vendor usage endpoint, so the only acceptable answer
     #    is an explicit error, and the host must stay healthy afterwards.
     if ($authIndex) {
-        $quota = Invoke-Http -Method POST -Url "$base/v8/management/plugins/planbridge/quota" -Headers $managementHeaders -Body @{ auth_index = $authIndex } -TimeoutSec 120
+        $quota = Invoke-Http -Method POST -Url "$base/v8/management/plugins/occodebridge/quota" -Headers $managementHeaders -Body @{ auth_index = $authIndex } -TimeoutSec 120
         $quotaError = if ($quota.Json) { [string]$quota.Json.error } else { $quota.Text }
         $quotaExplicit = $quota.Status -ge 400 -and -not [string]::IsNullOrWhiteSpace($quotaError)
-        Add-Result 'quota.explicit-error' $quotaExplicit ("POST /v8/management/plugins/planbridge/quota -> {0} error={1}" -f $quota.Status, $quotaError)
+        Add-Result 'quota.explicit-error' $quotaExplicit ("POST /v8/management/plugins/occodebridge/quota -> {0} error={1}" -f $quota.Status, $quotaError)
 
         $afterQuota = Invoke-Http -Method POST -Url "$base/v1/chat/completions" -Headers $clientHeaders -Body $chatBody -TimeoutSec 120
         $afterText = if ($afterQuota.Json -and @($afterQuota.Json.choices).Count -gt 0) { [string]$afterQuota.Json.choices[0].message.content } else { '' }
@@ -404,8 +404,8 @@ $logText = ''
 foreach ($file in Get-ChildItem -Path $logDir -File -Filter *.log -ErrorAction SilentlyContinue) {
     try { $logText += [IO.File]::ReadAllText($file.FullName, $utf8) } catch { }
 }
-$hostLogOk = $logText -match '(?i)pluginhost: plugin loaded plugin_id=planbridge'
-$loadedAndRegistered = $hostLogOk -and ($logText -match '(?i)pluginhost: plugin registered plugin_id=planbridge')
+$hostLogOk = $logText -match '(?i)pluginhost: plugin loaded plugin_id=occodebridge'
+$loadedAndRegistered = $hostLogOk -and ($logText -match '(?i)pluginhost: plugin registered plugin_id=occodebridge')
 Add-Result 'plugin.host-log' $loadedAndRegistered ("CPA log records plugin load={0} register={1}" -f $hostLogOk, $loadedAndRegistered)
 $summary = $results
 

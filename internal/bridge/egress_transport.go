@@ -258,7 +258,7 @@ func (s *Service) classifyEgressError(up upstreamStream, body map[string]any, ra
 	}
 	until := p.cooldownGroupLocked(up.local.lease.group, now.Add(delay))
 	p.mu.Unlock()
-	return &upstreamError{APIError: &APIError{429, "upstream_ip_rate_limited", "[planbridge:ip_rate_limit] Upstream edge/IP rate limit"}, HTTPStatus: up.StatusCode, UpstreamStatus: 429, Scope: "egress_ip", RetryAt: until}
+	return &upstreamError{APIError: &APIError{429, "upstream_ip_rate_limited", "[occodebridge:ip_rate_limit] Upstream edge/IP rate limit"}, HTTPStatus: up.StatusCode, UpstreamStatus: 429, Scope: "egress_ip", RetryAt: until}
 }
 
 func (p *egressManager) cooldownGroupLocked(group *egressGroup, until time.Time) time.Time {

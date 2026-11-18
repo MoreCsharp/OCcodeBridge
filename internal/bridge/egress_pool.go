@@ -218,7 +218,7 @@ func (p *egressManager) acquire(ctx context.Context, pin string) (*egressLease, 
 		}
 		changed := p.changed
 		p.mu.Unlock()
-		local := &upstreamError{APIError: &APIError{429, "local_egress_unavailable", "[planbridge:egress_unavailable] No egress capacity available; no upstream request sent"}, RetryAt: next, Scope: "egress_pool", Local: true}
+		local := &upstreamError{APIError: &APIError{429, "local_egress_unavailable", "[occodebridge:egress_unavailable] No egress capacity available; no upstream request sent"}, RetryAt: next, Scope: "egress_pool", Local: true}
 		if wait == 0 {
 			return nil, local
 		}

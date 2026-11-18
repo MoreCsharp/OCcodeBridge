@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 // These fields follow CPA's JSON ABI, independently of the plugin console's usage DTO.
@@ -37,7 +37,7 @@ func (s *Service) fetchQuota(raw json.RawMessage) (quotaResponse, error) {
 		HostCallbackID string `json:"host_callback_id"`
 	}
 	if json.Unmarshal(raw, &req) != nil || req.Provider != Provider || req.AuthID == "" {
-		return quotaResponse{}, fail(400, "PlanBridge quota requires a matching credential")
+		return quotaResponse{}, fail(400, "OCcodeBridge quota requires a matching credential")
 	}
 	// CPA resolves auth_index to its routing identity. Never fall back to the first
 	// account, and allow manually disabled or quota-paused accounts to query usage.
@@ -51,7 +51,7 @@ func (s *Service) fetchQuota(raw json.RawMessage) (quotaResponse, error) {
 	}
 	s.mu.RUnlock()
 	if credentialID == "" {
-		return quotaResponse{}, fail(404, "PlanBridge quota credential is no longer available")
+		return quotaResponse{}, fail(404, "OCcodeBridge quota credential is no longer available")
 	}
 	value, err := s.credentialUsage(ManagementRequest{
 		Query: url.Values{"id": {credentialID}, "refresh": {"1"}}, HostCallbackID: req.HostCallbackID,
@@ -72,7 +72,7 @@ func (s *Service) fetchQuota(raw json.RawMessage) (quotaResponse, error) {
 			status = 504
 		}
 		// The console can label stale values; CPA's normalized response cannot.
-		return quotaResponse{}, fail(status, "PlanBridge quota query failed: "+value.Status)
+		return quotaResponse{}, fail(status, "OCcodeBridge quota query failed: "+value.Status)
 	}
 	displayName := value.Vendor
 	if v, known := vendors.Get(value.Vendor); known {
@@ -91,7 +91,7 @@ func (s *Service) fetchQuota(raw json.RawMessage) (quotaResponse, error) {
 		group.Buckets = append(group.Buckets, bucket)
 	}
 	if len(group.Buckets) == 0 {
-		return quotaResponse{}, fail(502, "PlanBridge returned no usable quota windows")
+		return quotaResponse{}, fail(502, "OCcodeBridge returned no usable quota windows")
 	}
 	response := quotaResponse{Groups: []quotaGroup{group}}
 	// The plan name is the vendor's own label from the usage sample.

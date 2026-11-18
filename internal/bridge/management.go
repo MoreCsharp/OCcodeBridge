@@ -14,13 +14,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 //go:embed ui/*
 var ui embed.FS
 
-const apiBase = "/v0/management/planbridge"
+const apiBase = "/v0/management/occodebridge"
 
 func (s *Service) registerManagement(raw json.RawMessage) (any, error) {
 	s.startUsageSampler()
@@ -35,7 +35,7 @@ func (s *Service) registerManagement(raw json.RawMessage) (any, error) {
 		routes = append(routes, map[string]string{"Method": "PUT", "Path": apiBase + "/" + p})
 	}
 	routes = append(routes, map[string]string{"Method": "DELETE", "Path": apiBase + "/credentials"})
-	return map[string]any{"routes": routes, "resources": []map[string]string{{"Path": "/console", "Menu": "PlanBridge", "Description": "OpenCode Go / CommandCode 模型、凭据与用量"}}}, nil
+	return map[string]any{"routes": routes, "resources": []map[string]string{{"Path": "/console", "Menu": "OCcodeBridge", "Description": "OpenCode Go / CommandCode 模型、凭据与用量"}}}, nil
 }
 func managementJSON(code int, v any) (any, error) {
 	return ManagementResponse{StatusCode: code, Headers: http.Header{"Content-Type": []string{"application/json; charset=utf-8"}, "Cache-Control": []string{"no-store"}}, Body: jsonBytes(v)}, nil
@@ -50,12 +50,12 @@ func (s *Service) management(raw json.RawMessage) (any, error) {
 		if e != nil {
 			return nil, e
 		}
-		b = []byte(strings.ReplaceAll(string(b), "__PLANBRIDGE_API_BASE__", apiBase))
-		logo, err := ui.ReadFile("ui/planbridge-logo.png")
+		b = []byte(strings.ReplaceAll(string(b), "__OCCODEBRIDGE_API_BASE__", apiBase))
+		logo, err := ui.ReadFile("ui/occodebridge-logo.png")
 		if err != nil {
 			return nil, err
 		}
-		b = []byte(strings.ReplaceAll(string(b), "__PLANBRIDGE_LOGO_DATA__", "data:image/png;base64,"+base64.StdEncoding.EncodeToString(logo)))
+		b = []byte(strings.ReplaceAll(string(b), "__OCCODEBRIDGE_LOGO_DATA__", "data:image/png;base64,"+base64.StdEncoding.EncodeToString(logo)))
 		authJS, err := ui.ReadFile("ui/cpa-auth.js")
 		if err != nil {
 			return nil, err

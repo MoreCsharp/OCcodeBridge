@@ -71,7 +71,7 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/bridge"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/bridge"
 )
 
 const abiVersion = 1

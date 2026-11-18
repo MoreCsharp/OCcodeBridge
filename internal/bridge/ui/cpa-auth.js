@@ -7,20 +7,20 @@
   // A reverse proxy may strip its public prefix before CPA renders the page.
   // Resolve it once from the console URL for both API requests and saved logins.
   const apiMeta = document.querySelector('meta[name="cpa-api-base"]');
-  const consolePath = location.pathname.match(/^(.*)\/v(?:0|8)\/resource\/plugins\/planbridge\/console\/?$/);
+  const consolePath = location.pathname.match(/^(.*)\/v(?:0|8)\/resource\/plugins\/occodebridge\/console\/?$/);
   const configured = new URL(apiMeta.content, location.origin);
-  const apiPath = configured.pathname.match(/\/v(?:0|8)\/management\/planbridge\/?$/);
+  const apiPath = configured.pathname.match(/\/v(?:0|8)\/management\/occodebridge\/?$/);
   if (consolePath && apiPath && configured.origin === location.origin && !configured.username && !configured.password && !configured.search && !configured.hash) {
     apiMeta.content = consolePath[1] + apiPath[0];
   }
   function endpoint() {
     const own = new URL(apiMeta.content, location.origin);
-    if (own.origin !== location.origin || own.username || own.password || own.search || own.hash || !/\/v(?:0|8)\/management\/planbridge\/?$/.test(own.pathname)) return null;
-    return { origin: own.origin, root: own.pathname.replace(/\/v(?:0|8)\/management\/planbridge\/?$/, '') };
+    if (own.origin !== location.origin || own.username || own.password || own.search || own.hash || !/\/v(?:0|8)\/management\/occodebridge\/?$/.test(own.pathname)) return null;
+    return { origin: own.origin, root: own.pathname.replace(/\/v(?:0|8)\/management\/occodebridge\/?$/, '') };
   }
   function sessionKey() {
     const own = endpoint();
-    return own ? `planbridge:management-auth:${own.origin}${own.root}` : null;
+    return own ? `occodebridge:management-auth:${own.origin}${own.root}` : null;
   }
   function authHeaders(login) {
     if (!login || typeof login.key !== 'string' || !login.key.trim()) return {};
@@ -61,15 +61,15 @@
       return { key: saved.managementKey.trim(), base: server.href };
     } catch { return null; }
   }
-  window.PlanBridgeAuthHeaders = () => {
+  window.OCcodeBridgeAuthHeaders = () => {
     for (const login of [readManualLogin(), readManualLogin(true), readSavedLogin()]) {
       const headers = authHeaders(login);
       if (Object.keys(headers).length) return headers;
     }
     return {};
   };
-  window.PlanBridgeRememberAuth = () => Object.keys(authHeaders(readManualLogin(true))).length > 0;
-  window.PlanBridgeSaveAuth = (key, type, remember = false) => {
+  window.OCcodeBridgeRememberAuth = () => Object.keys(authHeaders(readManualLogin(true))).length > 0;
+  window.OCcodeBridgeSaveAuth = (key, type, remember = false) => {
     const name = sessionKey();
     if (!name || typeof key !== 'string' || !key.trim()) return;
     const value = JSON.stringify({ key: key.trim(), type: type === 'x-management-key' ? type : 'bearer' });
@@ -79,7 +79,7 @@
       else localStorage.removeItem(name);
     } catch { /* One blocked store must not prevent using the other. */ }
   };
-  window.PlanBridgeClearAuth = (rejectedHeaders) => {
+  window.OCcodeBridgeClearAuth = (rejectedHeaders) => {
     const name = sessionKey();
     if (!name) return;
     for (const persistent of [false, true]) {

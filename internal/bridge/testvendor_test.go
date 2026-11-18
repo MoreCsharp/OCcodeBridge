@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors/opencodego"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors/opencodego"
 )
 
 // The bridge tests exercise the request/usage path against this fixture vendor

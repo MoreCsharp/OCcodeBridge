@@ -164,7 +164,7 @@ func TestErrorRulesPhysicalSyncFailureRetryAndFieldPreservation(t *testing.T) {
 func TestErrorRulesHostFallbackPreservesUnknownAndRedactsFailure(t *testing.T) {
 	s := registeredService(t, "")
 	const key = "private-fixture-key"
-	raw := []byte(`{"type":"planbridge","vendor":"opencode-go","id":"account","api_key":"private-fixture-key","disabled":true,"unknown":{"serial":9007199254740993},"quota_revision":"keep"}`)
+	raw := []byte(`{"type":"occodebridge","vendor":"opencode-go","id":"account","api_key":"private-fixture-key","disabled":true,"unknown":{"serial":9007199254740993},"quota_revision":"keep"}`)
 	if _, err := s.parseAuth(jsonBytes(map[string]any{"FileName": "account.json", "RawJSON": raw})); err != nil {
 		t.Fatal(err)
 	}

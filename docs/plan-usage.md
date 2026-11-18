@@ -66,11 +66,11 @@ ZDR 开关只对声明支持零数据保留的厂商（当前为 CommandCode）�
 
 ### 重新检测
 
-「凭据管理」中处于「套餐不支持 API」的凭据提供「重新检测」，对应接口 `POST /v0/management/planbridge/credentials/recheck`，请求体 `{"id":"<凭据ID>"}`。插件执行一次强制用量查询：查询成功即清除永久状态并恢复调度；仍失败则返回 `cleared:false`、状态和原因，状态保持不变。
+「凭据管理」中处于「套餐不支持 API」的凭据提供「重新检测」，对应接口 `POST /v0/management/occodebridge/credentials/recheck`，请求体 `{"id":"<凭据ID>"}`。插件执行一次强制用量查询：查询成功即清除永久状态并恢复调度；仍失败则返回 `cleared:false`、状态和原因，状态保持不变。
 
 ## CPA 标准配额接口
 
-插件通过 CPA JSON ABI 声明 `quota_provider` 能力，并提供 `quota.identifier`、`quota.describe`、`quota.fetch` 和 `quota.reset`。外部管理客户端可调用 `POST /v8/management/plugins/planbridge/quota`，请求体 `{"auth_index":"<auth_index>"}`；GET 路由支持 `?auth_index=<auth_index>`。`auth_index` 由 CPA 解析到对应账号，插件不会回退到其他账号。
+插件通过 CPA JSON ABI 声明 `quota_provider` 能力，并提供 `quota.identifier`、`quota.describe`、`quota.fetch` 和 `quota.reset`。外部管理客户端可调用 `POST /v8/management/plugins/occodebridge/quota`，请求体 `{"auth_index":"<auth_index>"}`；GET 路由支持 `?auth_index=<auth_index>`。`auth_index` 由 CPA 解析到对应账号，插件不会回退到其他账号。
 
 响应使用 CPA 标准的 `subscription` 和 `groups[].buckets[]`：
 
@@ -102,7 +102,7 @@ CPA 契约（`sdk/pluginapi/types.go`）把 `window` 作为开放字符串，示
 
 ## 接口与兼容性
 
-- 插件管理接口：`GET /v0/management/planbridge/credentials/usage?id=<凭据ID>`（手动刷新加 `refresh=1`），与 `POST /v0/management/planbridge/credentials/recheck`，均由 CPA 管理鉴权保护。
+- 插件管理接口：`GET /v0/management/occodebridge/credentials/usage?id=<凭据ID>`（手动刷新加 `refresh=1`），与 `POST /v0/management/occodebridge/credentials/recheck`，均由 CPA 管理鉴权保护。
 - 代理池关闭且凭据未指定独立代理时，用量查询使用 CPA 的宿主 HTTP 回调和全局代理。启用代理池或凭据配置了 `proxy_url` 时，查询通过插件传输，独立代理优先；代理连接失败会显示查询错误，不会绕过指定代理直连。查询也计入相应出口组的请求和并发预算。
 - 用量查询不参与模型推理、凭据轮转或冷却；它只影响额度暂停状态。
 

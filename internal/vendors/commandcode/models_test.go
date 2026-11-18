@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 )
 
 // modelsPath is the catalog endpoint the fixtures answer.

@@ -66,7 +66,7 @@ func (w *streamReadWatchdog) streamDiagnostics() *StreamDiagnostics {
 func (w *streamReadWatchdog) expired(now time.Time) error {
 	select {
 	case <-w.shutdown:
-		return bridgeUnavailable("PlanBridge is shutting down")
+		return bridgeUnavailable("OCcodeBridge is shutting down")
 	default:
 	}
 	if w.parentError != nil {

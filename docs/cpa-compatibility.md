@@ -1,6 +1,6 @@
 # CPA 兼容性说明
 
-PlanBridge 使用 JSON ABI v1，按 [README](../README.md#安装与配置) 安装到支持动态库插件的原版 CPA。插件功能以原版接口为边界，升级时备份插件目录、CPA 凭据目录与插件数据目录即可。
+OCcodeBridge 使用 JSON ABI v1，按 [README](../README.md#安装与配置) 安装到支持动态库插件的原版 CPA。插件功能以原版接口为边界，升级时备份插件目录、CPA 凭据目录与插件数据目录即可。
 
 ## 原版接口与提前截流
 
@@ -24,7 +24,7 @@ HTTP 502: upstream response stream ended before completion: unexpected EOF (upst
 
 宿主冷却兼容与 `client_retry_compatibility` 开关独立。开启时规范上游服务/协议/连接错误，避免原始嵌套状态误导客户端；关闭时尽量保留原文，但宿主分类标签、生命周期文本和受保护错误摘要仍生效。原始诊断始终留在插件日志。
 
-已核对的原版 CPA v8.0.13、v8.0.29 流错误接口只传字符串。未命中插件统一规则的普通服务/未知故障使用 EOF/timeout 识别词或明确的 `[planbridge:cpa_compat:...]` 标签，并在对应 RPC 错误中省略内部 `http_status`（0 表示缺失）；除下述 Chat Completions 兼容结构外，下游由 CPA 默认封装为 500（通常为 `internal_server_error`），已开始的 HTTP 200 通过 SSE error 结束，插件日志保留内部状态。宿主仅按 500/502 状态配置的规则可能匹配不到这类兼容错误。兼容标签仅用于宿主分类，不表示已经确认底层断流原因。
+已核对的原版 CPA v8.0.13、v8.0.29 流错误接口只传字符串。未命中插件统一规则的普通服务/未知故障使用 EOF/timeout 识别词或明确的 `[occodebridge:cpa_compat:...]` 标签，并在对应 RPC 错误中省略内部 `http_status`（0 表示缺失）；除下述 Chat Completions 兼容结构外，下游由 CPA 默认封装为 500（通常为 `internal_server_error`），已开始的 HTTP 200 通过 SSE error 结束，插件日志保留内部状态。宿主仅按 500/502 状态配置的规则可能匹配不到这类兼容错误。兼容标签仅用于宿主分类，不表示已经确认底层断流原因。
 
 「重试兼容」开启时，仅原始路径 `/v1/chat/completions` 在 `after_output` 阶段、明确归为请求范围的 5xx，且无显式规则、冷却或停止策略时，向 `host.stream.close` 的 `error` 字符串传递单行 JSON，包含 `error.type="server_error"`、`error.code="500"` 及保留原兼容摘要和分类标签的 `message`。适用错误仅为 `upstream_service_error`，或内部网络子类型为 `eof` 的 `upstream_network_error`；EOF 来自传输错误类型、流完整性检查或已验证的结构化回调，不通过 message 推断，未知网络故障、连接重置/关闭、超时、DNS 和 TLS 错误均沿用原编码。原版 CPA v8.0.29 会透传该 JSON；`500` 是兼容业务码，实际 HTTP 200、日志中的原始状态/异常和 `error_details` 的真实 code/status 不变。RPC、其他接口、缺少路径、关闭开关和未满足条件的流错误沿用原编码与回退。
 

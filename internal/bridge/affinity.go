@@ -256,7 +256,7 @@ func (s *Service) clearAffinity(r ManagementRequest) (any, error) {
 	}
 	// Keep secrets in auth-dir. The watcher ignores these .bak files; plugin
 	// settings, logs and quota data remain free of credential copies.
-	backup := filepath.Join(filepath.Dir(files[0].path), ".planbridge-affinity-backups", id())
+	backup := filepath.Join(filepath.Dir(files[0].path), ".occodebridge-affinity-backups", id())
 	if err := os.MkdirAll(backup, 0700); err != nil {
 		return managementJSON(500, map[string]any{"error": "保存恢复副本失败，尚未执行重新分配"})
 	}
@@ -289,7 +289,7 @@ func (s *Service) clearAffinity(r ManagementRequest) (any, error) {
 		}
 		message := safeError(cause) + "；已恢复原凭据文件，请稍后刷新重试"
 		if !restored {
-			message = safeError(cause) + "；部分文件恢复失败，请使用 CPA 凭据目录 .planbridge-affinity-backups 中的恢复副本"
+			message = safeError(cause) + "；部分文件恢复失败，请使用 CPA 凭据目录 .occodebridge-affinity-backups 中的恢复副本"
 		}
 		return managementJSON(500, map[string]any{"error": message})
 	}

@@ -29,8 +29,8 @@
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="cpa-api-base" content="__PLANBRIDGE_API_BASE__">
-  <title>PlanBridge · 管理</title>
+  <meta name="cpa-api-base" content="__OCCODEBRIDGE_API_BASE__">
+  <title>OCcodeBridge · 管理</title>
   <style>
     :root {
       color-scheme: light;
@@ -503,7 +503,7 @@
 <body>
   <main class="shell">
     <div class="topbar">
-      <div class="brand"><img class="brandmark" src="__PLANBRIDGE_LOGO_DATA__" width="32" height="32" alt="PlanBridge"><span>PlanBridge</span></div>
+      <div class="brand"><img class="brandmark" src="__OCCODEBRIDGE_LOGO_DATA__" width="32" height="32" alt="OCcodeBridge"><span>OCcodeBridge</span></div>
       <button class="button icon ghost release-bell" id="releaseNoticeButton" type="button" aria-label="查看公告" title="公告" aria-haspopup="dialog" aria-controls="releaseNoticeDialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4M12 2V1"/></svg></button>
     </div>
     <div class="notice error" id="logPersistenceError" role="alert" hidden></div>
@@ -667,14 +667,14 @@
   <!-- 发布时仅在需要重新弹出公告时递增 data-notice-revision，普通版本升级保持不变。 -->
   <dialog id="releaseNoticeDialog" data-notice-revision="2" aria-labelledby="releaseNoticeTitle">
     <div class="release-notice-head">
-      <div><h2 id="releaseNoticeTitle">公告</h2><span class="badge" id="releaseNoticeVersion">PlanBridge</span></div>
+      <div><h2 id="releaseNoticeTitle">公告</h2><span class="badge" id="releaseNoticeVersion">OCcodeBridge</span></div>
       <form method="dialog"><button class="button icon ghost" type="submit" aria-label="关闭公告" title="关闭"><svg class="button-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></form>
     </div>
     <div class="release-notice-body" tabindex="0" role="region" aria-label="公告内容">
       <section class="release-notice-item release-notice-featured" aria-labelledby="releaseNoticeRoutingTitle">
         <div class="release-notice-label"><span class="badge warn">0.1.0 · 首个版本</span></div>
         <h3 id="releaseNoticeRoutingTitle">一个插件，两家订阅套餐</h3>
-        <p>PlanBridge 0.1.0 支持 <strong>OpenCode Go</strong> 与 <strong>CommandCode</strong>：请求由凭据的<strong>厂商</strong>决定发往哪里，两家厂商的实现各自独立。</p>
+        <p>OCcodeBridge 0.1.0 支持 <strong>OpenCode Go</strong> 与 <strong>CommandCode</strong>：请求由凭据的<strong>厂商</strong>决定发往哪里，两家厂商的实现各自独立。</p>
         <p>凭据必须选择厂商才会参与调度；上游模型 ID 需要带厂商前缀，例如 <strong>opencode-go/模型名</strong>，发往上游时只发送去掉前缀的模型名。</p>
         <p>用量窗口按厂商读取，统一为 5 小时 / 每周 / 每天 / 每月；窗口用尽默认暂停调度，避免花到付费额外额度。OpenCode Go 响应里的 <strong>opencode.allowance</strong> 会作为「本次计入额度」记入请求日志。</p>
         <p class="release-notice-callout"><strong>上游用量接口是非公开接口。</strong>本版本只用合成样本和本地假上游验证过，尚未用真实付费 key 全量核实；查询失败时卡片保留旧值并标明状态。</p>
@@ -777,7 +777,7 @@
     <div class="dialog-actions"><button class="button" id="cancelCandidates" type="button" data-icon="close">取消</button><button class="button primary" id="confirmCandidates" type="button" disabled data-icon="check">应用更改</button></div>
   </dialog>
   <dialog id="errorRulesDialog" aria-labelledby="errorRulesTitle">
-    <div class="panel-head"><h2 id="errorRulesTitle" title="按顺序采用首条匹配的规则；同一状态码下，任意条件命中即可。">错误规则</h2><div class="row-actions"><span class="badge">全部 PlanBridge 凭据</span><button class="button compact" id="openErrorRuleHelp" type="button" aria-haspopup="dialog" data-icon="info">动作说明</button></div></div>
+    <div class="panel-head"><h2 id="errorRulesTitle" title="按顺序采用首条匹配的规则；同一状态码下，任意条件命中即可。">错误规则</h2><div class="row-actions"><span class="badge">全部 OCcodeBridge 凭据</span><button class="button compact" id="openErrorRuleHelp" type="button" aria-haspopup="dialog" data-icon="info">动作说明</button></div></div>
     <form id="errorRulesForm">
       <div id="errorRulesList"></div>
       <div class="error-rules-tools"><button class="button compact" id="addErrorRule" type="button" data-icon="plus">新增规则</button><button class="button compact" id="resetErrorRules" type="button" title="恢复为默认五条规则，保存后应用到全部账号" data-icon="undo">恢复默认规则</button></div>
@@ -910,7 +910,7 @@
       const hint = kind === 'ttft' ? '首字：<5 秒绿，<10 秒黄，其余红' : '耗时：输出不足 100 tokens 时，<10 秒绿、<30 秒黄、其余红；否则按输出 ÷ 总耗时，≥30 t/s 绿、≥15 t/s 黄、其余红';
       return `<div class="latency-line ${known ? latencyTone(value, kind, completionTokens) : ''}" title="${esc(hint)}"><span>${label}</span><strong>${known ? formatLogDuration(value) : '—'}</strong></div>`;
     }
-    const apiReady = () => API_BASE && !API_BASE.includes('__PLANBRIDGE_');
+    const apiReady = () => API_BASE && !API_BASE.includes('__OCCODEBRIDGE_');
     const apiUrl = (path, query) => {
       const base = new URL(API_BASE.replace(/\/?$/, '/'), location.origin);
       const url = new URL(path.replace(/^\//, ''), base);
@@ -1122,7 +1122,7 @@
           if (authGate.bannedUntil > Date.now() && !authGate.timer) authGate.timer = setInterval(renderAuthState, 1000);
         } else if ((response.status === 401 || response.status === 403) && auth.revision === authGate.revision) {
           if (response.status === 401) {
-            window.PlanBridgeClearAuth?.(auth.headers);
+            window.OCcodeBridgeClearAuth?.(auth.headers);
             state.key = '';
           }
           pauseAuth(error, response.status === 403);
@@ -1143,7 +1143,7 @@
         const manualKey = state.key, manualAuthType = state.authType, rememberAuth = state.rememberAuth === true;
         const headers = manualKey
           ? (manualAuthType === 'x-management-key' ? { 'X-Management-Key': manualKey } : { Authorization: `Bearer ${manualKey}` })
-          : { ...await window.PlanBridgeAuthHeaders?.() };
+          : { ...await window.OCcodeBridgeAuthHeaders?.() };
         if (revision !== authGate.revision || authGate.paused) throw authGate.paused || new Error('登录状态已变化，请重新验证');
         if (!headers.Authorization && !headers['X-Management-Key']) {
           const error = new Error('请输入当前管理入口的管理密钥');
@@ -1154,7 +1154,7 @@
         const status = await managementRequest('/status', { signal: AbortSignal.timeout(15000) }, auth);
         if (revision !== authGate.revision || authGate.paused) throw authGate.paused || new Error('登录状态已变化，请重新验证');
         authGate.verified = auth;
-        if (manualKey) window.PlanBridgeSaveAuth?.(manualKey, manualAuthType, rememberAuth);
+        if (manualKey) window.OCcodeBridgeSaveAuth?.(manualKey, manualAuthType, rememberAuth);
         setButtonLabel('authButton', manualKey ? '密钥已验证' : '已复用管理密钥');
         return { auth, status };
       }).finally(() => { authGate.flight = null; renderAuthState(); });
@@ -1296,7 +1296,7 @@
       dropdowns.get('providerFilter').sync();
     }
     const statistics = { controller: null, revision: 0, loading: false, resetting: false };
-    const STATISTICS_STORAGE_KEY = 'planbridge.statistics-range.v1';
+    const STATISTICS_STORAGE_KEY = 'occodebridge.statistics-range.v1';
     const STATISTICS_SCOPE_HINT = $('statisticsSegments').title;
     const STATISTICS_RATE_HINT = $('statTokenRateCard').title;
     function localMinute(date) {
@@ -1891,7 +1891,7 @@
     $('degradedOnly').addEventListener('change', () => { state.page = 0; loadLogs(); });
     $('authButton').addEventListener('click', () => { renderAuthState(); $('authDialog').showModal(); });
     $('closeAuth').addEventListener('click', () => $('authDialog').close());
-    $('clearAuth').addEventListener('click', () => { state.key = ''; state.rememberAuth = false; window.PlanBridgeClearAuth?.(); $('authKey').value = ''; $('rememberAuth').checked = false; pauseAuth(new Error('插件手动保存的管理密钥已清除，请重新验证')); toast('插件手动保存的管理密钥已清除'); });
+    $('clearAuth').addEventListener('click', () => { state.key = ''; state.rememberAuth = false; window.OCcodeBridgeClearAuth?.(); $('authKey').value = ''; $('rememberAuth').checked = false; pauseAuth(new Error('插件手动保存的管理密钥已清除，请重新验证')); toast('插件手动保存的管理密钥已清除'); });
     $('authForm').addEventListener('submit', async (event) => {
       event.preventDefault();
       if (authGate.flight || authGate.submitting || Date.now() < authGate.bannedUntil) return;
@@ -2337,9 +2337,9 @@
     /*__SCHEDULING_MODULE__*/
     /*__ERROR_RULES_MODULE__*/
     /*__RELEASE_NOTICE_MODULE__*/
-    $('rememberAuth').checked = window.PlanBridgeRememberAuth?.() || false;
+    $('rememberAuth').checked = window.OCcodeBridgeRememberAuth?.() || false;
     restoreStatisticsRange();
-    if (!apiReady()) globalError('管理 API 路径尚未注入；请由宿主设置 __PLANBRIDGE_API_BASE__。');
+    if (!apiReady()) globalError('管理 API 路径尚未注入；请由宿主设置 __OCCODEBRIDGE_API_BASE__。');
     else refreshLogsView();
   </script>
 </body>

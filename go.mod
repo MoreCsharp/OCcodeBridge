@@ -1,4 +1,4 @@
-module github.com/xiao-qiu-qiu/PlanBridge
+module github.com/xiao-qiu-qiu/OCcodeBridge
 
 go 1.26.0
 

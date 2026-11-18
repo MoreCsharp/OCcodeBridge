@@ -1,14 +1,14 @@
 <div align="center">
 
-# PlanBridge
+# OCcodeBridge
 
 把订阅型编码套餐接到 CPA，在你常用的 OpenAI 兼容客户端里调用。
 
-[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-64748b)](https://github.com/xiao-qiu-qiu/PlanBridge/releases)
+[![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-64748b)](https://github.com/xiao-qiu-qiu/OCcodeBridge/releases)
 [![Go](https://img.shields.io/badge/Go-1.26-00ADD8?logo=go&logoColor=white)](go.mod)
-[![License](https://img.shields.io/github/license/xiao-qiu-qiu/PlanBridge?color=16a34a)](LICENSE)
+[![License](https://img.shields.io/github/license/xiao-qiu-qiu/OCcodeBridge?color=16a34a)](LICENSE)
 
-[使用文档](docs/configuration.md) · [更新日志](CHANGELOG.md) · [反馈问题](https://github.com/xiao-qiu-qiu/PlanBridge/issues)
+[使用文档](docs/configuration.md) · [更新日志](CHANGELOG.md) · [反馈问题](https://github.com/xiao-qiu-qiu/OCcodeBridge/issues)
 
 </div>
 
@@ -34,8 +34,8 @@ plugins:
   dir: plugins
 ```
 
-1. 把插件动态库放进 CPA 的 `plugins` 目录（`planbridge.dll` / `planbridge.so` / `planbridge.dylib`），或从 [Releases](https://github.com/xiao-qiu-qiu/PlanBridge/releases) 下载对应平台的 ZIP 手动放置。发布附带 `checksums.txt`。
-2. 打开管理页 `/v0/resource/plugins/planbridge/console`，在「凭据管理」中添加 API Key 并选择厂商。
+1. 把插件动态库放进 CPA 的 `plugins` 目录（`occodebridge.dll` / `occodebridge.so` / `occodebridge.dylib`），或从 [Releases](https://github.com/xiao-qiu-qiu/OCcodeBridge/releases) 下载对应平台的 ZIP 手动放置。发布附带 `checksums.txt`。
+2. 打开管理页 `/v0/resource/plugins/occodebridge/console`，在「凭据管理」中添加 API Key 并选择厂商。
 3. 进入「模型映射」，点「添加模型 → 获取上游模型」按厂商拉取候选，或直接手填带前缀的上游 ID。
 4. 在客户端填入 **CPA 的 API 地址和 CPA 的客户端 API key**，选择刚添加的模型即可。
 
@@ -78,7 +78,7 @@ CommandCode 的凭据可以打开 **ZDR**（零数据保留），插件会把 `x
 - **窗口额度保护默认开启。** 任一 5 小时 / 每周 / 每天 / 每月窗口用尽时暂停该账号调度，避免把额度花到付费 extra usage 上；`pause_on_window_limit: false` 可关闭主动暂停。
 - **流式卡住时提前截流默认关闭。** 开启后，从首段有效输出后计时，默认连续 20 秒没有新的有效输出才触发。
 - **Debug 默认关闭。** 按需开启额外流诊断；普通请求日志、错误和用量照常记录。
-- **升级前保留数据。** 容器部署请持久化插件目录、CPA 的 `auth-dir` 和插件数据目录（默认 `plugins/planbridge-data`），升级前备份。
+- **升级前保留数据。** 容器部署请持久化插件目录、CPA 的 `auth-dir` 和插件数据目录（默认 `plugins/occodebridge-data`），升级前备份。
 
 | 文档 | 内容 |
 | --- | --- |
@@ -99,13 +99,13 @@ Linux amd64，装好 Docker 后在仓库根目录执行：
 docker build --platform linux/amd64 -f Dockerfile.build --output type=local,dest=dist .
 ```
 
-产物是 `dist/planbridge.so`。
+产物是 `dist/occodebridge.so`。
 
 Windows amd64，用本地 winlibs MinGW-w64 gcc：
 
 ```powershell
-pwsh -NoProfile -File scripts/build-windows.ps1        # dist\planbridge.dll
-pwsh -NoProfile -File scripts/build-windows.ps1 -Zip   # 另打 planbridge_<版本>_windows_amd64.zip
+pwsh -NoProfile -File scripts/build-windows.ps1        # dist\occodebridge.dll
+pwsh -NoProfile -File scripts/build-windows.ps1 -Zip   # 另打 occodebridge_<版本>_windows_amd64.zip
 ```
 
 提交前的一键检查（格式、vet、build、Go 测试、前端测试）：

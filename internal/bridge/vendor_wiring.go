@@ -10,10 +10,10 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors"
 	// Blank imports register every vendor package this build ships.
-	_ "github.com/xiao-qiu-qiu/PlanBridge/internal/vendors/commandcode"
-	_ "github.com/xiao-qiu-qiu/PlanBridge/internal/vendors/opencodego"
+	_ "github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors/commandcode"
+	_ "github.com/xiao-qiu-qiu/OCcodeBridge/internal/vendors/opencodego"
 )
 
 // knownVendor reports whether this build implements the vendor id.
@@ -55,7 +55,7 @@ func (s *Service) vendorHeaders(c Credential, v vendors.Vendor, r vendors.Reques
 		h = http.Header{}
 	}
 	if h.Get("User-Agent") == "" {
-		h.Set("User-Agent", "PlanBridge/"+Version)
+		h.Set("User-Agent", "OCcodeBridge/"+Version)
 	}
 	if h.Get("Content-Type") == "" {
 		h.Set("Content-Type", "application/json")
