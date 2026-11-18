@@ -203,7 +203,7 @@ func TestManagementRequestsHonorCredentialProxyWithoutSharedPool(t *testing.T) {
 	}))
 	defer proxy.Close()
 	s := probeService(t)
-	s.cfg.BaseURL = "http://opencode.fixture.invalid/v1"
+	s.cfg.BaseURLOverrides = map[string]string{requestVendorID: "http://opencode.fixture.invalid/v1"}
 	c := s.creds["probe-account"]
 	c.APIKey, c.ProxyURL = "proxy-fixture-key", strings.Replace(proxy.URL, "http://", "http://proxy-user:proxy-password@", 1)
 	s.creds[c.ID] = c

@@ -121,12 +121,10 @@ func (s *Service) management(raw json.RawMessage) (any, error) {
 	case "PUT /config":
 		cfg := s.config()
 		dataDir := cfg.DataDir
-		base := cfg.BaseURL
 		if e := decodeConfigJSON(r.Body, &cfg); e != nil {
 			return managementJSON(400, map[string]any{"error": "invalid config JSON"})
 		}
 		cfg.DataDir = dataDir
-		cfg.BaseURL = base
 		if e := s.saveConfig(cfg); e != nil {
 			return managementJSON(statusOf(e), map[string]any{"error": safeError(e)})
 		}

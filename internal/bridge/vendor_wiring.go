@@ -34,10 +34,11 @@ func vendorFor(c Credential) (vendors.Vendor, error) {
 	return v, nil
 }
 
-// inferenceBase is where this credential's requests go: the vendor owns its base
-// and Config.BaseURL is only an override for tests and self-hosted proxies.
+// inferenceBase is where this credential's requests go. The vendor owns its base;
+// Config.BaseURLOverrides only replaces that one vendor's base (tests, self-hosted
+// proxies), so overriding one vendor never redirects another.
 func (s *Service) inferenceBase(v vendors.Vendor) string {
-	if base := strings.TrimRight(s.config().BaseURL, "/"); base != "" {
+	if base := strings.TrimRight(s.config().BaseURLOverrides[v.ID()], "/"); base != "" {
 		return base
 	}
 	return strings.TrimRight(v.BaseURL(), "/")

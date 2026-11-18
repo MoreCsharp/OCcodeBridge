@@ -43,7 +43,8 @@ func TestEgressChallengeCoolsSharedIPWithoutChangingCredential(t *testing.T) {
 		t.Fatal(err)
 	}
 	s.mu.Lock()
-	s.cfg.BaseURL, s.cfg.NonstreamMode = origin.URL, "native"
+	s.cfg.BaseURLOverrides = map[string]string{requestVendorID: origin.URL}
+	s.cfg.NonstreamMode = "native"
 	s.creds[credential.ID] = credential
 	s.mu.Unlock()
 	before := jsonBytes(credential)

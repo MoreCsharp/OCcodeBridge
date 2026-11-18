@@ -78,6 +78,13 @@ func (s *Service) config() Config {
 		c.ReasoningMapping = &mapping
 	}
 	c.Models = append([]Model{}, c.Models...)
+	if c.BaseURLOverrides != nil {
+		overrides := make(map[string]string, len(c.BaseURLOverrides))
+		for vendorID, base := range c.BaseURLOverrides {
+			overrides[vendorID] = base
+		}
+		c.BaseURLOverrides = overrides
+	}
 	for i := range c.Models {
 		if c.Models[i].ReasoningMapping != nil {
 			mapping := c.Models[i].ReasoningMapping.clone()

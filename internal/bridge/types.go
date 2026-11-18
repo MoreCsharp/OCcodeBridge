@@ -132,18 +132,19 @@ type Model struct {
 type Config struct {
 	ReasoningMapping *ReasoningMappingConfig `json:"reasoning_mapping,omitempty" yaml:"reasoning_mapping,omitempty"` // Legacy global mapping; migrated during validation.
 	DataDir          string                  `json:"data_dir" yaml:"data_dir"`
-	// BaseURL overrides every vendor's inference base. Empty means "use the
-	// vendor's own base"; it exists for tests and self-hosted proxies only.
-	BaseURL                  string  `json:"base_url" yaml:"base_url"`
-	Models                   []Model `json:"models" yaml:"models"`
-	NonstreamMode            string  `json:"nonstream_mode" yaml:"nonstream_mode"`
-	ClientRetryCompatibility bool    `json:"client_retry_compatibility" yaml:"client_retry_compatibility"`
-	StreamIdleCutoffEnabled  bool    `json:"stream_idle_cutoff_enabled" yaml:"stream_idle_cutoff_enabled"`
-	StreamIdleTimeoutSeconds int     `json:"stream_idle_timeout_seconds" yaml:"stream_idle_timeout_seconds"`
-	TimeoutSeconds           int     `json:"timeout_seconds" yaml:"timeout_seconds"`
-	LogRetention             int     `json:"log_retention" yaml:"log_retention"`
-	Debug                    bool    `json:"debug" yaml:"debug"`
-	MaxResponseBytes         int     `json:"max_response_bytes" yaml:"max_response_bytes"`
+	// BaseURLOverrides replaces one vendor's inference base, keyed by vendor id.
+	// Empty or missing means "use the vendor's own base"; the map exists for
+	// tests and self-hosted proxies only, and one vendor never rewrites another.
+	BaseURLOverrides         map[string]string `json:"base_url_overrides,omitempty" yaml:"base_url_overrides,omitempty"`
+	Models                   []Model           `json:"models" yaml:"models"`
+	NonstreamMode            string            `json:"nonstream_mode" yaml:"nonstream_mode"`
+	ClientRetryCompatibility bool              `json:"client_retry_compatibility" yaml:"client_retry_compatibility"`
+	StreamIdleCutoffEnabled  bool              `json:"stream_idle_cutoff_enabled" yaml:"stream_idle_cutoff_enabled"`
+	StreamIdleTimeoutSeconds int               `json:"stream_idle_timeout_seconds" yaml:"stream_idle_timeout_seconds"`
+	TimeoutSeconds           int               `json:"timeout_seconds" yaml:"timeout_seconds"`
+	LogRetention             int               `json:"log_retention" yaml:"log_retention"`
+	Debug                    bool              `json:"debug" yaml:"debug"`
+	MaxResponseBytes         int               `json:"max_response_bytes" yaml:"max_response_bytes"`
 }
 
 // A fresh install ships no model mapping and no base URL override: the operator
@@ -169,6 +170,8 @@ func decodeConfigJSON(raw []byte, cfg *Config) error {
 			next.Models = nil
 		case strings.EqualFold(key, "reasoning_mapping"):
 			next.ReasoningMapping = nil
+		case strings.EqualFold(key, "base_url_overrides"):
+			next.BaseURLOverrides = nil
 		}
 	}
 	decoder := json.NewDecoder(bytes.NewReader(raw))
@@ -186,9 +189,17 @@ func (c *Config) validate() error {
 			return err
 		}
 	}
-	if c.BaseURL != "" {
-		if err := validateBaseURLOverride(c.BaseURL); err != nil {
-			return err
+	if len(c.BaseURLOverrides) > 0 {
+		for vendorID, base := range c.BaseURLOverrides {
+			if !knownVendor(vendorID) {
+				return fail(400, "base_url_overrides keys must be known vendor ids: "+strings.Join(vendors.IDs(), ", "))
+			}
+			if strings.TrimSpace(base) == "" {
+				continue
+			}
+			if err := validateBaseURLOverride(base); err != nil {
+				return err
+			}
 		}
 	}
 	if c.TimeoutSeconds < 10 || c.TimeoutSeconds > 1800 {
@@ -241,7 +252,7 @@ func (c *Config) validate() error {
 func validateBaseURLOverride(raw string) error {
 	u, err := url.Parse(raw)
 	if err != nil || (u.Scheme != "https" && u.Scheme != "http") || u.Host == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
-		return fail(400, "base_url override must be an http(s) URL without credentials, query or fragment")
+		return fail(400, "base_url_overrides values must be http(s) URLs without credentials, query or fragment")
 	}
 	return nil
 }
