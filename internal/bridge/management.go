@@ -435,6 +435,13 @@ func (s *Service) recheckCredential(r ManagementRequest) (any, error) {
 	if json.Unmarshal(r.Body, &in) != nil || in.ID == "" {
 		return managementJSON(400, map[string]any{"error": "请选择要重新检测的凭据"})
 	}
+	// An operator-initiated check must not reuse a sample taken before it, even a
+	// failed one from seconds ago.
+	s.mu.Lock()
+	if entry := s.usageCache[in.ID]; entry != nil && entry.done == nil {
+		entry.value.CheckedAt = nil
+	}
+	s.mu.Unlock()
 	value, err := s.credentialUsage(ManagementRequest{Query: url.Values{"id": {in.ID}, "refresh": {"1"}}, HostCallbackID: r.HostCallbackID})
 	if err != nil {
 		return managementJSON(statusOf(err), map[string]any{"error": safeError(err)})

@@ -148,8 +148,10 @@ func TestUsagePollingDetectsPlanWithoutAPIAccess(t *testing.T) {
 func TestRecheckClearsPermanentPlanState(t *testing.T) {
 	for _, healthy := range []bool{true, false} {
 		t.Run(fmt.Sprint("healthy=", healthy), func(t *testing.T) {
+			upstreamOK, calls := false, 0
 			s := usageTestService(t, func(map[string]any) (int, string) {
-				if !healthy {
+				calls++
+				if !upstreamOK {
 					return 403, `{"error":{"message":"still no api access"}}`
 				}
 				return 200, `{"planName":"Fixture Plan","windows":[{"kind":"7d","percent":3}]}`
@@ -159,6 +161,13 @@ func TestRecheckClearsPermanentPlanState(t *testing.T) {
 			if err := s.observeQuotaError(c, permanentPlanError("go plan has no api access")); err != nil {
 				t.Fatal(err)
 			}
+			// Prime the cache with a failed sample: an explicit re-check must not
+			// reuse it even though its short TTL has not expired.
+			if _, err := s.credentialUsage(usageTestRequest()); err != nil {
+				t.Fatal(err)
+			}
+			primed := calls
+			upstreamOK = healthy
 			raw, err := s.management(jsonBytes(ManagementRequest{Method: "POST", Path: apiBase + "/credentials/recheck", Body: jsonBytes(map[string]any{"id": c.ID}), HostCallbackID: "usage-callback"}))
 			if err != nil {
 				t.Fatal(err)
@@ -171,6 +180,9 @@ func TestRecheckClearsPermanentPlanState(t *testing.T) {
 			}
 			if response.StatusCode != 200 || json.Unmarshal(response.Body, &value) != nil {
 				t.Fatalf("recheck failed: %s", response.Body)
+			}
+			if calls <= primed {
+				t.Fatalf("recheck reused the cached sample: %d calls", calls)
 			}
 			if value.Cleared != healthy {
 				t.Fatalf("cleared = %v, want %v: %s", value.Cleared, healthy, response.Body)
