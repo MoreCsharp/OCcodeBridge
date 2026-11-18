@@ -1,0 +1,8 @@
+{
+  "error": {
+    "type": "GoUsageLimitError",
+    "name": "GoUsageLimitError",
+    "code": "usage_limit_exceeded",
+    "message": "You have reached the 5-hour usage limit for your plan. It resets at 2026-11-18T14:30:00Z."
+  }
+}

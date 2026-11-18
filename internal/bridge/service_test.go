@@ -799,11 +799,11 @@ func TestCatalogRefreshUsesVendorCatalogAndPreservesAliases(t *testing.T) {
 // A vendor whose catalog is not implemented yet must say so instead of failing opaquely.
 func TestCatalogRefreshReportsUnimplementedVendor(t *testing.T) {
 	s := registeredService(t, "native")
-	s.creds["catalog"] = Credential{Type: Provider, ID: "catalog", Label: "catalog", APIKey: "catalog-key", Vendor: requestVendorID}
+	s.creds["catalog"] = Credential{Type: Provider, ID: "catalog", Label: "catalog", APIKey: "catalog-key", Vendor: unimplementedVendorID}
 	s.SetHost(func(method string, _, _ any) error { return fmt.Errorf("unexpected host callback %s", method) })
 	result, err := s.Handle("management.handle", jsonBytes(ManagementRequest{
 		Method: "POST", Path: apiBase + "/models/refresh",
-		Body: jsonBytes(map[string]any{"vendor": requestVendorID}),
+		Body: jsonBytes(map[string]any{"vendor": unimplementedVendorID}),
 	}))
 	if err != nil {
 		t.Fatal(err)

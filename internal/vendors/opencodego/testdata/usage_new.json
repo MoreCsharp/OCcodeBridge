@@ -1,0 +1,21 @@
+{
+  "usage": {
+    "rolling": {
+      "status": "ok",
+      "percent": 12.5,
+      "resetsAt": "2026-11-18T14:30:00Z"
+    },
+    "weekly": {
+      "status": "ok",
+      "percent": 40.5,
+      "resetsAt": "2026-11-23T00:00:00Z"
+    },
+    "monthly": {
+      "status": "warning",
+      "percent": 72.4,
+      "resetsAt": 1796083200
+    }
+  },
+  "plan": { "name": "Go Plus", "id": "go-plus" },
+  "workspace": { "id": "wrk_fixture", "name": "Fixture Workspace" }
+}

@@ -1,0 +1,6 @@
+{
+  "usage": {
+    "rolling": { "status": "ok", "resetsAt": "2026-11-18T12:00:00Z" },
+    "monthly": { "status": "ok" }
+  }
+}

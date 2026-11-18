@@ -1,0 +1,6 @@
+{
+  "usage": {
+    "rolling": { "usedMicroCents": "50000000", "limitMicroCents": "100000000" },
+    "monthly": { "usedMicroCents": 0, "limitMicroCents": 250000000 }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "usage": {
+    "rolling": { "used": "2.5", "limit": "10" },
+    "weekly": { "used": 3, "limit": 20 },
+    "monthly": { "used": 12, "limit": 10 }
+  }
+}
