@@ -258,6 +258,35 @@ func TestFetchUsageReportsRejectedKey(t *testing.T) {
 	}
 }
 
+// A plan without API access rejects the management calls too. The error keeps the
+// upstream body so the bridge can reuse ClassifyLimitError instead of guessing
+// the permanent state from the status alone.
+type responseBodyCarrier interface{ ResponseBody() []byte }
+
+func TestFetchUsageKeepsBodyForPlanClassification(t *testing.T) {
+	pointAPIAtFakeHost(t)
+	responses := usageFixtures(t)
+	body := `{"success":false,"error":{"code":"upgrade_required","status":403,"message":"Upgrade required"}}`
+	responses[creditsPath] = fakeResponse{status: 403, body: body}
+	doer := &fakeDoer{responses: responses}
+
+	_, err := Vendor{}.FetchUsage(t.Context(), vendors.Credential{APIKey: usageKey}, doer)
+	if err == nil || statusCodeOf(err) != 403 {
+		t.Fatalf("credits 403 = %v", err)
+	}
+	carrier, ok := err.(responseBodyCarrier)
+	if !ok || string(carrier.ResponseBody()) != body {
+		t.Fatalf("error did not keep the upstream body: %T", err)
+	}
+	block := (Vendor{}).ClassifyLimitError(statusCodeOf(err), carrier.ResponseBody(), time.Now())
+	if block == nil || !block.Permanent {
+		t.Fatalf("a plan without API access was not classified as permanent: %+v", block)
+	}
+	if strings.Contains(err.Error(), usageKey) {
+		t.Fatalf("error %q repeats the API key", err.Error())
+	}
+}
+
 func TestFetchUsageNeedsATransport(t *testing.T) {
 	pointAPIAtFakeHost(t)
 	if _, err := (Vendor{}).FetchUsage(t.Context(), vendors.Credential{APIKey: usageKey}, nil); err == nil {
