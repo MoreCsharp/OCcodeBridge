@@ -120,8 +120,9 @@ func TestQuotaProviderRejectsUnrelatedAndRevokedCredentials(t *testing.T) {
 	}
 }
 
-// The money pair a vendor reports is exact, so it outranks its percentage, and a
-// day/month window keeps the contract's own spelling instead of a fixed window.
+// The amount pair a vendor reports is exact, so it outranks its percentage; the
+// month window keeps the contract's own spelling, and a kind that is not a plan
+// window (such as a per-day request cap) never becomes a bucket.
 func TestQuotaProviderPrefersReportedAmountsAndMapsEveryWindow(t *testing.T) {
 	s := usageTestService(t, func(map[string]any) (int, string) {
 		return 200, `{"planName":"Fixture Plan","windows":[
@@ -153,7 +154,6 @@ func TestQuotaProviderPrefersReportedAmountsAndMapsEveryWindow(t *testing.T) {
 		remaining float64
 	}{
 		{"5h", 0.05},      // used/cap wins over the 50% percentage
-		{"daily", 0.6},    // percentage only
 		{"monthly", 0.25}, // used/cap only
 	}
 	if len(buckets) != len(want) {

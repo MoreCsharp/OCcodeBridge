@@ -7,7 +7,7 @@
 | 厂商 | 用量接口 | 窗口种类 | 额度暂停依据 |
 | --- | --- | --- | --- |
 | OpenCode Go | `GET https://opencode.ai/zen/go/v1/usage`（Bearer API Key） | 5 小时、每周、每月 | 该接口返回的已用百分比或已用/上限 |
-| CommandCode | `GET https://api.commandcode.ai/alpha/whoami?limits=1`、`/alpha/billing/credits`、`/alpha/billing/subscriptions`（带 Bearer Key，按组织加 `orgId`） | 5 小时、每周、每天、每月 | `windowLimits` 的 `used`/`cap` 与月度额度池 |
+| CommandCode | `GET https://api.commandcode.ai/alpha/whoami?limits=1`、`/alpha/billing/credits`、`/alpha/billing/subscriptions`（带 Bearer Key，按组织加 `orgId`） | 5 小时、每周、每月 | `windowLimits` 的 `used`/`cap` 与套餐月积分 |
 
 用量查询使用凭据的 API Key，走插件的出口层与超时设置；上游 `401`/`403` 以该凭据的查询状态返回，不会触发 CPA 管理密钥登录弹窗。
 
@@ -21,11 +21,13 @@
 
 一次查询聚合三个接口：`whoami` 决定组织范围，`credits` 提供滚动窗口与付费余额，`subscriptions` 提供套餐和本期起止时间；`whoami` 或 `subscriptions` 失败只丢失它们负责的字段，`credits` 失败则整个查询失败，`401` 直接返回鉴权失败。
 
-`windowLimits` 只在 `limited` 为真时生成 5 小时/每周/每天窗口，`used`/`cap` 单位为 credits（约等于美元）。每月窗口按 CLI 的 `projectUsageView` 折算：本月套餐额度 + 购买额度 + 赠送额度构成上限，剩余额度就是三者之和，已经用掉的 `alpha/usage/summary` 尚未查询，因此月窗口在未持有有效订阅时只反映当前余额。付费余额（购买 + 赠送）作为「额外额度」显示。
+`windowLimits` 只在 `limited` 为真时生成 5 小时与每周窗口；上游若返回 `daily`（免费模型的每日请求上限，不是套餐窗口）会被忽略，对应的 429 也只按普通限流处理，不暂停账号。每月窗口只统计**套餐自身的月积分**：上限取套餐月积分（GOAT 70、Pro 30/80、Go 10 等，与官方 CLI 套餐表一致），剩余为 `monthlyCredits`；没有有效订阅或识别不出套餐时不生成月窗口。购买与赠送的额外额度按美元计、不受窗口限制，单独显示为「额外额度」，不混入月窗口。
+
+**金额单位。** Go、GOAT、Pro 套餐的 `used`/`cap` 是**套餐积分**，不是美元：每个模型有各自的月度额度，一次请求按它占该模型月度额度的比例扣积分，所以 1 积分在不同模型上值的钱不同（约等于 积分 × 该模型月度额度 ÷ 套餐月积分）。例如 GOAT 的 5 小时上限是 14 积分，在月度额度 $100 的 Ling 3.1 Flash 上约值 $20，在 $70 的 GLM-5.2 上约值 $14。各模型月度额度随官方活动变化，插件不内置换算表，卡片上显示为「x / y 积分」，悬停可看折算说明。Max、Ultra、Teams Pro、Provider 套餐 1 积分 = $1，按美元显示；识别不出套餐时只显示数字、不加单位。
 
 ## 管理页
 
-「凭据管理 → 编辑/展开」卡片按厂商显示厂商名、套餐名与本期截止时间，以及该厂商实际报告的窗口：5 小时、每周、每天、每月进度条、已用/上限金额和重置时间。没有数据的窗口显示 `—` 与「重置时间 —」，不显示为 0%；重置时间按浏览器本地时区显示。缺失整段数据时行为与旧版一致：保留上次成功值并标注过期。
+「凭据管理 → 编辑/展开」卡片按厂商显示厂商名、套餐名与本期截止时间，以及该厂商实际报告的窗口：5 小时、每周、每月进度条、已用/上限（按上面的单位显示：积分或美元）和重置时间。厂商没有报告的窗口不画占位行；报告了但缺少数值的窗口显示 `—` 与「重置时间 —」，不显示为 0%；重置时间按浏览器本地时区显示。缺失整段数据时行为与旧版一致：保留上次成功值并标注过期。
 
 | 状态徽章 | 含义 | 清除方式 |
 | --- | --- | --- |
@@ -42,7 +44,7 @@ ZDR 开关只对声明支持零数据保留的厂商（当前为 CommandCode）�
 
 ### 窗口额度保护（`pause_on_window_limit`）
 
-新装和旧配置默认开启。开启时，用量采样发现任一 5 小时/每周/每天/每月窗口 `UsedPercent >= 100` 或 `Used >= Cap`（`Cap > 0`）就暂停该账号的调度，直到窗口重置时间（多个窗口取最晚）。这是防止 CommandCode 在窗口用尽后自动扣用 extra credits、OpenCode Extra Usage 扣余额的主要手段。
+新装和旧配置默认开启。开启时，用量采样发现任一 5 小时/每周/每月窗口 `UsedPercent >= 100` 或 `Used >= Cap`（`Cap > 0`）就暂停该账号的调度，直到窗口重置时间（多个窗口取最晚）。这是防止 CommandCode 在窗口用尽后自动扣用 extra credits、OpenCode Extra Usage 扣余额的主要手段。
 
 关闭后，用量轮询不再主动暂停，但上游返回窗口超限 429（`ClassifyLimitError` 判定为窗口限制）时仍按额度暂停处理。配置项写在设置文件里，管理页「配置概览 → 窗口额度保护」可开关：
 
@@ -78,10 +80,9 @@ ZDR 开关只对声明支持零数据保留的厂商（当前为 CommandCode）�
 | --- | --- | --- |
 | `five_hour` | `5h` | 滚动 5 小时 |
 | `weekly` | `7d` | 每周 |
-| `daily` | `daily` | 每日窗口 |
 | `monthly` | `monthly` | 日历月 |
 
-CPA 契约（`sdk/pluginapi/types.go`）把 `window` 作为开放字符串，示例值包含 `5h`、`7d`、`daily`、`monthly`。5 小时与每周使用短窗口写法，日/月窗口没有专用短写法，因此保留 `daily`、`monthly` 语义，不硬塞成固定时长窗口。
+CPA 契约（`sdk/pluginapi/types.go`）把 `window` 作为开放字符串，示例值包含 `5h`、`7d`、`monthly` 等。5 小时与每周使用短窗口写法，日历月没有专用短写法，因此保留 `monthly` 语义，不硬塞成固定时长窗口。两家套餐都没有每日窗口。
 
 `remainingFraction` 为 0–1 的剩余比例：优先用已用/上限（`Used/Cap`）算出，其次用已用百分比；两者都没有的窗口不生成额度条，不推断为 0% 或额度耗尽。`resetTime` 使用上游重置时间。`subscription.plan` 取用量样本的套餐名称（OpenCode Go 的 `planName`/`plan.name`，CommandCode 计划表映射后的名称）。标准接口只输出厂商显示名、套餐名和已报告窗口，不输出 API Key、账号/订阅标识或余额金额。
 

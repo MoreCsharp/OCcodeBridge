@@ -124,6 +124,10 @@ func apiKeyWindows(usage map[string]any, now time.Time) []vendors.Window {
 			window.UsedPercent = clampPercent(percent)
 		}
 		window.Used, window.Cap = meterAmounts(meter)
+		if window.Used != nil || window.Cap != nil {
+			// OpenCode Go meters its allowance in dollars.
+			window.Unit = vendors.UnitUSD
+		}
 		if window.UsedPercent == nil && window.Used != nil && window.Cap != nil && *window.Cap > 0 {
 			window.UsedPercent = clampPercent(*window.Used / *window.Cap * 100)
 		}
@@ -156,6 +160,10 @@ func consoleWindows(meters map[string]any, periodEnd *time.Time, now time.Time) 
 		}
 		window := vendors.Window{Kind: spec.kind}
 		window.Used, window.Cap = meterAmounts(meter)
+		if window.Used != nil || window.Cap != nil {
+			// OpenCode Go meters its allowance in dollars.
+			window.Unit = vendors.UnitUSD
+		}
 		if window.Used != nil && window.Cap != nil && *window.Cap > 0 {
 			window.UsedPercent = clampPercent(*window.Used / *window.Cap * 100)
 		}

@@ -36,8 +36,8 @@ type Vendor interface {
 
 ## 共享类型约定
 
-- `Window.Kind` 只能是 `5h` / `7d` / `daily` / `month`。bridge 映射到 CPA quota 时：`5h`→`5h`、`7d`→`7d`、`daily`→`daily`、`month`→`monthly`（CPA 契约的 `window` 是开放字符串，示例含这四个值）。`daily`/`month` 同时用于内部暂停判断与页面展示。
-- 金额字段 `Used`/`Cap`/`Balance` 只在厂商确实给出金额时填写，币种由 `BalanceCurrency` 说明。
+- `Window.Kind` 只能是 `5h` / `7d` / `month`（两家套餐都只有这三个窗口；免费模型的每日请求上限不是套餐窗口，不得上报）。bridge 映射到 CPA quota 时：`5h`→`5h`、`7d`→`7d`、`month`→`monthly`。
+- `Used`/`Cap` 只在厂商确实给出数值时填写，`Window.Unit` 说明单位：`usd`（美元）或 `credit`（套餐积分，美元价值随模型不同）；不确定时留空，页面不加货币符号。`Balance` 的币种由 `BalanceCurrency` 说明。
 - `Model.Endpoints` 使用厂商文档里的原样路径（如 `/chat/completions`、`/messages`）；空表示未知。
 - 厂商 id 与模型 id 之间的前缀切分统一用 `vendors.SplitUpstreamID`：只切第一段，因此 `commandcode/deepseek/deepseek-v4-flash` 的模型 id 是 `deepseek/deepseek-v4-flash`。
 

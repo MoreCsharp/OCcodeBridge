@@ -34,11 +34,21 @@ type Model struct {
 }
 
 // Window kinds shared by every vendor. Windows a vendor does not report stay absent.
+// Both subscriptions have exactly these three plan windows; a per-day request cap
+// on a free model is not a plan window and is never reported as one.
 const (
 	WindowFiveHour = "5h"
 	WindowWeekly   = "7d"
-	WindowDaily    = "daily"
 	WindowMonthly  = "month"
+)
+
+// Units of Window.Used and Window.Cap.
+const (
+	// UnitUSD is US dollars.
+	UnitUSD = "usd"
+	// UnitCredit is a plan credit whose dollar value depends on the model: a
+	// model with a larger monthly allowance draws fewer credits per dollar.
+	UnitCredit = "credit"
 )
 
 // Window is one usage window. A nil number means "the vendor did not report it";
@@ -48,8 +58,10 @@ type Window struct {
 	UsedPercent *float64
 	Used        *float64
 	Cap         *float64
-	ResetAt     *time.Time
-	Status      string
+	// Unit is UnitUSD or UnitCredit for Used and Cap; empty means unknown.
+	Unit    string
+	ResetAt *time.Time
+	Status  string
 }
 
 // Usage is one usage sample for a credential.

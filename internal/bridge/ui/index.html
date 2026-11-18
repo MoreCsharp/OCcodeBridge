@@ -676,7 +676,7 @@
         <h3 id="releaseNoticeRoutingTitle">一个插件，两家订阅套餐</h3>
         <p>OCcodeBridge 0.1.0 支持 <strong>OpenCode Go</strong> 与 <strong>CommandCode</strong>：请求由凭据的<strong>厂商</strong>决定发往哪里，两家厂商的实现各自独立。</p>
         <p>凭据必须选择厂商才会参与调度；上游模型 ID 需要带厂商前缀，例如 <strong>opencode-go/模型名</strong>，发往上游时只发送去掉前缀的模型名。</p>
-        <p>用量窗口按厂商读取，统一为 5 小时 / 每周 / 每天 / 每月；窗口用尽默认暂停调度，避免花到付费额外额度。OpenCode Go 响应里的 <strong>opencode.allowance</strong> 会作为「本次计入额度」记入请求日志。</p>
+        <p>用量窗口按厂商读取，统一为 5 小时 / 每周 / 每月；窗口用尽默认暂停调度，避免花到付费额外额度。OpenCode Go 响应里的 <strong>opencode.allowance</strong> 会作为「本次计入额度」记入请求日志。</p>
         <p class="release-notice-callout"><strong>上游用量接口是非公开接口。</strong>本版本只用合成样本和本地假上游验证过，尚未用真实付费 key 全量核实；查询失败时卡片保留旧值并标明状态。</p>
       </section>
       <section class="release-notice-item" aria-labelledby="releaseNoticePolicyTitle">
@@ -1638,7 +1638,7 @@
         syncClearAffinityControls();
       }
     });
-    const usageLabels = { five_hour: '5 小时', weekly: '每周', daily: '每天', monthly: '每月' };
+    const usageLabels = { five_hour: '5 小时', weekly: '每周', monthly: '每月' };
     function usageDate(value) {
       const date = new Date(value);
       return value && Number.isFinite(date.getTime()) ? date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
@@ -1647,6 +1647,17 @@
       return typeof value === 'number' && Number.isFinite(value)
         ? `$${value.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
     }
+    // Window amounts carry their unit. CommandCode Go/GOAT/Pro report plan credits,
+    // whose dollar value depends on the model, so they must never be shown as "$".
+    function usageNumber(value) {
+      return value.toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+    function usageAmounts(limit) {
+      if (!(typeof limit?.used === 'number' && Number.isFinite(limit.used) && typeof limit?.cap === 'number' && Number.isFinite(limit.cap) && limit.cap > 0)) return null;
+      if (limit.unit === 'usd') return { text: `${usageMoney(limit.used)} / ${usageMoney(limit.cap)}`, title: '已用 / 窗口上限（美元）' };
+      if (limit.unit === 'credit') return { text: `${usageNumber(limit.used)} / ${usageNumber(limit.cap)} 积分`, title: '已用 / 窗口上限，单位为套餐积分。积分按模型折算：每个模型有自己的月度额度，同样 1 积分在月度额度越高的模型上能用的金额越多（约等于 积分 × 该模型月度额度 ÷ 套餐月积分）。' };
+      return { text: `${usageNumber(limit.used)} / ${usageNumber(limit.cap)}`, title: '已用 / 窗口上限（单位未知）' };
+    }
     // The vendor that produced the sample decides the extra fields: CommandCode
     // bills a dollar balance that is spent automatically once a window is full.
     function usageVendor(item, usage) { return String(usage?.vendor || item?.vendor || '').toLowerCase(); }
@@ -1654,7 +1665,10 @@
       const usage = credentialView.usage.get(item.id);
       const stale = !!usage?.updated_at && (usage.status !== 'ok' || Date.now() - Date.parse(usage.updated_at) > 90000);
       const limits = Array.isArray(usage?.limits) ? usage.limits : [];
-      const kinds = [...Object.keys(usageLabels), ...new Set(limits.map((limit) => limit.type).filter((type) => !Object.hasOwn(usageLabels, type)))];
+      // Only windows the vendor reported are drawn, in a fixed order; an
+      // unreported window gets no placeholder row.
+      const reported = new Set(limits.map((limit) => limit.type));
+      const kinds = [...Object.keys(usageLabels).filter((type) => reported.has(type)), ...[...reported].filter((type) => !Object.hasOwn(usageLabels, type))];
       const meters = kinds.map((type) => {
         const limit = limits.find((limit) => limit.type === type);
         const value = typeof limit?.percent_used === 'number' && Number.isFinite(limit.percent_used) && limit.percent_used >= 0 ? limit.percent_used : null;
@@ -1662,10 +1676,9 @@
         const resetPassed = reset && Date.parse(limit.resets_at) <= Date.now();
         const label = Object.hasOwn(usageLabels, type) ? usageLabels[type] : type;
         const text = value === null ? '—' : `${value.toLocaleString('zh-CN', { maximumFractionDigits: 1 })}%`;
-        const amounts = typeof limit?.used === 'number' && Number.isFinite(limit.used) && typeof limit?.cap === 'number' && Number.isFinite(limit.cap) && limit.cap > 0
-          ? `${usageMoney(limit.used)} / ${usageMoney(limit.cap)}` : '';
+        const amounts = usageAmounts(limit);
         const derived = /derived/.test(String(limit?.status || '')) ? '<div class="usage-derived">按规则推算</div>' : '';
-        return `<div class="usage-meter ${value === null ? '' : value >= 90 ? 'bad' : value >= 70 ? 'warn' : 'good'}"><div class="usage-meter-head"><span>${esc(label)}</span><strong title="已使用${esc(text)}">${text}</strong></div><div class="usage-track" ${value === null ? 'aria-hidden="true"' : `role="progressbar" aria-label="${esc(label)}已用${esc(text)}${stale ? '，上次数据' : ''}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100, value)}"`}><span class="usage-fill" style="width:${value === null ? 0 : Math.min(100, value)}%"></span></div>${amounts ? `<div class="usage-amount" title="已用 / 窗口上限">${esc(amounts)}</div>` : ''}<div class="usage-reset">${reset ? `${esc(reset)} 重置${resetPassed ? ' · 待更新' : ''}` : '重置时间 —'}</div>${derived}</div>`;
+        return `<div class="usage-meter ${value === null ? '' : value >= 90 ? 'bad' : value >= 70 ? 'warn' : 'good'}"><div class="usage-meter-head"><span>${esc(label)}</span><strong title="已使用${esc(text)}">${text}</strong></div><div class="usage-track" ${value === null ? 'aria-hidden="true"' : `role="progressbar" aria-label="${esc(label)}已用${esc(text)}${stale ? '，上次数据' : ''}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100, value)}"`}><span class="usage-fill" style="width:${value === null ? 0 : Math.min(100, value)}%"></span></div>${amounts ? `<div class="usage-amount" title="${esc(amounts.title)}">${esc(amounts.text)}</div>` : ''}<div class="usage-reset">${reset ? `${esc(reset)} 重置${resetPassed ? ' · 待更新' : ''}` : '重置时间 —'}</div>${derived}</div>`;
       }).join('');
       const balance = usageVendor(item, usage) === 'commandcode' && typeof usage?.balance === 'number' && Number.isFinite(usage.balance) ? usageMoney(usage.balance) : '';
       const notes = balance ? `<div class="usage-notes"><span title="付费余额：本周期窗口用尽后，上游会从这里自动扣用。">额外额度 <b>${esc(balance)}</b>（超窗口时会被自动扣用）</span></div>` : '';

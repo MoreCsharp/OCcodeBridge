@@ -45,11 +45,6 @@ func TestClassifyLimitErrorReportsRateLimitWindows(t *testing.T) {
 			body:   `{"success":false,"error":{"code":"RATE_LIMITED","status":429,"message":"weekly limit reached","rateLimit":{"window":"weekly","reset":1794993000,"model":"deepseek/deepseek-v4-flash"}}}`,
 			window: vendors.WindowWeekly,
 		},
-		{
-			name:   "daily window in the openai envelope",
-			body:   `{"error":{"type":"rate_limit_error","code":"RATE_LIMITED","message":"daily limit reached","rateLimit":{"window":"daily","reset":1794993000}}}`,
-			window: vendors.WindowDaily,
-		},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -154,5 +149,14 @@ func TestClassifyLimitErrorUnrelatedUpgradeWordingIsNotPermanent(t *testing.T) {
 	body := []byte(`{"error":{"type":"permission_error","code":"upstream_refused","message":"Provider refused; upgrade your client and retry"}}`)
 	if block := (Vendor{}).ClassifyLimitError(403, body, time.Now()); block != nil {
 		t.Fatalf("unrelated 403 must not pause the credential: %+v", block)
+	}
+}
+
+// A "daily" rateLimit is a free model's per-day request cap, not a plan window:
+// it must stay an ordinary rate limit and never pause the whole account.
+func TestClassifyLimitErrorDailyRequestCapIsNotAPlanWindow(t *testing.T) {
+	body := []byte(`{"error":{"type":"rate_limit_error","code":"RATE_LIMITED","message":"daily limit reached","rateLimit":{"window":"daily","reset":1794993000,"model":"glyph-cluster:free"}}}`)
+	if block := (Vendor{}).ClassifyLimitError(429, body, time.Now()); block != nil {
+		t.Fatalf("daily request cap must not pause the account: %+v", block)
 	}
 }

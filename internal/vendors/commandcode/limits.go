@@ -46,11 +46,13 @@ type limitRateLimit struct {
 	Model  string          `json:"model"`
 }
 
-// windowKinds maps the API's rateLimit.window onto the shared window kinds.
+// windowKinds maps the API's rateLimit.window onto the shared plan windows. A
+// "daily" window is deliberately absent: it is the per-day request cap of a free
+// model (e.g. "up to 1000 requests a day"), not a plan window, so it must stay an
+// ordinary request-scoped rate limit instead of pausing the whole account.
 var windowKinds = map[string]string{
 	"fivehour": vendors.WindowFiveHour,
 	"weekly":   vendors.WindowWeekly,
-	"daily":    vendors.WindowDaily,
 }
 
 // ClassifyLimitError reports the rolling window CommandCode exhausted, and the Go

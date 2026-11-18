@@ -25,24 +25,27 @@ function card(usage) {
   return { item, ...context.card };
 }
 
-test('CommandCode shows used/cap amounts, dollar extra credits and every window', () => {
+test('CommandCode GOAT shows plan credits (not dollars), dollar extra credits and its three windows', () => {
   const view = card({
     id: 'one', vendor: 'commandcode', status: 'ok',
     updated_at: new Date().toISOString(),
     balance: 12.5, balance_currency: 'USD',
     plan: { name: 'GOAT', current_period_end: '2030-01-31T00:00:00Z' },
     limits: [
-      { type: 'five_hour', percent_used: 95, used: 9.5, cap: 10, resets_at: '2030-01-02T00:00:00Z' },
-      { type: 'weekly', percent_used: 40, used: 20, cap: 50, resets_at: '2030-01-08T00:00:00Z' },
-      { type: 'monthly', used: 3, cap: 4 },
+      { type: 'five_hour', percent_used: 95, used: 9.5, cap: 10, unit: 'credit', resets_at: '2030-01-02T00:00:00Z' },
+      { type: 'weekly', percent_used: 40, used: 20, cap: 50, unit: 'credit', resets_at: '2030-01-08T00:00:00Z' },
+      { type: 'monthly', used: 3, cap: 4, unit: 'credit' },
     ],
   });
   const markup = view.meters(view.item);
   assert.match(markup, /5 小时/);
   assert.match(markup, /每周/);
   assert.match(markup, /每月/);
-  assert.match(markup, /\$9\.50 \/ \$10\.00/);
-  assert.match(markup, /\$3\.00 \/ \$4\.00/);
+  assert.doesNotMatch(markup, /每天/, 'there is no daily plan window');
+  assert.match(markup, /9\.5 \/ 10 积分/);
+  assert.match(markup, /3 \/ 4 积分/);
+  assert.doesNotMatch(markup, /\$9\.5|\$10\.00|\$3\.00/, 'plan credits are never shown as dollars');
+  assert.match(markup, /积分按模型折算/, 'the tooltip explains that a credit is worth a different amount per model');
   assert.match(markup, /额外额度 <b>\$12\.50<\/b>（超窗口时会被自动扣用）/);
   assert.match(markup, /usage-meter bad/, 'a 95% window is highlighted as risky');
   assert.equal(view.plan(view.item), 'CommandCode · GOAT · 本期至 01/31 08:00');
@@ -52,9 +55,11 @@ test('missing values stay unknown and only reported windows get a bar', () => {
   const view = card({
     id: 'one', vendor: 'opencode-go', status: 'ok', updated_at: new Date().toISOString(),
     plan: { name: 'Go' },
-    limits: [{ type: '5h' }, { type: 'weekly', percent_used: 0, status: 'derived', resets_at: '2030-01-07T00:00:00Z' }],
+    limits: [{ type: 'five_hour' }, { type: 'weekly', percent_used: 0, used: 0, cap: 12, unit: 'usd', status: 'derived', resets_at: '2030-01-07T00:00:00Z' }],
   });
   const markup = view.meters(view.item);
+  assert.doesNotMatch(markup, /每月|每天/, 'an unreported window gets no placeholder row');
+  assert.match(markup, /\$0\.00 \/ \$12\.00/, 'dollar windows keep the dollar format');
   const fiveHour = markup.slice(markup.indexOf('5 小时'), markup.indexOf('每周'));
   assert.match(fiveHour, /—/);
   assert.match(fiveHour, /重置时间 —/);
@@ -68,7 +73,7 @@ test('a failed query keeps the last sample and says so', () => {
     id: 'one', vendor: 'commandcode', status: 'unavailable', error: '上游拒绝查询，请检查 API Key 或账号权限',
     checked_at: new Date().toISOString(),
     updated_at: '2020-01-01T00:00:00Z',
-    limits: [{ type: 'weekly', percent_used: 12, used: 6, cap: 50 }],
+    limits: [{ type: 'weekly', percent_used: 12, used: 6, cap: 50, unit: 'usd' }],
   });
   const status = view.status(view.item);
   assert.match(status, /查询失败/);
@@ -80,8 +85,19 @@ test('a failed query keeps the last sample and says so', () => {
 test('an empty sample does not render a zero bar', () => {
   const view = card({ id: 'one', vendor: 'commandcode', status: 'ok', updated_at: new Date().toISOString(), limits: [] });
   const markup = view.meters(view.item);
-  assert.match(markup, /—/);
   assert.doesNotMatch(markup, /role="progressbar"/);
+  assert.doesNotMatch(markup, /usage-meter /, 'no placeholder windows are drawn');
+  assert.match(view.status(view.item), /上游未返回用量窗口/);
+});
+
+test('amounts with an unknown unit carry no currency sign', () => {
+  const view = card({
+    id: 'one', vendor: 'commandcode', status: 'ok', updated_at: new Date().toISOString(),
+    limits: [{ type: 'five_hour', percent_used: 50, used: 1, cap: 2 }],
+  });
+  const markup = view.meters(view.item);
+  assert.match(markup, />1 \/ 2</);
+  assert.doesNotMatch(markup, /\$/);
 });
 
 function schedulingView(account, item = { id: 'one', label: '测试账号', enabled: true, quota_paused: true }) {

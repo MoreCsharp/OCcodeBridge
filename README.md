@@ -48,7 +48,7 @@ plugins:
 | 厂商 | 在哪里拿 API Key | 套餐限制 | 插件如何处理 |
 | --- | --- | --- | --- |
 | OpenCode Go | [opencode.ai](https://opencode.ai) 控制台的 Go 套餐页签发 API Key | 有 5 小时 / 每周 / 每月额度；每周额度在周一 00:00 UTC 重置；超额可能转用付费 extra usage | 每个请求带稳定的 `x-opencode-session` 会话头，便于上游缓存与计费；额度窗口满时按 `pause_on_window_limit` 暂停 |
-| CommandCode | [commandcode.ai](https://commandcode.ai) 账号后台的 API Key（CLI 与 API 共用一把） | **Go 套餐没有 API 权限**，需要 GOAT 及以上；额度以 credits（约等于美元）计 | 上游明确表示「套餐无 API 权限」时长期停用该凭据，重启不丢失，升级套餐后点「重新检测」或换 Key 解除 |
+| CommandCode | [commandcode.ai](https://commandcode.ai) 账号后台的 API Key（CLI 与 API 共用一把） | **Go 套餐没有 API 权限**，需要 GOAT 及以上；Go/GOAT/Pro 的窗口额度以套餐积分计（1 积分的美元价值随模型不同），Max/Teams 1 积分 = $1 | 上游明确表示「套餐无 API 权限」时长期停用该凭据，重启不丢失，升级套餐后点「重新检测」或换 Key 解除 |
 
 CommandCode 的凭据可以打开 **ZDR**（零数据保留），插件会把 `x-cmd-zdr` 发给上游。OpenCode Go 没有这个开关。
 
@@ -75,7 +75,7 @@ CommandCode 的凭据可以打开 **ZDR**（零数据保留），插件会把 `x
 ## 用之前看一眼
 
 - **用量接口没有真实 key 全量核实。** 见上文；额度卡片显示的是厂商报告的百分比或已用/上限，不按价格推算。
-- **窗口额度保护默认开启。** 任一 5 小时 / 每周 / 每天 / 每月窗口用尽时暂停该账号调度，避免把额度花到付费 extra usage 上；`pause_on_window_limit: false` 可关闭主动暂停。
+- **窗口额度保护默认开启。** 任一 5 小时 / 每周 / 每月窗口用尽时暂停该账号调度，避免把额度花到付费 extra usage 上；`pause_on_window_limit: false` 可关闭主动暂停。
 - **流式卡住时提前截流默认关闭。** 开启后，从首段有效输出后计时，默认连续 20 秒没有新的有效输出才触发。
 - **Debug 默认关闭。** 按需开启额外流诊断；普通请求日志、错误和用量照常记录。
 - **升级前保留数据。** 容器部署请持久化插件目录、CPA 的 `auth-dir` 和插件数据目录（默认 `plugins/occodebridge-data`），升级前备份。

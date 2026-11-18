@@ -118,17 +118,15 @@ func quotaUsedFraction(limit usageLimit) (float64, bool) {
 }
 
 // quotaWindowName maps the internal window type onto the name CPA's quota
-// contract accepts. "5h" and "7d" are the documented short windows; a day or a
-// calendar month has no dedicated value, so the contract's own spellings "daily"
-// and "monthly" are used rather than squeezing them into a fixed-length window.
+// contract accepts. "5h" and "7d" are the documented short windows; a calendar
+// month has no dedicated value, so the contract's own spelling "monthly" is used
+// rather than squeezing it into a fixed-length window.
 func quotaWindowName(kind string) string {
 	switch kind {
 	case "five_hour":
 		return "5h"
 	case "weekly":
 		return "7d"
-	case "daily":
-		return "daily"
 	case "monthly":
 		return "monthly"
 	}

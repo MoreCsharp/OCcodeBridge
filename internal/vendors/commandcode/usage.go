@@ -62,7 +62,6 @@ type windowLimits struct {
 	Limited  *bool        `json:"limited"`
 	FiveHour *windowLimit `json:"fiveHour"`
 	Weekly   *windowLimit `json:"weekly"`
-	Daily    *windowLimit `json:"daily"`
 }
 
 // windowLimit is one rolling window, measured in credits.
@@ -137,8 +136,9 @@ func (Vendor) FetchUsage(ctx context.Context, c vendors.Credential, doer vendors
 		balance := maxCredit(credits.Credits.PurchasedCredits) + maxCredit(credits.Credits.FreeCredits)
 		usage.Balance, usage.BalanceCurrency = &balance, "USD"
 	}
-	usage.Windows = append(usage.Windows, limitWindows(credits.WindowLimits)...)
-	if monthly, ok := monthlyWindow(credits.Credits, current); ok {
+	unit := creditUnit(planID)
+	usage.Windows = append(usage.Windows, limitWindows(credits.WindowLimits, unit)...)
+	if monthly, ok := monthlyWindow(credits.Credits, current, unit); ok {
 		usage.Windows = append(usage.Windows, monthly)
 	}
 	return usage, nil
@@ -186,7 +186,7 @@ func maxCredit(value *float64) float64 {
 // that reports limited generates windows: without it the account is either
 // pay-as-you-go or the vendor did not report limits, and an empty bar would be a
 // claim the data does not support.
-func limitWindows(limits *windowLimits) []vendors.Window {
+func limitWindows(limits *windowLimits, unit string) []vendors.Window {
 	if limits == nil || limits.Limited == nil || !*limits.Limited {
 		return nil
 	}
@@ -196,14 +196,13 @@ func limitWindows(limits *windowLimits) []vendors.Window {
 	}{
 		{vendors.WindowFiveHour, limits.FiveHour},
 		{vendors.WindowWeekly, limits.Weekly},
-		{vendors.WindowDaily, limits.Daily},
 	}
 	windows := make([]vendors.Window, 0, len(reported))
 	for _, entry := range reported {
 		if entry.limit == nil {
 			continue
 		}
-		if window, ok := entry.limit.window(entry.kind); ok {
+		if window, ok := entry.limit.window(entry.kind, unit); ok {
 			windows = append(windows, window)
 		}
 	}
@@ -212,11 +211,11 @@ func limitWindows(limits *windowLimits) []vendors.Window {
 
 // window converts one credit window. A used/cap pair gives the exact percentage;
 // a non-positive cap leaves the percentage unknown rather than dividing by zero.
-func (l *windowLimit) window(kind string) (vendors.Window, bool) {
+func (l *windowLimit) window(kind, unit string) (vendors.Window, bool) {
 	if l.Used == nil && l.Cap == nil {
 		return vendors.Window{}, false
 	}
-	window := vendors.Window{Kind: kind, Used: l.Used, Cap: l.Cap, ResetAt: parseFlexibleTime(l.ResetAt)}
+	window := vendors.Window{Kind: kind, Used: l.Used, Cap: l.Cap, Unit: unit, ResetAt: parseFlexibleTime(l.ResetAt)}
 	if l.Used != nil && l.Cap != nil && *l.Cap > 0 {
 		percent := clampPercent(*l.Used / *l.Cap * 100)
 		window.UsedPercent = &percent
@@ -224,34 +223,35 @@ func (l *windowLimit) window(kind string) (vendors.Window, bool) {
 	return window, true
 }
 
-// monthlyWindow projects the monthly credit pool the way the CLI's
-// projectUsageView does: an active plan adds its own monthly credits to the
-// purchased and free credits, so the bar shows how much of the pool is spent. The
-// spend reported by /alpha/usage/summary is not queried yet, so without an active
-// plan the pool is just what is left.
-func monthlyWindow(credits *creditsBlock, current *subscription) (vendors.Window, bool) {
-	if credits == nil {
+// monthlyWindow reports how much of the plan's own monthly credits is spent. The
+// pool is the plan's monthly credits (or the larger remaining figure, as the CLI's
+// projectUsageView takes), and the remaining figure is monthlyCredits.
+//
+// Purchased and free extra credits are deliberately left out, unlike the CLI's
+// combined bar: they are billed in dollars at model cost, never paced by any
+// window, and the console shows them separately. Mixing them in would put two
+// units in one bar and dilute the plan percentage.
+//
+// Without an active, recognized plan there is no pool to measure against (the
+// spend from /alpha/usage/summary is not queried), so no monthly window is
+// reported rather than a made-up 0%.
+func monthlyWindow(credits *creditsBlock, current *subscription, unit string) (vendors.Window, bool) {
+	if credits == nil || credits.MonthlyCredits == nil || current == nil || !strings.EqualFold(strings.TrimSpace(current.Status), "active") {
 		return vendors.Window{}, false
 	}
-	monthly := maxCredit(credits.MonthlyCredits)
-	purchased := maxCredit(credits.PurchasedCredits)
-	free := maxCredit(credits.FreeCredits)
-	remaining := monthly + purchased + free
-	pool := remaining
-	if current != nil && strings.EqualFold(strings.TrimSpace(current.Status), "active") {
-		if active, ok := matchPlan(current.PlanID); ok {
-			pool = math.Max(active.MonthlyCredits, monthly) + purchased + free
-		}
+	active, ok := matchPlan(current.PlanID)
+	if !ok {
+		return vendors.Window{}, false
 	}
+	remaining := maxCredit(credits.MonthlyCredits)
+	pool := math.Max(active.MonthlyCredits, remaining)
 	if pool <= 0 {
 		return vendors.Window{}, false
 	}
 	used := pool - remaining
 	percent := clampPercent(used / pool * 100)
-	window := vendors.Window{Kind: vendors.WindowMonthly, Used: &used, Cap: &pool, UsedPercent: &percent}
-	if current != nil {
-		window.ResetAt = parseFlexibleTime(current.CurrentPeriodEnd)
-	}
+	window := vendors.Window{Kind: vendors.WindowMonthly, Used: &used, Cap: &pool, Unit: unit, UsedPercent: &percent}
+	window.ResetAt = parseFlexibleTime(current.CurrentPeriodEnd)
 	return window, true
 }
 

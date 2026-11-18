@@ -46,9 +46,18 @@ func TestFetchUsageAggregatesWhoamiCreditsAndSubscription(t *testing.T) {
 	if reset := usage.Windows[1].ResetAt; reset == nil || reset.Unix() != 1794993000 {
 		t.Fatalf("weekly reset = %v, want the unix-second stamp", reset)
 	}
-	// An active GOAT plan puts its 70 monthly credits into the pool, on top of the
-	// 15 extra credits: 85 total, of which 30 is spent.
-	assertWindow(t, usage.Windows[2], vendors.WindowMonthly, 30, 85, 30.0/85*100)
+	// An active GOAT plan's pool is its own 70 monthly credits; 40 are left, so 30
+	// are spent. The 15 extra credits are dollars, shown as the balance, and are
+	// not mixed into the plan-credit bar.
+	assertWindow(t, usage.Windows[2], vendors.WindowMonthly, 30, 70, 30.0/70*100)
+	for i, window := range usage.Windows {
+		if window.Unit != vendors.UnitCredit {
+			t.Fatalf("window %d unit = %q, want plan credits for GOAT", i, window.Unit)
+		}
+	}
+	if usage.Balance == nil || *usage.Balance != 15 {
+		t.Fatalf("balance = %v, want the 15 extra credits", usage.Balance)
+	}
 	if reset := usage.Windows[2].ResetAt; reset == nil || reset.Format(time.RFC3339) != "2026-12-01T00:00:00Z" {
 		t.Fatalf("monthly reset = %v", reset)
 	}
@@ -132,7 +141,7 @@ func TestFetchUsageKeepsUnknownCapAndReadsISOReset(t *testing.T) {
 		"credits": {"monthlyCredits": 40},
 		"windowLimits": {"limited": true,
 			"fiveHour": {"used": 3, "cap": 0},
-			"weekly": {"cap": 50},
+			"weekly": {"cap": 50, "resetAt": "2026-11-20T15:00:00Z"},
 			"daily": {"used": 1, "cap": 4, "resetAt": "2026-11-20T15:00:00Z"}}
 	}`}
 	doer := &fakeDoer{responses: responses}
@@ -141,8 +150,9 @@ func TestFetchUsageKeepsUnknownCapAndReadsISOReset(t *testing.T) {
 	if err != nil {
 		t.Fatalf("FetchUsage: %v", err)
 	}
-	if len(usage.Windows) != 4 {
-		t.Fatalf("windows = %+v, want 5h, 7d, daily and month", usage.Windows)
+	// "daily" is not a plan window and is ignored even when reported.
+	if len(usage.Windows) != 3 || usage.Windows[0].Kind != vendors.WindowFiveHour || usage.Windows[1].Kind != vendors.WindowWeekly || usage.Windows[2].Kind != vendors.WindowMonthly {
+		t.Fatalf("windows = %+v, want 5h, 7d and month", usage.Windows)
 	}
 	fiveHour := usage.Windows[0]
 	if fiveHour.UsedPercent != nil {
@@ -154,9 +164,8 @@ func TestFetchUsageKeepsUnknownCapAndReadsISOReset(t *testing.T) {
 	if usage.Windows[1].UsedPercent != nil || usage.Windows[1].Used != nil {
 		t.Fatalf("weekly window = %+v, want an unknown used and percent", usage.Windows[1])
 	}
-	assertWindow(t, usage.Windows[2], vendors.WindowDaily, 1, 4, 25)
-	if reset := usage.Windows[2].ResetAt; reset == nil || reset.Format(time.RFC3339) != "2026-11-20T15:00:00Z" {
-		t.Fatalf("daily reset = %v", reset)
+	if reset := usage.Windows[1].ResetAt; reset == nil || reset.Format(time.RFC3339) != "2026-11-20T15:00:00Z" {
+		t.Fatalf("weekly reset = %v", reset)
 	}
 }
 
@@ -176,14 +185,10 @@ func TestFetchUsageDegradesWhenSubscriptionsFail(t *testing.T) {
 	if usage.PlanName != "GOAT" {
 		t.Fatalf("plan = %q, want the plan named by the credits response", usage.PlanName)
 	}
-	if len(usage.Windows) != 3 {
-		t.Fatalf("windows = %+v, want the two rolling windows and a monthly one", usage.Windows)
-	}
-	// Without a subscription status there is no active monthly pool, so the month
-	// window only reports the credits that are left.
-	assertWindow(t, usage.Windows[2], vendors.WindowMonthly, 0, 55, 0)
-	if usage.Windows[2].ResetAt != nil {
-		t.Fatalf("monthly reset = %v, want unknown", usage.Windows[2].ResetAt)
+	// Without a subscription status there is no known monthly pool, so no month
+	// window is reported rather than a made-up 0%.
+	if len(usage.Windows) != 2 || usage.Windows[0].Kind != vendors.WindowFiveHour || usage.Windows[1].Kind != vendors.WindowWeekly {
+		t.Fatalf("windows = %+v, want only the two rolling windows", usage.Windows)
 	}
 }
 
@@ -308,5 +313,23 @@ func assertWindow(t *testing.T, window vendors.Window, kind string, used, capaci
 	}
 	if window.UsedPercent == nil || math.Abs(*window.UsedPercent-percent) > 1e-6 {
 		t.Fatalf("%s percent = %v, want %v", kind, window.UsedPercent, percent)
+	}
+}
+
+// Plans other than Go, GOAT and Pro count 1 credit as $1, so their amounts are
+// dollars; an unknown plan keeps the unit unknown.
+func TestCreditUnitFollowsThePlan(t *testing.T) {
+	cases := map[string]string{
+		"individual_goat":   vendors.UnitCredit,
+		"individual-go-v1":  vendors.UnitCredit,
+		"individual_pro_v1": vendors.UnitCredit,
+		"individual_max":    vendors.UnitUSD,
+		"teams_pro":         vendors.UnitUSD,
+		"mystery_plan":      "",
+	}
+	for planID, want := range cases {
+		if got := creditUnit(planID); got != want {
+			t.Fatalf("creditUnit(%q) = %q, want %q", planID, got, want)
+		}
 	}
 }

@@ -43,7 +43,7 @@ func (s *Service) schedulingResponse() (any, error) {
 				account["plan_unsupported"] = true
 				account["quota_reason"] = c.QuotaBlock.Reason
 			} else {
-				labels := map[string]string{"five_hour": "五小时", "weekly": "每周", "daily": "每天", "monthly": "每月"}
+				labels := map[string]string{"five_hour": "五小时", "weekly": "每周", "monthly": "每月"}
 				reasons := []string{}
 				var retry time.Time
 				for _, limit := range c.QuotaBlock.Limits {

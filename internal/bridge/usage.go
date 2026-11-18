@@ -16,6 +16,7 @@ type usageLimit struct {
 	PercentUsed *float64   `json:"percent_used"`
 	Used        *float64   `json:"used,omitempty"`
 	Cap         *float64   `json:"cap,omitempty"`
+	Unit        string     `json:"unit,omitempty"`
 	ResetsAt    *time.Time `json:"resets_at"`
 	Status      string     `json:"status,omitempty"`
 }
@@ -59,8 +60,6 @@ func quotaTypeForWindow(kind string) string {
 		return "five_hour"
 	case vendors.WindowWeekly:
 		return "weekly"
-	case vendors.WindowDaily:
-		return "daily"
 	case vendors.WindowMonthly:
 		return "monthly"
 	}
@@ -227,7 +226,7 @@ func (s *Service) fetchCredentialUsage(callbackID string, c Credential, value cr
 		if window.UsedPercent != nil && *window.UsedPercent < 0 {
 			window.UsedPercent = nil
 		}
-		limits = append(limits, usageLimit{Type: kind, PercentUsed: window.UsedPercent, Used: window.Used, Cap: window.Cap, ResetsAt: window.ResetAt, Status: window.Status})
+		limits = append(limits, usageLimit{Type: kind, PercentUsed: window.UsedPercent, Used: window.Used, Cap: window.Cap, Unit: window.Unit, ResetsAt: window.ResetAt, Status: window.Status})
 	}
 	now := time.Now().UTC()
 	value.Limits, value.UpdatedAt, value.Status, value.Error = limits, &now, "ok", ""
