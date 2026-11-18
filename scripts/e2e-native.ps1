@@ -15,6 +15,8 @@ Set-StrictMode -Version Latest
 # The CPA executable is reused when bin\cli-proxy-api.exe already exists; set
 # PLANBRIDGE_CPA_EXE to seed it from a verified build, or leave it unset to build
 # ./cmd/server from PLANBRIDGE_CPA_SOURCE (default D:\code\cpaexp\CLIProxyAPI).
+# Requires Python 3 on PATH for the fake upstream, and a C toolchain for the DLL
+# build that scripts/build-windows.ps1 performs.
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $runtimeRoot = if ($env:PLANBRIDGE_E2E_ROOT) { $env:PLANBRIDGE_E2E_ROOT } else { 'D:\code\cpaexp\.runtime\planbridge-e2e' }

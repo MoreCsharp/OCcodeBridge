@@ -114,7 +114,7 @@ pwsh -NoProfile -File scripts/build-windows.ps1 -Zip   # 另打 planbridge_<版�
 pwsh -NoProfile -File scripts/check.ps1
 ```
 
-其他平台（Linux arm64、macOS amd64/arm64）的打包方式见[发布工作流](.github/workflows/release.yml)。仓库里还有 `scripts/e2e-native.ps1`：用本地假上游和真 CPA 进程跑一遍原生验收，不会访问真实上游。
+其他平台（Linux arm64、macOS amd64/arm64）的打包方式见[发布工作流](.github/workflows/release.yml)。仓库里还有 `scripts/e2e-native.ps1`：用本地假上游和真 CPA 进程跑一遍原生验收（需要 Python 3 与本地 CPA 可执行文件），不会访问真实上游。
 
 ## 许可与致谢
 
