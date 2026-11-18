@@ -149,3 +149,10 @@ func TestClassifyLimitErrorIgnoresOrdinaryFailures(t *testing.T) {
 		})
 	}
 }
+
+func TestClassifyLimitErrorUnrelatedUpgradeWordingIsNotPermanent(t *testing.T) {
+	body := []byte(`{"error":{"type":"permission_error","code":"upstream_refused","message":"Provider refused; upgrade your client and retry"}}`)
+	if block := (Vendor{}).ClassifyLimitError(403, body, time.Now()); block != nil {
+		t.Fatalf("unrelated 403 must not pause the credential: %+v", block)
+	}
+}

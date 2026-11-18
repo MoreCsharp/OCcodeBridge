@@ -85,10 +85,12 @@ func (Vendor) ClassifyLimitError(status int, body []byte, _ time.Time) *vendors.
 }
 
 // mentionsGoPlan reports the 403 message that names the Go plan, which is the only
-// plan without API access, so a body without a code still classifies.
+// plan without API access, so a body without a code still classifies. A bare
+// "upgrade" is not enough: a Permanent block stops scheduling until an operator
+// acts, so an unrelated 403 must never trigger it.
 func mentionsGoPlan(message string) bool {
 	lower := strings.ToLower(message)
-	return strings.Contains(lower, "go plan") || strings.Contains(lower, "upgrade")
+	return strings.Contains(lower, "go plan") && strings.Contains(lower, "api")
 }
 
 // normalizeWindow folds the window spellings onto the keys of windowKinds.
