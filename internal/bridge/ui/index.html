@@ -2007,10 +2007,11 @@
       const id = $('modelId').value;
       const upstream_id = $('upstreamId').value;
       if (!id.trim() || !upstream_id.trim()) { $('modelDialogState').textContent = '两个模型名称都不能为空'; return; }
+      if (!state.vendors.some((vendor) => upstream_id.startsWith(`${vendor.id}/`))) { $('modelDialogState').textContent = '上游模型需要以厂商前缀开头，例如 opencode-go/模型名'; return; }
       if (state.models.some((model, index) => index !== state.editingModelIndex && String(model.id).toLowerCase() === id.toLowerCase())) { $('modelDialogState').textContent = '客户端模型名称已存在'; return; }
       const next = state.models.map((model) => ({ ...model }));
       const existing = state.models[state.editingModelIndex];
-      const item = { ...existing, id, upstream_id, providers: existing ? [...existing.providers] : [] };
+      const item = { ...existing, id, upstream_id };
       if (existing && existing.upstream_id !== upstream_id) delete item.reasoning_mapping;
       if (state.editingModelIndex < 0) next.push(item); else next[state.editingModelIndex] = item;
       state.modelBusy = true;
