@@ -1,10 +1,12 @@
 # PlanBridge C ABI 入口
 
-本目录将 `internal/bridge.Service` 接到 CLIProxyAPI v7.3.12 的原生插件 ABI v1。编译目标是 Linux amd64 共享库：
+本目录将 `internal/bridge.Service` 接到 CLIProxyAPI 的原生插件 ABI v1（已在官方 v8.0.67 上做过原生验收）。编译目标是动态库，例如 Linux amd64：
 
 ```bash
-CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -buildmode=c-shared -o planbridge.so ./cmd/planbridge
+CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -trimpath -buildvcs=false -buildmode=c-shared -ldflags="-s -w" -o planbridge.so ./cmd/planbridge
 ```
+
+Windows 用 `scripts/build-windows.ps1`，macOS 与 Linux arm64 的构建参数见发布工作流。
 
 `main.go` 导出 `cliproxy_plugin_init`，并向宿主提供 `call`、`free_buffer`、`shutdown` 函数表。所有插件方法原样传给 `Service.Handle(method string, raw json.RawMessage) (any, error)`，返回值序列化为 `{ "ok": true, "result": ... }`。错误转成 `{ "ok": false, "error": { "code": ..., "message": ..., "http_status": ... } }`；服务错误可实现 `StatusCode() int`、`Code() string`、`Retryable() bool` 保留分类。适配器会回收自己分配的 C 内存及宿主回调返回的缓冲区。
 
