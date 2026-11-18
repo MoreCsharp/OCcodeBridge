@@ -60,7 +60,7 @@ const releaseNoticeModule = (() => {
   button.addEventListener('click', () => open(true));
   document.getElementById('releaseNoticeDismiss').addEventListener('click', () => dialog.close());
   document.getElementById('releaseNoticeSettings').addEventListener('click', () => {
-    setTab('pin');
+    setTab('credentials');
     dialog.close();
   });
   dialog.addEventListener('close', () => {

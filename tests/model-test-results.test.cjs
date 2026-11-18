@@ -15,84 +15,82 @@ const keyDeclaration = html.match(/^    const modelTestKey = .+;$/m);
 assert.ok(keyDeclaration, 'missing model test cache key');
 const code = [
   keyDeclaration[0],
-  section('    function renderModelRows()', '    const parseProviders ='),
+  section('    function renderModelRows()', '    function syncModelTestCredentials()'),
   section('    async function testMappedModel(', '    function candidateChanges('),
 ].join('\n');
 
-function page(reply = async () => ({ ok: true, provider: 'openai-compatible-private' })) {
-  const state = {
-    models: [{ id: 'flash', upstream_id: 'opencode-go/flash', providers: ['deepseek'] }],
-    config: { provider_policy: 'config' }, modelBusy: false,
-  };
+// A model test result belongs to one model/credential/reasoning input triple, so any
+// change to the mapping revision must hide the previous result instead of reusing it.
+function page(reply = async () => ({ ok: true, provider: 'deepseek' })) {
+  const state = { models: [{ id: 'flash', upstream_id: 'opencode-go/flash' }], modelBusy: false };
   const nodes = new Map();
-  const pinButton = { dataset: { index: '0' }, setAttribute() {} };
   function node(id) {
     if (!nodes.has(id)) nodes.set(id, { value: '', innerHTML: '' });
     return nodes.get(id);
   }
-  node('modelTestCredential').value = node('pinProbeCredential').value = 'fixture-credential';
-  node('pinModelList').querySelectorAll = () => [pinButton];
+  node('modelTestCredential').value = 'fixture-credential';
   const context = vm.createContext({
     state, $: node, modelTestResults: new Map(), reasoningMappingRevision: 0,
-    reasoningMappingBusy: false, pinAutosave: { flight: null }, performance,
+    reasoningMappingBusy: false, performance,
     shown: value => value, esc: value => String(value), buttonIcon: () => '',
-    modelToolsLabel: () => '', setButtonLabel() {},
+    setButtonLabel() {},
     modelTestHTML: result => result ? result.pending ? 'pending' : result.provider : '',
     api: reply,
   });
   vm.runInContext(code, context);
   return {
-    state, node, pinButton,
+    state, node,
     run: () => context.testMappedModel({ ...state.models[0] }),
-    setHas(has) {
-      state.models = [{ ...state.models[0], has }];
+    setMapping(mapping) {
+      state.models = [{ ...state.models[0], reasoning_mapping: mapping }];
+      context.renderModelRows();
+    },
+    setRevision(revision) {
+      context.reasoningMappingRevision = revision;
       context.renderModelRows();
     },
     assertProvider(provider) {
-      assert.equal(node('pinModelTest-0').innerHTML, provider);
-      if (provider) assert.ok(node('modelList').innerHTML.includes(provider));
-      else assert.ok(!node('modelList').innerHTML.includes('openai-compatible-private'));
+      const rows = node('modelList').innerHTML;
+      if (provider) assert.ok(rows.includes(provider), `expected ${provider} in ${rows}`);
+      else assert.ok(!rows.includes('deepseek'), `stale result stayed visible: ${rows}`);
     },
   };
 }
 
-test('adding, replacing or clearing has hides results from the previous routing configuration', async () => {
-  for (const [before, after] of [[undefined, ['vision']], [['vision'], ['implicit-caching']], [['vision'], []]]) {
+test('a saved reasoning mapping hides results produced before it', async () => {
+  for (const [before, after] of [[undefined, { enabled: true }], [{ enabled: true }, { enabled: false }]]) {
     const view = page();
-    view.setHas(before);
+    view.setMapping(before);
     await view.run();
-    view.assertProvider('openai-compatible-private');
-    view.setHas(after);
+    view.assertProvider('deepseek');
+    view.setMapping(after);
     view.assertProvider('');
   }
 });
 
-test('missing, null and empty has retain the same unfiltered test result', async () => {
+test('a mapping revision bump hides results produced before the save', async () => {
   const view = page();
   await view.run();
-  for (const has of [null, []]) {
-    view.setHas(has);
-    view.assertProvider('openai-compatible-private');
-  }
+  view.assertProvider('deepseek');
+  view.setRevision(1);
+  view.assertProvider('');
 });
 
-test('a late response from the old capability filter stays hidden until a new test runs', async () => {
+test('a late response from the previous mapping stays hidden until a new test runs', async () => {
   let finishOld;
   let calls = 0;
   const view = page(() => ++calls === 1
     ? new Promise(resolve => { finishOld = resolve; })
-    : Promise.resolve({ ok: true, provider: 'deepseek' }));
+    : Promise.resolve({ ok: true, provider: 'kimi' }));
   const oldTest = view.run();
   view.assertProvider('pending');
-  assert.equal(view.pinButton.disabled, true);
-  view.setHas(['vision']);
+  view.setRevision(1);
   view.assertProvider('');
-  assert.equal(view.pinButton.disabled, false);
-  finishOld({ ok: true, provider: 'openai-compatible-private' });
+  finishOld({ ok: true, provider: 'deepseek' });
   await oldTest;
   view.assertProvider('');
   await view.run();
   assert.equal(calls, 2);
-  view.assertProvider('deepseek');
-  assert.ok(!view.node('modelList').innerHTML.includes('openai-compatible-private'));
+  view.assertProvider('kimi');
+  assert.ok(!view.node('modelList').innerHTML.includes('deepseek'));
 });

@@ -4,9 +4,9 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { test } = require('node:test');
 
-const source = fs.readFileSync(process.env.PASSBRIDGE_AUTH_SOURCE || path.join(__dirname, '../internal/bridge/ui/cpa-auth.js'), 'utf8');
+const source = fs.readFileSync(process.env.PLANBRIDGE_AUTH_SOURCE || path.join(__dirname, '../internal/bridge/ui/cpa-auth.js'), 'utf8');
 const origin = 'https://cpa.example';
-const userAgent = 'PassBridge auth regression fixture';
+const userAgent = 'PlanBridge auth regression fixture';
 const key = 'fixture-management-key';
 
 // Fixed synthetic fixtures using the official obfuscateData format from
@@ -57,7 +57,7 @@ function loadAuth({ login = savedLogin(), apiBase = '/v0/management/planbridge',
 }
 
 async function headers(options) {
-  return JSON.parse(JSON.stringify(await loadAuth(options).PassBridgeAuthHeaders()));
+  return JSON.parse(JSON.stringify(await loadAuth(options).PlanBridgeAuthHeaders()));
 }
 
 test('reuse existing remembered login, encrypted or plain', async () => {
@@ -116,12 +116,12 @@ test('manual bearer and X-Management-Key survive refresh and iframe recreation w
     const session = new Map();
     const options = { session, login: savedLogin(origin, false), loggedIn: null };
     const first = loadAuth(options);
-    first.PassBridgeSaveAuth(key, type);
+    first.PlanBridgeSaveAuth(key, type);
     const expected = type === 'bearer' ? { Authorization: `Bearer ${key}` } : { 'X-Management-Key': key };
-    assert.deepEqual(JSON.parse(JSON.stringify(loadAuth(options).PassBridgeAuthHeaders())), expected);
-    assert.deepEqual(JSON.parse(JSON.stringify(loadAuth({ ...options, session: new Map() }).PassBridgeAuthHeaders())), {});
-    assert.deepEqual(JSON.parse(JSON.stringify(loadAuth({ ...options, apiBase: '/other/v8/management/planbridge' }).PassBridgeAuthHeaders())), {});
-    first.PassBridgeClearAuth();
+    assert.deepEqual(JSON.parse(JSON.stringify(loadAuth(options).PlanBridgeAuthHeaders())), expected);
+    assert.deepEqual(JSON.parse(JSON.stringify(loadAuth({ ...options, session: new Map() }).PlanBridgeAuthHeaders())), {});
+    assert.deepEqual(JSON.parse(JSON.stringify(loadAuth({ ...options, apiBase: '/other/v8/management/planbridge' }).PlanBridgeAuthHeaders())), {});
+    first.PlanBridgeClearAuth();
     assert.equal(session.size, 0);
   }
 });
@@ -133,18 +133,18 @@ test('remembered manual keys survive a new session, stay endpoint scoped, and pr
     const context = loadAuth(options);
     const panelStorage = new Map(persistent);
     const expected = type === 'bearer' ? { Authorization: 'Bearer remembered-fixture-key' } : { 'X-Management-Key': 'remembered-fixture-key' };
-    context.PassBridgeSaveAuth('remembered-fixture-key', type, true);
+    context.PlanBridgeSaveAuth('remembered-fixture-key', type, true);
     assert.equal(session.size, 1);
     assert.equal(persistent.size, panelStorage.size + 1);
     assert.deepEqual(await headers({ ...options, session: new Map() }), expected);
     assert.deepEqual(await headers({ ...options, session: new Map(), apiBase: '/other/v8/management/planbridge' }), {});
 
     const sessionOnly = new Map();
-    loadAuth({ session: sessionOnly }).PassBridgeSaveAuth('session-fixture-key', type);
+    loadAuth({ session: sessionOnly }).PlanBridgeSaveAuth('session-fixture-key', type);
     const sessionExpected = type === 'bearer' ? { Authorization: 'Bearer session-fixture-key' } : { 'X-Management-Key': 'session-fixture-key' };
     assert.deepEqual(await headers({ ...options, session: sessionOnly }), sessionExpected);
 
-    context.PassBridgeClearAuth();
+    context.PlanBridgeClearAuth();
     assert.equal(session.size, 0);
     assert.deepEqual(persistent, panelStorage);
     assert.deepEqual(await headers({ ...options, session: new Map() }), { Authorization: `Bearer ${key}` });
@@ -157,13 +157,13 @@ test('default and explicit session-only saves remove an old remembered key for t
     const options = { session, persistent, login: savedLogin(origin, false), loggedIn: null };
     const context = loadAuth(options);
     const otherOptions = { ...options, session: new Map(), apiBase: '/other/v8/management/planbridge' };
-    loadAuth(otherOptions).PassBridgeSaveAuth('other-fixture-key', 'bearer', true);
+    loadAuth(otherOptions).PlanBridgeSaveAuth('other-fixture-key', 'bearer', true);
     const savedPersistent = new Map(persistent);
-    context.PassBridgeSaveAuth('old-fixture-key', 'bearer', true);
+    context.PlanBridgeSaveAuth('old-fixture-key', 'bearer', true);
     assert.equal(persistent.size, savedPersistent.size + 1);
-    context.PassBridgeSaveAuth(key, 'bearer', remember);
+    context.PlanBridgeSaveAuth(key, 'bearer', remember);
     assert.deepEqual(persistent, savedPersistent);
-    assert.deepEqual(JSON.parse(JSON.stringify(context.PassBridgeAuthHeaders())), { Authorization: `Bearer ${key}` });
+    assert.deepEqual(JSON.parse(JSON.stringify(context.PlanBridgeAuthHeaders())), { Authorization: `Bearer ${key}` });
     assert.deepEqual(await headers({ ...options, session: new Map() }), {});
     assert.deepEqual(await headers({ ...otherOptions, session: new Map() }), { Authorization: 'Bearer other-fixture-key' });
   }
@@ -171,29 +171,29 @@ test('default and explicit session-only saves remove an old remembered key for t
 
 test('invalid storage and blocked storage leave the page usable', () => {
   const context = loadAuth({ blocked: true });
-  assert.doesNotThrow(() => context.PassBridgeSaveAuth(key, 'bearer'));
-  assert.doesNotThrow(() => context.PassBridgeClearAuth());
-  assert.equal(context.PassBridgeAuthHeaders().Authorization, `Bearer ${key}`);
+  assert.doesNotThrow(() => context.PlanBridgeSaveAuth(key, 'bearer'));
+  assert.doesNotThrow(() => context.PlanBridgeClearAuth());
+  assert.equal(context.PlanBridgeAuthHeaders().Authorization, `Bearer ${key}`);
   const session = new Map();
   const corrupt = loadAuth({ session });
-  corrupt.PassBridgeSaveAuth(key, 'bearer');
+  corrupt.PlanBridgeSaveAuth(key, 'bearer');
   session.set([...session.keys()][0], '{broken');
-  assert.equal(corrupt.PassBridgeAuthHeaders().Authorization, `Bearer ${key}`);
+  assert.equal(corrupt.PlanBridgeAuthHeaders().Authorization, `Bearer ${key}`);
 });
 
 test('a delayed rejection does not clear a newer manual key', () => {
   const session = new Map(), persistent = new Map();
   const context = loadAuth({ session, persistent });
   const panelStorage = new Map(persistent);
-  context.PassBridgeSaveAuth(key, 'bearer', true);
-  context.PassBridgeSaveAuth('new-fixture-key', 'bearer', true);
+  context.PlanBridgeSaveAuth(key, 'bearer', true);
+  context.PlanBridgeSaveAuth('new-fixture-key', 'bearer', true);
   const savedSession = new Map(session), savedPersistent = new Map(persistent);
-  context.PassBridgeClearAuth({ Authorization: `Bearer ${key}` });
+  context.PlanBridgeClearAuth({ Authorization: `Bearer ${key}` });
   assert.deepEqual(session, savedSession);
   assert.deepEqual(persistent, savedPersistent);
-  assert.equal(context.PassBridgeAuthHeaders().Authorization, 'Bearer new-fixture-key');
-  assert.equal(loadAuth({ persistent }).PassBridgeAuthHeaders().Authorization, 'Bearer new-fixture-key');
-  context.PassBridgeClearAuth({ Authorization: 'Bearer new-fixture-key' });
+  assert.equal(context.PlanBridgeAuthHeaders().Authorization, 'Bearer new-fixture-key');
+  assert.equal(loadAuth({ persistent }).PlanBridgeAuthHeaders().Authorization, 'Bearer new-fixture-key');
+  context.PlanBridgeClearAuth({ Authorization: 'Bearer new-fixture-key' });
   assert.equal(session.size, 0);
   assert.deepEqual(persistent, panelStorage);
 });
@@ -250,8 +250,8 @@ test('page API persists only verified manual keys and removes rejected session c
   const options = { session, persistent, login: savedLogin(origin, false), loggedIn: null };
   const context = pageAPI(options);
   const panelStorage = new Map(persistent);
-  const savedCalls = [], saveAuth = context.PassBridgeSaveAuth;
-  context.PassBridgeSaveAuth = (...args) => { savedCalls.push(args); saveAuth(...args); };
+  const savedCalls = [], saveAuth = context.PlanBridgeSaveAuth;
+  context.PlanBridgeSaveAuth = (...args) => { savedCalls.push(args); saveAuth(...args); };
   context.state.key = key;
   let status = 500;
   context.fetch = async () => ({ ok: status === 200, status, text: async () => '{}' });
@@ -324,7 +324,7 @@ test('late unauthorized or banned responses do not reopen the dialog after a new
     const options = { session, persistent, loggedIn: null };
     const context = pageAPI(options);
     context.state.rememberAuth = true;
-    if (fromSession) context.PassBridgeSaveAuth(key, 'bearer', true);
+    if (fromSession) context.PlanBridgeSaveAuth(key, 'bearer', true);
     else context.state.key = key;
     context.fetch = async () => ({ ok: true, status: 200, text: async () => '{}' });
     await context.api('/status');
@@ -338,14 +338,14 @@ test('late unauthorized or banned responses do not reopen the dialog after a new
     context.fetch = async () => ({ ok: true, status: 200, text: async () => '{}' });
     await context.api('/status');
     const savedSession = new Map(session), savedPersistent = new Map(persistent);
-    assert.equal(loadAuth({ ...options, session: new Map() }).PassBridgeAuthHeaders().Authorization, 'Bearer new-fixture-key');
+    assert.equal(loadAuth({ ...options, session: new Map() }).PlanBridgeAuthHeaders().Authorization, 'Bearer new-fixture-key');
     context.$('authButton').textContent = '密钥已输入';
     reply({ ok: false, status, text: async () => JSON.stringify({ error: status === 403 ? 'IP banned. Try again in 28m47s' : 'invalid management key' }) });
     await assert.rejects(oldRequest, new RegExp(`HTTP ${status}`));
     assert.equal(context.$('authDialog').open, false);
     assert.equal(context.$('authButton').textContent, '密钥已输入');
     assert.equal(context.state.key, 'new-fixture-key');
-    assert.equal(context.PassBridgeAuthHeaders().Authorization, 'Bearer new-fixture-key');
+    assert.equal(context.PlanBridgeAuthHeaders().Authorization, 'Bearer new-fixture-key');
     assert.deepEqual(session, savedSession);
     assert.deepEqual(persistent, savedPersistent);
   }
@@ -392,7 +392,7 @@ test('real API requests and remembered panel logins follow the public console pr
 test('public console prefixes isolate manual credentials from root and sibling deployments', async () => {
   const session = new Map(), persistent = new Map();
   const options = { ...noLogin, session, persistent, consoleURL: `${origin}/team/cpa/v0/resource/plugins/planbridge/console` };
-  loadAuth(options).PassBridgeSaveAuth(key, 'bearer', true);
+  loadAuth(options).PlanBridgeSaveAuth(key, 'bearer', true);
   assert.deepEqual(await headers({ ...options, session: new Map() }), { Authorization: `Bearer ${key}` });
   for (const prefix of ['', '/other', '/team/other']) {
     assert.deepEqual(await headers({ ...options, consoleURL: `${origin}${prefix}/v0/resource/plugins/planbridge/console` }), {});
@@ -455,8 +455,8 @@ test('wrong key and duplicate form submissions cause just one failed verificatio
 
 test('a stale asynchronously restored panel login is validated once and stays paused after failure', async () => {
   const context = pageAPI();
-  const saved = context.PassBridgeAuthHeaders;
-  context.PassBridgeAuthHeaders = async () => saved();
+  const saved = context.PlanBridgeAuthHeaders;
+  context.PlanBridgeAuthHeaders = async () => saved();
   const calls = [];
   context.fetch = async url => { calls.push(url); return reply(401, { error: 'invalid management key' }); };
   await Promise.allSettled([context.api('/status'), context.api('/statistics'), context.api('/logs')]);
@@ -542,7 +542,7 @@ test('IP bans preserve credentials, count down locally, and require explicit ret
     const context = pageAPI({ ...noLogin, session, persistent });
     let now = 1000000, count = 0;
     context.Date = class extends Date { static now() { return now; } };
-    if (fromSaved) context.PassBridgeSaveAuth(key, 'bearer', true);
+    if (fromSaved) context.PlanBridgeSaveAuth(key, 'bearer', true);
     else context.state.key = key;
     context.state.rememberAuth = true;
     context.fetch = async () => { count++; return reply(); };

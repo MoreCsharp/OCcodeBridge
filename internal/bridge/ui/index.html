@@ -139,11 +139,6 @@
        banner balanced instead of hanging the text off the top edge. */
     .notice.with-action { display: flex; gap: 12px; align-items: center; }
     .notice.with-action > span { flex: 1; }
-    .credential-estimate-notice { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 16px; font-size: 13px; line-height: 1.7; }
-    .credential-estimate-notice > svg { width: 18px; height: 18px; flex: none; margin-top: 2px; color: var(--warn); }
-    .credential-estimate-notice p + p { margin-top: 4px; }
-    .credential-estimate-notice strong, .credential-estimate-notice a { color: var(--warn); }
-    .credential-estimate-notice a { text-underline-offset: 3px; }
     dialog.dialog-wide { max-width: min(680px, calc(100vw - 32px)); }
     dialog.dialog-wide h3 { margin: 18px 0 6px; font-size: 13px; }
     dialog.dialog-wide ol, dialog.dialog-wide ul { margin: 6px 0 0; padding-left: 20px; color: var(--muted); font-size: 12px; line-height: 1.65; }
@@ -241,43 +236,8 @@
     .panel-hint { color: var(--muted); font-size: 12px; margin-top: 3px; }
     .model-row { justify-content: space-between; border-radius: 8px; background: var(--inset-bg); padding: 14px; min-width: 0; }
     #modelList, #pinModelList { display: grid; gap: 10px; }
-    #pinPanel { display: grid; gap: 24px; }
-    #pinPanel .panel-head { align-items: flex-start; flex-wrap: wrap; margin-bottom: 16px; }
-    .pin-policy-layout { display: grid; grid-template-columns: minmax(220px, 360px) minmax(0, 1fr); gap: 12px 24px; align-items: center; }
-    .pin-policy-layout .field { margin: 0; }
-    .pin-policy-layout .subtext { margin: 0; }
-    .pin-save-feedback { display: flex; align-items: center; gap: 8px; margin-left: auto; min-width: 0; }
-    .pin-save-status { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
-    .pin-save-status[data-phase="saved"] { color: var(--success); }
-    .pin-save-status[data-phase="pending"], .pin-save-status[data-phase="saving"] { color: var(--warn); }
-    .pin-save-status[data-phase="error"] { color: var(--danger); }
-    .pin-help { margin-bottom: 16px; color: var(--muted); font-size: 12px; }
-    .pin-help > summary { width: fit-content; cursor: pointer; }
-    .pin-help[open] > summary { margin-bottom: 10px; }
-    .pin-semantics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin: 0; padding: 14px 16px; border-radius: 8px; background: var(--inset-bg); }
-    .pin-semantics > div + div { border-left: 1px solid var(--inset-line); padding-left: 16px; }
-    .pin-semantics dt { margin-bottom: 4px; color: var(--ink); font-size: 12px; font-weight: 600; }
-    .pin-semantics dd { margin: 0; color: var(--muted); font-size: 12px; }
-    .pin-probe-tools { padding-bottom: 18px; margin-bottom: 18px; border-bottom: 1px solid var(--inset-line); }
-    .pin-probe-tools .field-line { margin-bottom: 0; }
-    #pinProbeState:empty { display: none; }
-    .pin-editor { flex-basis: 100%; }
-    .pin-editor-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-    .pin-editor-heading .button { min-height: 26px; font-size: 11px; }
-    .pin-custom-summary { flex-basis: 100%; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
-    #pinRoutingDialog { width: min(680px, calc(100vw - 32px)); }
-    #pinRoutingModel { overflow-wrap: anywhere; }
     #pinProviderOptions { width: 100%; min-height: 270px; resize: vertical; tab-size: 2; line-height: 1.6; font-size: 13px; }
-    .pin-json-tools { display: flex; flex-wrap: wrap; gap: 8px; }
-    #pinRoutingState { margin: 0; overflow-wrap: anywhere; }
-    #pinModelList .row-actions { flex-wrap: wrap; }
-    .pin-model-test { flex-basis: 100%; min-width: 0; }
-    .pin-model-test:empty { display: none; }
     @media (max-width: 740px) {
-      .pin-policy-layout, .pin-semantics { grid-template-columns: 1fr; }
-      .pin-semantics { gap: 12px; }
-      .pin-semantics > div + div { border-left: 0; border-top: 1px solid var(--inset-line); padding: 12px 0 0; }
-      #pinPanel .notice.with-action { align-items: flex-start; flex-wrap: wrap; }
     }
     .provider-chips { display: flex; flex-wrap: wrap; gap: 5px; }
     .model-test-tools { margin: 0 0 14px; display: grid; gap: 6px; }
@@ -305,9 +265,6 @@
     .credential-title .primary-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .credential-id { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10px; }
     .credential-usage { display: contents; }
-    .credential-estimate-band { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(180px, .9fr) minmax(0, 2fr); align-items: start; gap: 6px 24px; }
-    .credential-estimate-label { padding-top: 8px; border-top: 1px solid var(--inset-line); color: color-mix(in srgb, var(--ink) 80%, var(--inset-bg)); font-size: 13px; font-weight: 550; }
-    .credential-estimate-values { min-width: 0; }
     .usage-meters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
     .usage-meter { min-width: 0; }
     .usage-meter-head { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--muted); }
@@ -325,31 +282,7 @@
     .credential-bottom { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--inset-line); }
     .credential-plan { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
     .credential-bottom .button { min-height: 28px; font-size: 11px; }
-    .usage-estimate { display: flex; align-items: baseline; justify-content: flex-end; flex-wrap: wrap; gap: 3px 6px; padding-top: 8px; border-top: 1px solid var(--inset-line); font-size: 11px; color: var(--muted); }
-    .usage-estimate-value { color: var(--ink); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
-    .usage-estimate-amount { display: inline-flex; align-items: center; gap: 5px; }
-    .estimate-preliminary { display: inline-flex; flex: 0 0 auto; color: var(--warn); cursor: help; border-radius: 50%; }
-    .estimate-preliminary svg { width: 14px; height: 14px; }
-    .estimate-preliminary:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
-    .usage-estimate-value.waiting { color: var(--muted); font-size: 11px; font-weight: 400; }
-    .usage-estimate-samples { flex-basis: 100%; text-align: right; font-size: 10px; line-height: 1.5; font-variant-numeric: tabular-nums; }
-    .estimate-info-button { display: flex; align-items: center; gap: 4px; margin-top: 3px; padding: 2px 0; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 10px; font-weight: 400; cursor: pointer; }
-    .estimate-info-button svg { width: 12px; height: 12px; flex: none; }
-    .estimate-info-button:hover { color: var(--ink); text-decoration: underline; }
-    .estimate-info-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 2px; }
-    .estimate-detail { color: var(--muted); font-size: 12px; }
-    #estimateDialog { max-width: min(600px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); }
-    #estimateDialog[open] { display: flex; flex-direction: column; }
-    #estimateDialogContent { overflow-y: auto; min-height: 0; }
-    #estimateDialogAccount { margin: 0 0 12px; overflow-wrap: anywhere; flex-shrink: 0; }
-    #estimateDialog .dialog-actions { flex-shrink: 0; }
-    .estimate-detail p { margin: 10px 0; line-height: 1.65; }
-    .estimate-detail a { color: var(--ink); text-decoration: underline; }
-    .estimate-samples { display: grid; gap: 14px; padding: 4px 0 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
-    .estimate-samples > div { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 10px; line-height: 1.8; }
-    .estimate-formula { color: var(--ink); }
-    .estimate-actual { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-    .estimate-sample-state { display: block; font-size: 11px; }
+    gap: 3px 6px; padding-top: 8px; border-top: 1px solid var(--inset-line); font-size: 11px; color: var(--muted); }
     .credential-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
     .credential-footer .pagination { margin: 0 0 0 auto; }
     @media (max-width: 860px) { .credential-row { grid-template-columns: 1fr; gap: 12px; } .credential-estimate-band { grid-template-columns: 1fr; gap: 8px; } .usage-meters { gap: 12px; } }
@@ -513,7 +446,6 @@
     .credential-collapsed .credential-collapse-toggle svg { transform: rotate(0); }
     .credential-collapsed .credential-schedule-detail,
     .credential-collapsed .credential-status,
-    .credential-collapsed .credential-estimate-band,
     .credential-collapsed .credential-bottom { display: none; }
     .credential-collapsed .credential-main { align-self: center; }
     .credential-collapsed .usage-meters { align-self: center; }
@@ -527,13 +459,6 @@
     .credential-toggle input:focus-visible + .toggle-track { outline: 2px solid var(--accent); outline-offset: 3px; }
     .credential-toggle:has(input:disabled) { opacity: .55; cursor: not-allowed; }
     @media (prefers-reduced-motion: reduce) { .toggle-track, .toggle-track::after { transition: none; } }
-    .model-tool-list { display: grid; gap: 10px; margin: 12px 0; }
-    .model-tool-option { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; cursor: pointer; }
-    .model-tool-option:has(input:checked) { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
-    .model-tool-option input { margin-top: 2px; }
-    .model-tool-option .model-tool-note { grid-column: 2; font-size: 12px; color: var(--muted); }
-    .model-tool-custom { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 8px; }
-    .model-tool-custom .control { flex: 1 1 auto; min-width: 180px; }
     #errorRulesDialog { max-width: min(720px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; }
     #errorRulesDialog .panel-head { margin-bottom: 16px; gap: 12px; }
     #errorRulesList { display: grid; gap: 12px; }
@@ -573,7 +498,7 @@
 <body>
   <main class="shell">
     <div class="topbar">
-      <div class="brand"><img class="brandmark" src="__CLINE_LOGO_DATA__" width="32" height="32" alt="Cline"><span>PlanBridge</span></div>
+      <div class="brand"><img class="brandmark" src="__PLANBRIDGE_LOGO_DATA__" width="32" height="32" alt="PlanBridge"><span>PlanBridge</span></div>
       <button class="button icon ghost release-bell" id="releaseNoticeButton" type="button" aria-label="查看公告" title="公告" aria-haspopup="dialog" aria-controls="releaseNoticeDialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4M12 2V1"/></svg></button>
     </div>
     <div class="notice error" id="logPersistenceError" role="alert" hidden></div>
@@ -581,7 +506,6 @@
 
     <div class="tabs" role="tablist" aria-label="管理视图">
       <button class="tab" id="logsTab" role="tab" aria-selected="true" aria-controls="logsPanel" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3h8l4 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h3Z"/><path d="M15 3v5h5M8 12h8M8 16h5"/></svg><span>请求日志</span></button>
-      <button class="tab" id="pinTab" role="tab" aria-selected="false" aria-controls="pinPanel" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 3 5 5-4 1-4 4-1 4-5-5 4-1 4-4 1-4ZM7 17l-4 4"/></svg><span>钉上游</span></button>
       <button class="tab" id="credentialsTab" role="tab" aria-selected="false" aria-controls="credentialsPanel" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M18 8v6M15 11h6"/></svg><span>凭据管理</span></button>
       <button class="tab" id="modelsTab" role="tab" aria-selected="false" aria-controls="modelsPanel" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h7v6H3zM14 13h7v6h-7zM10 8h7v5M7 11v5h7"/></svg><span>模型映射</span></button>
       <button class="tab" id="configTab" role="tab" aria-selected="false" aria-controls="configPanel" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h7m4 0h5M4 17h3m4 0h9"/><circle cx="13" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg><span>配置概览</span></button>
@@ -604,7 +528,6 @@
         <input class="control search" id="search" type="search" placeholder="搜索模型、渠道或错误" aria-label="搜索请求日志">
         <select class="control" id="statusFilter" aria-label="按状态筛选"><option value="">全部状态</option><option value="success">成功</option><option value="error">失败</option></select>
         <input class="control provider-filter" id="providerFilter" placeholder="实际渠道" aria-label="按实际渠道筛选" autocomplete="off">
-        <label class="network-log-filter" title="仅显示上游已报告成功调用搜索工具的请求"><input id="networkOnly" type="checkbox">仅看搜索请求</label>
         <label class="network-log-filter" title="仅显示上游回报的实际服务模型名匹配 fallback 后缀的请求"><input id="degradedOnly" type="checkbox">仅看降级池</label>
         <button class="button compact" id="refreshLogs" type="button" title="刷新日志和统计" data-icon="refresh">刷新</button>
         <span class="count" id="logCount">-- 条</span>
@@ -639,45 +562,8 @@
       <div class="pagination"><button class="button compact" id="prevPage" type="button" data-icon="prev">上一页</button><span id="pageInfo">第 1 页</span><button class="button compact" id="nextPage" type="button" data-icon="next">下一页</button></div>
     </section>
 
-    <section id="pinPanel" role="tabpanel" aria-labelledby="pinTab" hidden>
-      <div class="notice with-action" role="note"><span>Cline 当前拒绝客户端路由参数，建议使用「不钉」。提供方由 Cline 自动选择，可能落到 private；实际结果见日志。</span><button class="button compact" id="openPinEvidence" type="button" data-icon="book">历史证据</button></div>
-      <div class="panel">
-        <div class="panel-head"><div><h2>上游策略</h2></div><div class="pin-save-feedback"><span class="pin-save-status" id="providerPolicyState" role="status" aria-live="polite">自动保存</span><button class="button compact" id="retryProviderPolicy" type="button" data-icon="refresh" hidden>重试</button></div></div>
-        <form class="pin-policy-layout" id="providerPolicyForm">
-          <div class="field"><label for="providerPolicy">上游 provider 策略</label><select class="control" id="providerPolicy" aria-describedby="providerPolicyHint"><option value="none" selected>不钉（默认）</option><option value="config">插件配置优先</option><option value="client">客户端优先</option></select></div>
-          <p class="subtext" id="providerPolicyHint">由 Cline 自动选路，不发送插件或客户端的路由参数；下方配置保留，但不参与请求。</p>
-        </form>
-      </div>
-      <div class="panel">
-        <div class="panel-head"><div><h2>模型上游配置</h2><p class="panel-hint" id="pinInputHint">允许列表与能力过滤支持逗号或空格分隔，修改后自动保存。</p></div><div class="pin-save-feedback"><span class="pin-save-status" id="pinModelsState" role="status" aria-live="polite">自动保存</span><button class="button compact" id="retryPinModels" type="button" data-icon="refresh" hidden>重试</button></div></div>
-        <details class="pin-help"><summary>允许列表与能力过滤怎么配</summary><dl class="pin-semantics" id="pinSemantics">
-          <div><dt>允许列表 · 指定提供方</dt><dd>留空由网关选择；只填一家时限定该提供方，多家时在列表内选择与回退。部分私有模型路由会忽略该字段，以测试结果为准。</dd></div>
-          <div><dt>能力过滤 · 筛选候选</dt><dd id="pinHasHint">填写上游必须具备的能力，例如 <code>vision</code>、<code>implicit-caching</code>。DeepSeek 1017 的组合预设同时设置允许列表为 <code>deepseek</code>；仅设置能力条件也可能落到 Fireworks 等其他提供方。清空后移除配置的能力条件。</dd></div>
-        </dl></details>
-        <div class="pin-probe-tools">
-          <div class="field-line">
-            <div class="field"><label for="pinProbeCredential" title="按当前策略逐模型探测，结果取决于所用凭据与上游路由。">探测凭据</label><select class="control" id="pinProbeCredential" aria-describedby="pinProbeHint"><option value="">暂无可用额度的凭据</option></select></div>
-            <button class="button compact" id="probeAllModels" type="button" disabled data-icon="search" title="按顺序使用开始时选中的凭据探测所有模型；结果仅保留在当前页面。">探测全部模型</button>
-          </div>
-          <p class="subtext" id="pinProbeHint">查看本次提供方与候选；不钉时不应用能力过滤。</p>
-          <p class="inline-state" id="pinProbeState" role="status" aria-live="polite"></p>
-        </div>
-        <form class="form-stack" id="pinModelsForm">
-          <div id="pinModelList"><div class="empty">正在读取模型…</div></div>
-        </form>
-      </div>
-    </section>
-
     <section id="credentialsPanel" role="tabpanel" aria-labelledby="credentialsTab" hidden>
-      <aside class="notice credential-estimate-notice" role="note" aria-label="额度估算提醒">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 2.2 18a2 2 0 0 0 1.7 3h16.2a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><circle cx="12" cy="17" r=".8" fill="currentColor" stroke="none"/></svg>
-        <div>
-          <p><strong>额度估算提醒：</strong>Cline 官方定价说明较模糊，未明确峰谷价的适用时段；目前参考其引用的 DeepSeek 官方网页中的峰谷时间估算额度。</p>
-          <p>此外，Cline 疑似削减了额度，当前估算准确性存疑，尚未针对这一疑似变化进一步核验并调整估算。如有相关线索，欢迎<a href="https://github.com/xiao-qiu-qiu/PlanBridge/issues" target="_blank" rel="noopener noreferrer">前往 GitHub 提交 Issue ↗</a>。</p>
-        </div>
-      </aside>
-      <div class="panel credentials-panel">
-        <div class="panel-head"><div><h2 title="正常凭据按优先级从高到低排序；额度耗尽自动暂停的凭据置后，按预计恢复时间从早到晚排序。额度复查确认恢复后重新调度，人工停用独立保留。">凭据管理</h2><p class="panel-hint">Cline 账号整体已用比例 · 同一账号的多个 Key 共享套餐</p></div><div class="row-actions"><button class="button compact" id="openErrorRules" type="button" data-icon="gear">错误规则</button><button class="button compact primary" id="openCredential" type="button" data-icon="plus">添加凭据</button></div></div>
+        <div class="panel-head"><div><h2 title="正常凭据按优先级从高到低排序；额度耗尽自动暂停的凭据置后，按预计恢复时间从早到晚排序。额度复查确认恢复后重新调度，人工停用独立保留。">凭据管理</h2><p class="panel-hint">厂商返回的额度窗口 · 同一账号的多个 Key 共享套餐</p></div><div class="row-actions"><button class="button compact" id="openErrorRules" type="button" data-icon="gear">错误规则</button><button class="button compact primary" id="openCredential" type="button" data-icon="plus">添加凭据</button></div></div>
         <div class="toolbar credential-tools">
           <input class="control search" id="credentialSearch" type="search" placeholder="搜索凭据名称或 ID" aria-label="搜索凭据">
           <button class="button reassign" id="openClearAffinity" type="button" aria-haspopup="dialog" aria-controls="clearAffinityDialog" data-icon="refresh" disabled>重新分配会话</button>
@@ -691,7 +577,7 @@
     <section id="modelsPanel" role="tabpanel" aria-labelledby="modelsTab" hidden>
       <div class="config-grid">
         <div class="panel">
-          <div class="panel-head"><div><h2>模型映射</h2><p class="panel-hint">客户端名称与 Cline Pass 上游模型</p></div><div class="row-actions"><button class="button compact primary" id="openModel" type="button" data-icon="plus">添加模型</button></div></div>
+          <div class="panel-head"><div><h2>模型映射</h2><p class="panel-hint">客户端名称与厂商上游模型（上游 ID 带厂商前缀）</p></div><div class="row-actions"><button class="button compact primary" id="openModel" type="button" data-icon="plus">添加模型</button></div></div>
           <div class="model-test-tools"><label for="modelTestCredential">测试凭据</label><select class="control" id="modelTestCredential"><option value="">暂无可用额度的凭据</option></select><label for="modelTestReasoning" title="此测试直接调用上游，不经过 CPA 的 payload 规则。所选值作为映射前的输入；启用插件思考强度映射后，以映射后的值发送。">测试思考强度</label><select class="control" id="modelTestReasoning" title="仅影响模型测试的输入；未指定时也会应用已保存的「未设置」映射，不代表关闭思考。"><option value="">未指定</option><option value="none">none</option><option value="minimal">minimal</option><option value="low">low</option><option value="medium">medium</option><option value="high">high</option><option value="xhigh">xhigh</option><option value="max">max</option></select><p class="panel-hint">发送一条简短消息 · 结果仅代表所选账号 · 完整响应耗时：&lt;3 秒绿 / 3–10 秒黄 / ≥10 秒红</p></div>
           <div id="modelList" aria-live="polite"><div class="empty">正在读取模型…</div></div>
           <p class="inline-state" id="modelState"></p>
@@ -770,20 +656,20 @@
     </div>
     <div class="release-notice-body" tabindex="0" role="region" aria-label="公告内容">
       <section class="release-notice-item release-notice-featured" aria-labelledby="releaseNoticeRoutingTitle">
-        <div class="release-notice-label"><span class="badge warn">上游变更 · 2026-11-06</span></div>
-        <h3 id="releaseNoticeRoutingTitle">钉上游暂时失效，默认改为「不钉」</h3>
-        <p>Cline 已开始拒绝客户端路由参数。旧策略会触发 <strong>403</strong>，区域约束和能力过滤也无法继续固定官方提供方。</p>
-        <p>首次升级到本版会<strong>自动切换为「不钉」</strong>：直接由 Cline 选路，不再每次先失败再重试。原来的提供方、能力过滤和自定义参数仍然保留，但不发送给上游。</p>
-        <p class="release-notice-callout"><strong>请求恢复不等于恢复官方路由。</strong>自动选路可能落到 private，请以日志中的实际上游和响应模型为准。</p>
+        <div class="release-notice-label"><span class="badge warn">P0 骨架 · 开发中</span></div>
+        <h3 id="releaseNoticeRoutingTitle">PlanBridge 改为独立厂商适配</h3>
+        <p>请求不再统一发往单一上游，而是由凭据的<strong>厂商</strong>决定：目前内置 OpenCode Go 与 CommandCode 两个厂商。</p>
+        <p>凭据必须选择厂商才会参与调度；模型的上游 ID 需要带厂商前缀，例如 <strong>opencode-go/模型名</strong>，插件发往上游时只发送去掉前缀的模型名。</p>
+        <p class="release-notice-callout"><strong>钉上游、联网工具、本地额度估算已移除。</strong>额度窗口、限流与模型目录改由厂商适配层提供，尚未实现的厂商会明确报错而不是静默回退。</p>
       </section>
       <section class="release-notice-item" aria-labelledby="releaseNoticePolicyTitle">
-        <h3 id="releaseNoticePolicyTitle">可以手动切回，后续重启不会覆盖</h3>
-        <p>前往「钉上游 → 上游策略」可选择旧策略。每个带路由参数的请求仍可能先收到 403；上游明确拒绝时，插件会移除参数重试一次，并标记「已改为自动选路」。想避免这次失败，请保持「不钉」。</p>
+        <h3 id="releaseNoticePolicyTitle">开始使用</h3>
+        <p>在「凭据管理」添加凭据并选择厂商，然后在「模型映射」添加模型或从厂商目录获取候选模型，最后用「测试模型」确认可用。</p>
       </section>
     </div>
     <div class="release-notice-foot">
       <p>关闭后不再自动提示</p>
-      <div class="release-notice-actions"><button class="button" id="releaseNoticeDismiss" type="button">知道了</button><button class="button primary" id="releaseNoticeSettings" type="button">查看上游策略</button></div>
+      <div class="release-notice-actions"><button class="button" id="releaseNoticeDismiss" type="button">知道了</button><button class="button primary" id="releaseNoticeSettings" type="button">前往凭据管理</button></div>
     </div>
   </dialog>
 
@@ -809,7 +695,7 @@
     <div class="egress-guide-body">
       <h3>第一次用，从一条代理开始</h3>
       <ol>
-        <li>点「添加出口」，填入一条能访问 Cline 的代理地址。先保留默认的每 60 秒 60 次、最大在飞 4 个，保存出口。</li>
+        <li>点「添加出口」，填入一条能访问厂商上游的代理地址。先保留默认的每 60 秒 60 次、最大在飞 4 个，保存出口。</li>
         <li>勾选「启用出口池」，点「保存策略」。用少量请求确认能正常回复，再逐步增加出口和流量。</li>
         <li>遇到问题，可以关闭「启用出口池」并保存，恢复 CPA 原来的代理路径。已添加的出口会保留。</li>
       </ol>
@@ -826,8 +712,8 @@
       </dl>
       <h3>看状态、排问题</h3>
       <details><summary>“最近 60 秒”和“在飞”怎么看？</summary><p>显示的是整个出口组的数据，所以同组的几条代理会显示相同数字，不要再把它们相加。页面约每 15 秒刷新一次，也可点「刷新状态」；很快结束的请求可能来不及显示在“在飞”里。</p><p>例如两个入口实际都是同一个 IP，各填 60 次、4 个在飞并归入同组，那么这一组总共还是 60 次、4 个在飞。只有确认是不同出口 IP，才适合分组单独计算。</p></details>
-      <details><summary>报 429，是账号没额度还是代理忙？</summary><p>“代理池无容量”表示本地暂时没有空位，这次还没发给 Cline。“出口 IP 限流”表示上游明确限制了该出口，整组会暂时冷却，默认 60 秒；上游给了等待时间时优先采用。</p><p>账号额度耗尽会暂停账号，团队限流另行处理。普通的未知 429 不会一律算成 IP 限流。具体是否继续尝试其他账号，还要看「凭据管理 → 错误规则」。</p></details>
-      <details><summary>代理连不上，会自动换一条吗？</summary><p>选出口时会跳过冷却或满载的组。但发出请求后连接失败，目前没有通用的自动换代理重发功能，也不会偷偷改成直连。先停用有问题的出口，再检查代理连通性。</p><p>目前没有自动测速、健康检查或故障节点自动淘汰。这里的默认数值只是插件的起始配置，不代表 Cline 承诺的容量。</p></details>
+      <details><summary>报 429，是账号没额度还是代理忙？</summary><p>“代理池无容量”表示本地暂时没有空位，这次还没发给上游。“出口 IP 限流”表示上游明确限制了该出口，整组会暂时冷却，默认 60 秒；上游给了等待时间时优先采用。</p><p>账号额度耗尽会暂停账号，团队限流另行处理。普通的未知 429 不会一律算成 IP 限流。具体是否继续尝试其他账号，还要看「凭据管理 → 错误规则」。</p></details>
+      <details><summary>代理连不上，会自动换一条吗？</summary><p>选出口时会跳过冷却或满载的组。但发出请求后连接失败，目前没有通用的自动换代理重发功能，也不会偷偷改成直连。先停用有问题的出口，再检查代理连通性。</p><p>目前没有自动测速、健康检查或故障节点自动淘汰。这里的默认数值只是插件的起始配置，不代表上游承诺的容量。</p></details>
       <details><summary>Resin、订阅和账号独立代理怎么用？</summary><p>Resin 按普通 HTTP 或 SOCKS 代理接入即可，其他代理服务也一样。这里逐条填写代理地址，暂不支持导入订阅或自动读取 Resin 节点列表；填一个网关地址，不会自动获得它内部所有节点的独立预算。</p><p>账号认证文件里的 <code>proxy_url</code> 独立代理优先于公共池。插件的凭据编辑弹窗目前还没有这个字段，需在 CPA 认证文件中配置。只想测试公共池轮询，就让账号独立代理留空。</p><p>独立代理未列入池时，按代理网关共享默认的 60 次、4 个在飞；想调整它的预算，可把相同代理地址添加到池中。该代理已在池里但被停用时，绑定它的账号不会自动改走其他出口。</p></details>
       <details><summary>重启或多台 CPA 共用代理时要注意什么？</summary><p>代理配置会保存，重启后仍在；最近请求数和临时 IP 冷却保存在内存，重启后重新开始计算。保存配置时，同组已有的计数和冷却会保留。</p><p>多台 CPA 共用一个出口 IP 时，各台只统计自己的请求。请给各实例分配预算，别让每台都按整个 IP 的容量发送。代理池也不会增加账号套餐额度。</p></details>
     </div>
@@ -857,26 +743,12 @@
   </dialog>
   <dialog id="modelDialog" aria-labelledby="modelFormTitle">
     <h2 id="modelFormTitle">添加模型映射</h2>
-    <button class="button fetch-models" id="refreshModels" type="button" data-icon="refresh">获取上游模型</button>
+    <div class="model-fetch-tools"><div class="field"><label for="modelVendor">厂商</label><select class="control" id="modelVendor"></select></div><button class="button fetch-models" id="refreshModels" type="button" data-icon="refresh">获取上游模型</button></div>
     <form class="form-stack" id="modelForm" autocomplete="off">
       <div class="field"><label for="modelId">客户端模型名称</label><input class="control mono" id="modelId" required placeholder="例如 deepseek-v4.1-flash" autocomplete="off"></div>
-      <div class="field"><label for="upstreamId">Cline Pass 上游模型</label><input class="control mono" id="upstreamId" required placeholder="例如 opencode-go/deepseek-v4.1-flash" autocomplete="off"></div>
+      <div class="field"><label for="upstreamId">上游模型（含厂商前缀）</label><input class="control mono" id="upstreamId" required placeholder="例如 opencode-go/deepseek-v4.1-flash" autocomplete="off"></div>
       <p class="inline-state" id="modelDialogState" role="alert"></p>
       <div class="dialog-actions"><button class="button" id="cancelModelEdit" type="button" data-icon="close">取消</button><button class="button primary" id="saveModel" type="submit" data-icon="plus">添加模型</button></div>
-    </form>
-  </dialog>
-  <dialog class="dialog-wide" id="pinRoutingDialog" aria-labelledby="pinRoutingTitle">
-    <form class="form-stack" id="pinRoutingForm">
-      <div><h2 id="pinRoutingTitle">路由参数</h2><p class="panel-hint mono" id="pinRoutingModel"></p></div>
-      <div class="field"><label for="pinRoutingMode">参数模式</label><select class="control" id="pinRoutingMode"><option value="preset">使用预设</option><option value="custom">自定义 JSON</option></select></div>
-      <div class="field" id="pinCustomFields" hidden>
-        <div class="pin-editor-heading"><label for="pinProviderOptions">providerOptions</label><div class="pin-json-tools"><button class="button compact" id="fillPinPreset" type="button">填入当前预设</button><button class="button compact" id="formatPinOptions" type="button">格式化</button></div></div>
-        <textarea class="control mono" id="pinProviderOptions" spellcheck="false" aria-describedby="pinCustomHint" aria-label="自定义 providerOptions JSON"></textarea>
-        <p class="subtext" id="pinCustomHint">填写对象内容，不含外层 providerOptions。自定义模式不叠加预设；{} 表示不添加参数。</p>
-      </div>
-      <p class="subtext" id="pinPresetHint">使用模型行中的允许列表与能力过滤。DeepSeek 1017 仅允许 deepseek 时，自动附加官方区域约束。</p>
-      <p class="inline-state" id="pinRoutingState" role="alert"></p>
-      <div class="dialog-actions"><button class="button" id="cancelPinRouting" type="button" data-icon="close">取消</button><button class="button primary" id="savePinRouting" type="submit" data-icon="save">保存</button></div>
     </form>
   </dialog>
   <dialog class="candidate-dialog" id="modelCandidateDialog" aria-labelledby="modelCandidateTitle">
@@ -886,16 +758,6 @@
     <div class="candidate-list" id="candidateList" aria-live="polite"></div>
     <p class="inline-state" id="candidateState" role="status"></p>
     <div class="dialog-actions"><button class="button" id="cancelCandidates" type="button" data-icon="close">取消</button><button class="button primary" id="confirmCandidates" type="button" disabled data-icon="check">应用更改</button></div>
-  </dialog>
-  <dialog id="modelToolsDialog" aria-labelledby="modelToolsTitle" aria-describedby="modelToolsHint">
-    <form id="modelToolsForm">
-      <div class="panel-head"><div><h2 id="modelToolsTitle">联网工具</h2><p class="panel-hint mono" id="modelToolsModel"></p></div><button class="button icon ghost" type="button" id="closeModelTools" data-icon="close" aria-label="关闭"></button></div>
-      <p class="panel-hint" id="modelToolsHint">勾选的工具会在 bridge 发出请求时追加到 <code>tools</code>，由上游执行；搜索结果只进入模型上下文，客户端拿不到来源列表，也不会收到 tool_calls。</p>
-      <p class="panel-hint">搜索调用消耗 ClinePass 额度；下方价格为 Cline 上游 Vercel Gateway 标注的官方价格，ClinePass 订阅内的实际消耗不一定按此价格计算。</p>
-      <div class="model-tool-list" id="modelToolsList"></div>
-      <label class="model-tool-custom">其他类型 <input class="control mono" id="modelToolsCustom" type="text" placeholder="vercel:other_tool，多个用逗号分隔" aria-label="其他工具类型"></label>
-      <div class="dialog-actions"><span class="inline-state" id="modelToolsState" role="status"></span><button class="button compact" type="button" id="retryModelTools" data-icon="refresh" hidden>重试</button><button class="button compact" type="button" id="cancelModelTools">取消</button><button class="button compact primary" type="submit" id="saveModelTools" data-icon="save" disabled>保存</button></div>
-    </form>
   </dialog>
   <dialog id="errorRulesDialog" aria-labelledby="errorRulesTitle">
     <div class="panel-head"><h2 id="errorRulesTitle" title="按顺序采用首条匹配的规则；同一状态码下，任意条件命中即可。">错误规则</h2><div class="row-actions"><span class="badge">全部 PlanBridge 凭据</span><button class="button compact" id="openErrorRuleHelp" type="button" aria-haspopup="dialog" data-icon="info">动作说明</button></div></div>
@@ -923,7 +785,9 @@
     <p id="credentialDialogHint">输入名称和 API Key。</p>
     <form class="form-stack" id="credentialForm" autocomplete="off">
       <div class="field"><label for="credentialLabel">名称</label><input class="control" id="credentialLabel" name="label" maxlength="80" required placeholder="例如：主账号"></div>
+      <div class="field"><label for="credentialVendor">厂商</label><select class="control" id="credentialVendor" name="vendor" required aria-describedby="credentialVendorHint"></select><div class="subtext" id="credentialVendorHint">决定这个 Key 走哪个厂商上游；调度时缺少厂商的凭据不会被使用。</div></div>
       <div class="field"><label for="credentialKey">API Key</label><input class="control" id="credentialKey" name="api_key" type="password" autocomplete="new-password" required placeholder="输入新的 API Key"></div>
+      <label class="retry-compat-switch" for="credentialZDR" id="credentialZDRField" title="只对支持零数据保留的厂商生效；开启后在请求头声明 ZDR。" hidden><span>零数据保留（ZDR）</span><input id="credentialZDR" name="zdr" type="checkbox"></label>
       <div class="field panel" style="padding: 14px; background: var(--inset-bg);">
         <label for="credentialPriority" style="color: var(--ink);"><span class="primary-text">账号优先级</span></label>
         <input class="control" id="credentialPriority" name="priority" type="number" min="0" max="100" step="1" placeholder="不设置" aria-describedby="credentialPriorityHint">
@@ -954,29 +818,6 @@
       <div class="dialog-actions"><button class="button" id="cancelResetStatistics" type="button" autofocus data-icon="close">取消</button><button class="button danger" id="confirmResetStatistics" type="submit" data-icon="trash">确认清空统计</button></div>
     </form>
   </dialog>
-  <dialog id="estimateDialog" aria-labelledby="estimateDialogTitle" aria-describedby="estimateDialogAccount">
-    <h2 id="estimateDialogTitle">采样依据与计价说明</h2>
-    <p id="estimateDialogAccount"></p>
-    <div class="estimate-detail" id="estimateDialogContent"></div>
-    <form method="dialog" class="dialog-actions"><button class="button primary" autofocus data-icon="close">关闭</button></form>
-  </dialog>
-  <dialog class="dialog-wide" id="pinEvidenceDialog" aria-labelledby="pinEvidenceTitle">
-    <h2 id="pinEvidenceTitle">钉上游：详细证据</h2>
-    <p><strong>2026-11-06 更新：</strong>Cline 当前拒绝整个 providerOptions 字段，下文方法已失效。默认「不钉」不发送路由参数，不能保证官方提供方。</p>
-    <p><strong>2026-11-04 历史记录：</strong>下文为历史测试。新讨论报告旧能力过滤已不能排除 private；插件配置优先策略在 DeepSeek 1017 的允许列表仅为 deepseek 时自动附加区域约束。切换客户端优先、清空或更改允许列表可退出自动约束。US 用于排除 private，不表示推理位置；以正常生成和 finalProvider 验证，不能保证服务端未来仍遵循。参考：<a href="https://linux.do/t/topic/3119385" target="_blank" rel="noopener noreferrer">11 月 4 日讨论</a>。</p>
-    <p>2026-10-23，同一测试账号、相同短文本的 7 次流式请求均正常结束。以下为网关报告的最终提供方。</p>
-    <ul>
-      <li><strong>DeepSeek 1017 默认 / 仅 only</strong>：均为 <code>openai-compatible-private</code>。</li>
-      <li><strong>DeepSeek 1017 仅 has</strong>：为 <code>fireworks</code>，能力过滤本身不指定提供方。</li>
-      <li><strong>DeepSeek 1017 only + has</strong>：连续 2 次为 <code>deepseek</code>；保留插件双字段格式再测 1 次，也为 <code>deepseek</code>，共 3/3。</li>
-      <li><strong>无 1017 后缀 + 同样的组合</strong>：仍为 <code>openai-compatible-private</code>。</li>
-    </ul>
-    <p>组合为 <code>only=[deepseek]</code> 与 <code>has=[vision, implicit-caching]</code>，对应上游模型 <code>opencode-go/deepseek-v4.1-flash-1017</code>。当前版本会为尚未设置能力过滤的这类模型默认填入两项能力；自定义值和主动清空会保留。「应用 DeepSeek 预设」可恢复完整组合并自动保存。</p>
-    <p>判断以 <code>provider_metadata.gateway.routing.finalProvider</code> 为准：模型路径 <code>deepseek/…</code> 也可能由其他提供方服务。成功组合中的私有模型条目虽记为失败，但提供方尝试数为 0；本次只有一次实际提供方执行。</p>
-    <p>这些结果验证了该账号当时的请求路由，其他账号与后续时段请用「测试模型」复核。能力标签用于筛选，图片支持与缓存效果需按实际业务另行确认；响应成本字段也不等同于账号实际扣费。</p>
-    <form method="dialog" class="dialog-actions"><button class="button primary" autofocus data-icon="close">关闭</button></form>
-  </dialog>
-  <div class="toast" id="toast" role="status" hidden></div>
 
   <script>
     /*__CPA_AUTH_COMPAT__*/
@@ -984,14 +825,11 @@
     const API_BASE = document.querySelector('meta[name="cpa-api-base"]').content;
     const PAGE_SIZE = 50;
     const $ = (id) => document.getElementById(id);
-    const state = { key: '', authType: 'bearer', page: 0, total: 0, logsController: null, logsLoading: false, providers: new Set(), models: [], editingModelIndex: -1, modelBusy: false, config: null, toastTimer: 0, modelCandidates: [], selectedCandidates: new Set(), candidateBusy: false, candidateSnapshot: [], fetchingModels: false, editingCredentialId: '', credentialBusy: false, providerProbes: new Map(), providerProbePending: new Map(), providerProbeBatch: false };
+    const state = { key: '', authType: 'bearer', page: 0, total: 0, logsController: null, logsLoading: false, providers: new Set(), vendors: [], models: [], editingModelIndex: -1, modelBusy: false, config: null, toastTimer: 0, modelCandidates: [], selectedCandidates: new Set(), candidateBusy: false, candidateSnapshot: [], fetchingModels: false, editingCredentialId: '', credentialBusy: false };
     const modelTestResults = new Map();
     let reasoningMappingBusy = false;
     let reasoningMappingRevision = 0;
     const reasoningDrafts = new Map();
-    const pinAutosave = { drafts: new Map(), hasDrafts: new Map(), timer: 0, flight: null };
-    const policyAutosave = { desired: null, flight: null };
-    const pinRoutingEditor = { key: '', snapshot: '', busy: false };
     const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
     const buttonIcons = {
       gear: '<path d="m9.2 3-.6 2.3-2 .9-2.1-.7-2 3.5 1.6 1.6v2.8L2.5 15l2 3.5 2.1-.7 2 .9.6 2.3h4l.6-2.3 2-.9 2.1.7 2-3.5-1.6-1.6v-2.8l1.6-1.6-2-3.5-2.1.7-2-.9-.6-2.3Z"/><circle cx="11.2" cy="12" r="3"/>',
@@ -1055,7 +893,7 @@
       const hint = kind === 'ttft' ? '首字：<5 秒绿，<10 秒黄，其余红' : '耗时：输出不足 100 tokens 时，<10 秒绿、<30 秒黄、其余红；否则按输出 ÷ 总耗时，≥30 t/s 绿、≥15 t/s 黄、其余红';
       return `<div class="latency-line ${known ? latencyTone(value, kind, completionTokens) : ''}" title="${esc(hint)}"><span>${label}</span><strong>${known ? formatLogDuration(value) : '—'}</strong></div>`;
     }
-    const apiReady = () => API_BASE && !API_BASE.includes('__PASSBRIDGE_');
+    const apiReady = () => API_BASE && !API_BASE.includes('__PLANBRIDGE_');
     const apiUrl = (path, query) => {
       const base = new URL(API_BASE.replace(/\/?$/, '/'), location.origin);
       const url = new URL(path.replace(/^\//, ''), base);
@@ -1267,7 +1105,7 @@
           if (authGate.bannedUntil > Date.now() && !authGate.timer) authGate.timer = setInterval(renderAuthState, 1000);
         } else if ((response.status === 401 || response.status === 403) && auth.revision === authGate.revision) {
           if (response.status === 401) {
-            window.PassBridgeClearAuth?.(auth.headers);
+            window.PlanBridgeClearAuth?.(auth.headers);
             state.key = '';
           }
           pauseAuth(error, response.status === 403);
@@ -1288,7 +1126,7 @@
         const manualKey = state.key, manualAuthType = state.authType, rememberAuth = state.rememberAuth === true;
         const headers = manualKey
           ? (manualAuthType === 'x-management-key' ? { 'X-Management-Key': manualKey } : { Authorization: `Bearer ${manualKey}` })
-          : { ...await window.PassBridgeAuthHeaders?.() };
+          : { ...await window.PlanBridgeAuthHeaders?.() };
         if (revision !== authGate.revision || authGate.paused) throw authGate.paused || new Error('登录状态已变化，请重新验证');
         if (!headers.Authorization && !headers['X-Management-Key']) {
           const error = new Error('请输入当前管理入口的管理密钥');
@@ -1299,7 +1137,7 @@
         const status = await managementRequest('/status', { signal: AbortSignal.timeout(15000) }, auth);
         if (revision !== authGate.revision || authGate.paused) throw authGate.paused || new Error('登录状态已变化，请重新验证');
         authGate.verified = auth;
-        if (manualKey) window.PassBridgeSaveAuth?.(manualKey, manualAuthType, rememberAuth);
+        if (manualKey) window.PlanBridgeSaveAuth?.(manualKey, manualAuthType, rememberAuth);
         setButtonLabel('authButton', manualKey ? '密钥已验证' : '已复用管理密钥');
         return { auth, status };
       }).finally(() => { authGate.flight = null; renderAuthState(); });
@@ -1356,35 +1194,6 @@
       const mapping = log.reasoning_mapping;
       return mapping ? `${reasoningLabel(mapping.from)} → ${reasoningLabel(mapping.to)}` : log.reasoning_effort || '—';
     }
-    function networkToolName(type) {
-      const name = String(type).replace(/^vercel:/, '');
-      return ({ exa_search: 'Exa', perplexity_search: 'Perplexity', parallel_search: 'Parallel', tako_search: 'Tako', browserbase_search: 'Browserbase 搜索', browserbase_fetch: 'Browserbase 抓取' })[name] || name;
-    }
-    function networkLogFacts(log) {
-      const supplied = Array.isArray(log.server_tools) ? [...new Set(log.server_tools.filter((tool) => typeof tool === 'string' && tool))] : [];
-      const calls = log.server_tool_calls && typeof log.server_tool_calls === 'object' && !Array.isArray(log.server_tool_calls)
-        ? Object.entries(log.server_tool_calls).filter(([, count]) => Number.isSafeInteger(count) && count >= 0).sort(([a], [b]) => a.localeCompare(b)) : [];
-      const used = calls.filter(([, count]) => count > 0);
-      const reported = log.server_tool_calls_reported === true || used.length > 0;
-      const visible = log.upstream_skipped !== true && used.length > 0;
-      const missing = Array.isArray(log.attempts) ? log.attempts.filter((attempt) => attempt.upstream_skipped !== true && Array.isArray(attempt.server_tools) && attempt.server_tools.length && attempt.server_tool_calls_reported !== true).length : 0;
-      const detail = used.length ? used.map(([tool, count]) => `${networkToolName(tool)} ×${number(count)}`).join('、') : reported ? '已报告 0 次' : '未报告';
-      const total = used.reduce((sum, [, count]) => sum + count, 0);
-      const label = used.length === 1 ? detail : used.length ? `${number(total)} 次` : reported ? '0 次' : '未报告';
-      const title = [supplied.length ? `已提供：${supplied.map(networkToolName).join('、')}` : '', `成功调用：${detail}`, missing ? `${number(missing)} 次上游尝试未报告搜索调用次数；当前仅汇总已报告的次数。` : '次数来自上游回传的成功调用计数。'].filter(Boolean).join('\n');
-      return { supplied, used, reported, visible, detail, label, title, missing };
-    }
-    function networkLogBadge(log) {
-      const data = networkLogFacts(log);
-      if (!data.visible) return '';
-      return `<span class="badge network-log-badge good" title="${esc(data.title)}">搜索 · ${esc(data.label)}</span>`;
-    }
-    function networkLogDetails(log) {
-      const data = networkLogFacts(log);
-      if (!data.visible) return '';
-      const status = data.missing && data.reported ? `${data.detail}（部分尝试未报告）` : data.detail;
-      return datum('提供的搜索工具', data.supplied.length ? data.supplied.map(networkToolName).join('、') : '未记录') + datum('成功搜索调用', status);
-    }
     function logMarkup(log) {
       const debug = state.logDebug === true ? log.stream_diagnostics : null;
       const status = statusInfo(log.status);
@@ -1408,13 +1217,13 @@
       const usageTitle = logUsageReported(log, 'prompt') && logUsageReported(log, 'completion') ? '输入 / 输出 tokens' : '上游未报告完整用量；已生成内容的请求仍可能产生消耗';
       const attemptMarkup = attempts.length ? attempts.map((attempt, index) => {
         const attemptStatus = statusInfo(attempt.status);
-        return `<div class="attempt"><span class="mono">${index + 1}.</span><span class="badge ${attemptStatus.cls}">${attemptStatus.label}</span><strong>${shown(actualProvider(attempt.provider), '未知')}</strong><span>${formatLogDuration(attempt.duration_ms)}</span>${networkLogBadge(attempt)}<span class="error-text">${shown(attempt.error, '—')}</span></div>`;
+        return `<div class="attempt"><span class="mono">${index + 1}.</span><span class="badge ${attemptStatus.cls}">${attemptStatus.label}</span><strong>${shown(actualProvider(attempt.provider), '未知')}</strong><span>${formatLogDuration(attempt.duration_ms)}</span><span class="error-text">${shown(attempt.error, '—')}</span></div>`;
       }).join('') : `<div class="subtext">${local ? '本地退避拦截，未发起上游请求' : '无尝试明细'}</div>`;
       return `<details class="log-entry" data-id="${esc(log.id)}"><summary class="row-main">
         <div class="cell"><span class="cell-label">时间</span><div class="primary-text mono">${local ? '首 ' : ''}${formatTime(log.time)}</div>${local ? `<div class="subtext mono">末 ${formatTime(lastTime)}</div>` : ''}</div>
         <div class="cell log-model"><span class="cell-label">客户端模型 / 上游</span><div class="primary-text mono" title="${esc(log.model || '')}">${shown(log.model)}</div><div class="subtext mono" title="${esc(log.upstream_model || '')}">${shown(log.upstream_model)}</div><div class="subtext mono log-served-model" title="${esc(`真实响应模型：${responseModel || '未报告'}`)}">↳ ${shown(responseModel, '未报告')}</div></div>
         <div class="cell"><span class="cell-label">思考强度</span><span class="badge reasoning-badge" title="${log.reasoning_mapping ? (local ? '映射已计算；本次被本地退避拦截，未发往上游' : '插件收到的强度 → 发往上游的强度') : '未应用插件映射；— 表示未识别到显式强度'}">${esc(reasoningText(log))}</span></div>
-        <div class="cell"><span class="cell-label">结果</span><span class="badge ${local ? 'warn' : status.cls}" title="${esc(limitLabel)}">${local ? `本地拦截 ×${number(count)}` : limited ? limitName : incomplete ? '响应截断' : idleCutoff ? '卡住截流' : log.error_kind === 'upstream_quota_exhausted' ? '额度耗尽' : status.label}</span><div class="subtext">${local ? '本地退避' : log.stream === true ? '流式' : log.stream === false ? '非流式' : '模式未知'}</div>${log.routing_fallback ? '<span class="badge warn" title="上游拒绝路由参数，已移除后重试">已改为自动选路</span>' : ''}${networkLogBadge(log)}</div>
+        <div class="cell"><span class="cell-label">结果</span><span class="badge ${local ? 'warn' : status.cls}" title="${esc(limitLabel)}">${local ? `本地拦截 ×${number(count)}` : limited ? limitName : incomplete ? '响应截断' : idleCutoff ? '卡住截流' : log.error_kind === 'upstream_quota_exhausted' ? '额度耗尽' : status.label}</span><div class="subtext">${local ? '本地退避' : log.stream === true ? '流式' : log.stream === false ? '非流式' : '模式未知'}</div></div>
         <div class="cell"><span class="cell-label">凭据</span><div class="primary-text truncate" title="${esc(credential)}">${esc(credential)}</div></div>
         <div class="cell"><span class="cell-label">实际上游</span><div class="primary-text truncate" title="${actual}">${actual}</div></div>
         <div class="cell"><span class="cell-label">首字 / 耗时</span><div class="log-latency">${latencyLine('首字', log.ttft_ms, 'ttft', local, log.completion_tokens)}${latencyLine('耗时', log.duration_ms, 'duration', local, log.completion_tokens)}</div></div>
@@ -1429,7 +1238,6 @@
             ${datum('真实响应模型', responseModel, '未报告')}
             ${datum('实际凭据', credential, '—')}
             ${datum('上游请求', `${number(upstreamAttempts)} 次`)}
-            ${networkLogDetails(log)}
             ${datum('首字时间', ttft(log), '—')}
             ${datum('总耗时', duration, '—')}
             ${datum('输出速率', speed, '—')}
@@ -1578,7 +1386,7 @@
       syncLogsRefreshButton();
       $('logList').innerHTML = '<div class="empty">正在读取日志…</div>';
       try {
-        const data = await api('/logs', { query: { limit: PAGE_SIZE, offset: state.page * PAGE_SIZE, search: $('search').value.trim(), status: $('statusFilter').value, provider: $('providerFilter').value, network: $('networkOnly').checked ? 'used' : '', degraded: $('degradedOnly').checked ? 'yes' : '' }, signal: controller.signal });
+        const data = await api('/logs', { query: { limit: PAGE_SIZE, offset: state.page * PAGE_SIZE, search: $('search').value.trim(), status: $('statusFilter').value, provider: $('providerFilter').value, degraded: $('degradedOnly').checked ? 'yes' : '' }, signal: controller.signal });
         if (controller !== state.logsController) return;
         state.logDebug = data?.debug === true;
         const items = Array.isArray(data?.items) ? data.items : [];
@@ -1626,15 +1434,14 @@
       setButtonLabel('saveModel', '添加模型', 'plus');
       $('modelDialogState').textContent = '';
       $('refreshModels').hidden = false;
+      $('modelVendor').disabled = false;
+      if (state.vendors.length && !$('modelVendor').value) $('modelVendor').value = state.vendors[0].id;
+      syncVendorOptions();
     }
-    function renderModels(data, refreshPins = true) {
-      const previousKeys = state.models.map(modelKey).join('\n');
-      state.models = Array.isArray(data?.models) ? data.models.map((model) => ({ ...model, providers: Array.isArray(model.providers) ? [...model.providers] : [] })) : [];
-      for (const model of state.models) for (const provider of model.providers) if (present(provider)) state.providers.add(String(provider));
+    function renderModels(data) {
+      state.models = Array.isArray(data?.models) ? data.models.map((model) => ({ ...model })) : [];
       renderProviderOptions();
       renderModelRows();
-      if (refreshPins || previousKeys !== state.models.map(modelKey).join('\n')) renderPinModelRows();
-      else syncPinDraftRows();
       renderReasoningModels();
       if (state.editingModelIndex >= state.models.length) resetModelForm();
       if ($('modelCandidateDialog').open) renderCandidateList();
@@ -1645,10 +1452,10 @@
       await loadStatus();
     }
     const modelKey = (model) => JSON.stringify([model.id, model.upstream_id]);
-    const modelTestKey = (model, credential = $('modelTestCredential').value, reasoning = $('modelTestReasoning').value) => JSON.stringify([model.id, model.upstream_id, credential, reasoning, model.providers, model.has ?? [], state.config?.provider_policy, model.reasoning_mapping, reasoningMappingRevision, model.routing_mode || 'preset', model.provider_options ?? {}]);
+    const modelTestKey = (model, credential = $('modelTestCredential').value, reasoning = $('modelTestReasoning').value) => JSON.stringify([model.id, model.upstream_id, credential, reasoning, model.reasoning_mapping, reasoningMappingRevision]);
     function modelTestHTML(test) {
       if (!test) return '';
-      if (test.pending) return '<div class="model-test-result"><span class="subtext" role="status">正在连接 Cline，等待完整响应…</span></div>';
+      if (test.pending) return '<div class="model-test-result"><span class="subtext" role="status">正在连接上游，等待完整响应…</span></div>';
       const elapsed = Number(test.duration_ms);
       const time = Number.isFinite(elapsed) ? `${elapsed.toLocaleString()} ms` : '—';
       const tone = !test.ok || elapsed >= 10000 ? 'bad' : elapsed >= 3000 ? 'warn' : 'good';
@@ -1656,475 +1463,23 @@
       const error = String(test.error || '');
       const summary = error.split(/\r?\n/).find((line) => line.trim()) || '测试失败';
       const provider = test.upstream_skipped === true ? '未调用（本地退避）' : actualProvider(test.provider) || '未知';
-      return `<div class="model-test-result"><div class="model-test-meta"><span class="badge ${tone}">${label} · ${time}</span><span class="model-test-provider truncate" title="实际上游：${esc(provider)}">实际上游 ${esc(provider)}</span><span>思考 ${esc(reasoningText(test))}</span><span>凭据 ${esc(test.credential_label || test.credential_id || '—')}</span>${test.status ? `<span>状态 ${esc(test.status)}</span>` : ''}<span>${formatTime(test.tested_at)}</span></div>${test.routing_fallback ? '<span class="badge warn">路由参数被拒绝，已改为自动选路</span>' : ''}${error ? `<details class="model-test-error"><summary><span>${esc(summary)}</span><span>完整错误</span></summary><pre>${esc(error)}</pre></details>` : ''}</div>`;
+      return `<div class="model-test-result"><div class="model-test-meta"><span class="badge ${tone}">${label} · ${time}</span><span class="model-test-provider truncate" title="实际上游：${esc(provider)}">实际上游 ${esc(provider)}</span><span>思考 ${esc(reasoningText(test))}</span><span>凭据 ${esc(test.credential_label || test.credential_id || '—')}</span>${test.status ? `<span>状态 ${esc(test.status)}</span>` : ''}<span>${formatTime(test.tested_at)}</span></div>${error ? `<details class="model-test-error"><summary><span>${esc(summary)}</span><span>完整错误</span></summary><pre>${esc(error)}</pre></details>` : ''}</div>`;
     }
     function renderModelRows() {
       const credential = $('modelTestCredential').value;
       $('modelList').innerHTML = state.models.length ? state.models.map((model, index) => {
         const test = modelTestResults.get(modelTestKey(model));
-        return `<div class="model-row"><div class="model-main"><div class="primary-text mono">${shown(model.id)}</div><div class="subtext mono">→ ${shown(model.upstream_id)}${model.providers?.length ? ` · ${(state.config?.provider_policy || 'none') === 'none' ? '已保存' : '提供方配置'}: ${esc(model.providers.join(', '))}` : ''}</div></div><div class="row-actions"><button class="button compact model-tools" type="button" data-index="${index}" title="为这个模型注入上游内置搜索工具；客户端不必自己声明">${buttonIcon('search')}联网${modelToolsLabel(model.id)}</button><button class="button compact test-model" type="button" data-index="${index}" ${!credential || test?.pending || reasoningMappingBusy ? 'disabled' : ''}>${buttonIcon('test')}${test?.pending ? '测试中…' : '测试模型'}</button><button class="button compact edit-model" type="button" data-index="${index}">${buttonIcon('edit')}编辑</button><button class="button compact danger delete-model" type="button" data-index="${index}">${buttonIcon('trash')}删除</button></div>${modelTestHTML(test)}</div>`;
+        return `<div class="model-row"><div class="model-main"><div class="primary-text mono">${shown(model.id)}</div><div class="subtext mono">→ ${shown(model.upstream_id)}</div></div><div class="row-actions"><button class="button compact test-model" type="button" data-index="${index}" ${!credential || test?.pending || reasoningMappingBusy ? 'disabled' : ''}>${buttonIcon('test')}${test?.pending ? '测试中…' : '测试模型'}</button><button class="button compact edit-model" type="button" data-index="${index}">${buttonIcon('edit')}编辑</button><button class="button compact danger delete-model" type="button" data-index="${index}">${buttonIcon('trash')}删除</button></div>${modelTestHTML(test)}</div>`;
       }).join('') : '<div class="empty">暂无模型映射</div>';
-      syncPinModelTests();
     }
-    function syncPinModelTests() {
-      const credential = $('pinProbeCredential').value;
-      const reasoning = '';
-      for (const button of $('pinModelList').querySelectorAll('.pin-test-model')) {
-        const model = state.models[Number(button.dataset.index)];
-        if (!model) continue;
-        const test = modelTestResults.get(modelTestKey(model, credential, reasoning));
-        button.disabled = !credential || test?.pending || reasoningMappingBusy || (state.modelBusy && !pinAutosave.flight);
-        setButtonLabel(button, test?.pending ? '测试中…' : '测试模型', 'test');
-        button.setAttribute('aria-busy', String(!!test?.pending));
-        $(`pinModelTest-${button.dataset.index}`).innerHTML = modelTestHTML(test);
-      }
-    }
-    const parseProviders = (value) => [...new Set(value.split(/[,\s]+/).filter(Boolean).map((provider) => provider.toLowerCase()))];
-    // Capability slugs go through the same split, plus the server-side rules
-    // (lowercase, no duplicates) so an edit round-trips unchanged.
-    const parseHas = (value) => [...new Set(value.split(/[,\s]+/).filter(Boolean).map((capability) => capability.toLowerCase()))];
-    const providerProbeKey = (model, credential = $('pinProbeCredential').value) => JSON.stringify([model.id, model.upstream_id, credential, state.config?.provider_policy || 'none', model.routing_mode === 'custom' ? model.provider_options?.gateway?.has ?? [] : parseHas(pinAutosave.hasDrafts.get(modelKey(model)) ?? (model.has || []).join(', ')), model.routing_mode || 'preset', model.provider_options ?? {}]);
-    const deepseekPinPreset = (model) => model.upstream_id === 'opencode-go/deepseek-v4.1-flash-1017' ? { providers: ['deepseek'], has: ['vision', 'implicit-caching'] } : null;
-    const isDeepseekUpstream = (model) => /(?:^|\/)deepseek(?:[-_/]|$)/i.test(String(model.upstream_id || ''));
-    const orderedPinModels = (models) => models.map((model, index) => ({ model, index })).sort((a, b) => Number(isDeepseekUpstream(b.model)) - Number(isDeepseekUpstream(a.model)));
-    function presetProviderOptions(model) {
-      const gateway = {};
-      if (model.providers?.length) { gateway.only = [...model.providers]; gateway.order = [...model.providers]; }
-      if (model.has?.length) gateway.has = [...model.has];
-      if (model.upstream_id === 'opencode-go/deepseek-v4.1-flash-1017' && model.providers?.length === 1 && model.providers[0] === 'deepseek') {
-        gateway.inferenceRegion = { scope: 'global', providers: { 'openai-compatible-private': { scope: 'zone', geoRegion: 'us' } } };
-      }
-      return Object.keys(gateway).length ? { gateway } : {};
-    }
-    function routingSettingsKey(model) {
-      return JSON.stringify([model.routing_mode || 'preset', model.provider_options ?? {}], (_key, value) => value && typeof value === 'object' && !Array.isArray(value) ? Object.fromEntries(Object.keys(value).sort().map((key) => [key, value[key]])) : value);
-    }
-    function parsePinProviderOptions(value) {
-      const options = JSON.parse(value);
-      if (!options || typeof options !== 'object' || Array.isArray(options)) throw new Error('providerOptions 必须是 JSON 对象');
-      if (Object.hasOwn(options, 'providerOptions')) throw new Error('请去掉外层 providerOptions，只填写对象内容');
-      if (new TextEncoder().encode(value).length > 65536) throw new Error('自定义参数不能超过 64 KiB');
-      return options;
-    }
-    function syncPinRoutingMode() {
-      const custom = $('pinRoutingMode').value === 'custom';
-      $('pinCustomFields').hidden = !custom;
-      $('pinPresetHint').hidden = custom;
-    }
-    function pinRoutingBusy(busy) {
-      pinRoutingEditor.busy = busy;
-      for (const id of ['pinRoutingMode', 'pinProviderOptions', 'fillPinPreset', 'formatPinOptions', 'cancelPinRouting', 'savePinRouting']) $(id).disabled = busy;
-      const trigger = $('pinRoutingModeTrigger');
-      if (trigger) trigger.disabled = busy;
-      $('savePinRouting').setAttribute('aria-busy', String(busy));
-    }
-    async function openPinRouting(model) {
-      if (pinRoutingEditor.busy) return;
-      const saved = await Promise.all([flushPinModels(), flushProviderPolicy()]);
-      if (saved.some((ok) => !ok)) return;
-      model = state.models.find((item) => modelKey(item) === modelKey(model));
-      if (!model) return;
-      pinRoutingEditor.key = modelKey(model);
-      pinRoutingEditor.snapshot = routingSettingsKey(model);
-      $('pinRoutingModel').textContent = `${model.id} → ${model.upstream_id}`;
-      $('pinRoutingMode').value = model.routing_mode === 'custom' ? 'custom' : 'preset';
-      dropdowns.get('pinRoutingMode')?.sync();
-      const options = model.provider_options && typeof model.provider_options === 'object' ? model.provider_options : presetProviderOptions(model);
-      $('pinProviderOptions').value = JSON.stringify(options, null, 2);
-      $('pinRoutingState').textContent = '';
-      pinRoutingBusy(false);
-      syncPinRoutingMode();
-      $('pinRoutingDialog').showModal();
-    }
-    async function savePinRoutingSettings() {
-      if (pinRoutingEditor.busy) return false;
-      const routing_mode = $('pinRoutingMode').value === 'custom' ? 'custom' : 'preset';
-      let options;
-      try { options = parsePinProviderOptions($('pinProviderOptions').value); }
-      catch (error) {
-        if (routing_mode === 'custom') { $('pinRoutingState').textContent = `JSON 无效：${error.message}`; return false; }
-        options = state.models.find((item) => modelKey(item) === pinRoutingEditor.key)?.provider_options ?? {};
-      }
-      const desired = routingSettingsKey({ routing_mode, provider_options: options });
-      pinRoutingBusy(true);
-      let ownsModelLock = false;
-      try {
-        const pending = await Promise.all([flushPinModels(), flushProviderPolicy()]);
-        if (pending.some((ok) => !ok)) throw new Error('请先重试未保存的上游配置');
-        if (state.modelBusy || state.fetchingModels || state.candidateBusy || reasoningMappingBusy) throw new Error('模型正在保存，请稍后重试');
-        state.modelBusy = ownsModelLock = true;
-        $('pinRoutingState').textContent = '正在保存…';
-        const latest = await api('/models');
-        if (!Array.isArray(latest?.models)) throw new Error('读取模型列表失败，请重试');
-        const current = latest.models.find((item) => modelKey(item) === pinRoutingEditor.key);
-        if (!current) throw new Error('模型映射已变更，请重新打开参数设置');
-        const currentKey = routingSettingsKey(current);
-        if (currentKey !== pinRoutingEditor.snapshot && currentKey !== desired) throw new Error('路由参数已在其他位置更新，请重新打开参数设置');
-        let saved = latest;
-        if (currentKey !== desired) {
-          const models = latest.models.map((item) => modelKey(item) === pinRoutingEditor.key ? { ...item, routing_mode, provider_options: options } : item);
-          saved = await api('/models', { method: 'PUT', body: { models } });
-          if (!Array.isArray(saved?.models)) saved = await api('/models');
-        }
-        const actual = saved?.models?.find((item) => modelKey(item) === pinRoutingEditor.key);
-        if (!actual || routingSettingsKey(actual) !== desired) throw new Error('服务端返回的路由参数与本次修改不一致，请重试');
-        renderModels(saved);
-        pinSaveState('pinModelsState', '已保存', 'saved');
-        $('pinRoutingDialog').close();
-        return true;
-      } catch (error) { $('pinRoutingState').textContent = `保存失败：${error.message}`; return false; }
-      finally {
-        if (ownsModelLock) state.modelBusy = false;
-        pinRoutingBusy(false);
-        syncProviderProbeControls();
-        syncPinModelTests();
-      }
-    }
-    function applyDeepseekPinPreset(model) {
-      const preset = deepseekPinPreset(model);
-      const index = state.models.findIndex((item) => modelKey(item) === modelKey(model));
-      if (!preset || index < 0) return;
-      const providers = $(`pinProviders-${index}`), has = $(`pinHas-${index}`);
-      providers.value = preset.providers.join(', ');
-      has.value = preset.has.join(', ');
-      pinAutosave.drafts.set(modelKey(model), providers.value);
-      queuePinSave(has);
-    }
-    function pinSaveState(id, message, phase = 'idle') {
-      $(id).textContent = message;
-      $(id).dataset.phase = phase;
-      $(id === 'pinModelsState' ? 'retryPinModels' : 'retryProviderPolicy').hidden = phase !== 'error';
-    }
-    function updateProviderPolicyHint() {
-      const policy = $('providerPolicy').value;
-      $('providerPolicyHint').textContent = policy === 'none'
-        ? '由 Cline 自动选路，不发送插件或客户端的路由参数；下方配置保留，但不参与请求。'
-        : policy === 'client'
-          ? '优先使用客户端传入的上游参数，未设置的字段由插件配置补齐。当前上游拒绝这些参数时，会移除后重试一次。'
-          : '使用模型预设或自定义 JSON。当前上游拒绝这些参数时，会移除后重试一次，不能保证固定提供方。';
-    }
-    async function flushProviderPolicy() {
-      if (policyAutosave.flight) return policyAutosave.flight;
-      if (policyAutosave.desired === null) return true;
-      policyAutosave.flight = (async () => {
-        try {
-          while (policyAutosave.desired !== null) {
-            const provider_policy = policyAutosave.desired;
-            pinSaveState('providerPolicyState', '正在保存…', 'saving');
-            state.config = await api('/config', { method: 'PUT', body: { provider_policy } });
-            if (policyAutosave.desired === provider_policy) policyAutosave.desired = null;
-          }
-          pinSaveState('providerPolicyState', '已保存', 'saved');
-          renderModelRows();
-          renderPinModelRows();
-          return true;
-        } catch (error) {
-          pinSaveState('providerPolicyState', `保存失败：${error.message}`, 'error');
-          return false;
-        }
-      })();
-      try { return await policyAutosave.flight; }
-      finally { policyAutosave.flight = null; }
-    }
-    function syncPinDraftRows() {
-      const inputs = [
-        ...$('pinModelList').querySelectorAll('input[data-model-key]'),
-        ...$('pinModelList').querySelectorAll('input[data-has-key]'),
-      ];
-      for (const input of inputs) {
-        const capability = input.dataset.hasKey !== undefined;
-        const key = capability ? input.dataset.hasKey : input.dataset.modelKey;
-        const model = state.models.find((item) => modelKey(item) === key);
-        if (!model) continue;
-        if (model.routing_mode === 'custom') continue;
-        const drafts = capability ? pinAutosave.hasDrafts : pinAutosave.drafts;
-        const draft = drafts.get(key);
-        const current = capability ? model.has || [] : model.providers;
-        const values = draft === undefined ? current : capability ? parseHas(draft) : parseProviders(draft);
-        if (draft === undefined && input !== document.activeElement) input.value = values.join(', ');
-        if (capability) {
-          const badge = input.closest('.model-row').querySelector('.pin-has-badge');
-          badge.textContent = values.length ? `${(state.config?.provider_policy || 'none') === 'none' ? '已保存，未启用' : '能力'}：${values.join(', ')}` : '未设置能力过滤';
-          badge.classList.toggle('good', (state.config?.provider_policy || 'none') !== 'none' && values.length > 0);
-          continue;
-        }
-        const badge = input.closest('.model-row').querySelector('.pin-routing-badge');
-        badge.textContent = (state.config?.provider_policy || 'none') === 'none' ? '不钉 · 配置保留' : values.length > 1 ? '白名单配置' : values.length ? '提供方配置' : '自动路由';
-        badge.classList.toggle('good', (state.config?.provider_policy || 'none') !== 'none' && values.length > 0);
-      }
-      syncProviderProbeResults();
-    }
-    function queuePinSave(input, immediate = false) {
-      const capability = input.dataset.hasKey !== undefined;
-      const key = capability ? input.dataset.hasKey : input.dataset.modelKey;
-      (capability ? pinAutosave.hasDrafts : pinAutosave.drafts).set(key, input.value);
-      clearTimeout(pinAutosave.timer);
-      if (!pinAutosave.flight) pinSaveState('pinModelsState', '待保存…', 'pending');
-      syncPinDraftRows();
-      if (immediate) return flushPinModels();
-      pinAutosave.timer = setTimeout(flushPinModels, 650);
-    }
-    async function flushPinModels() {
-      clearTimeout(pinAutosave.timer);
-      pinAutosave.timer = 0;
-      if (pinAutosave.flight) return pinAutosave.flight;
-      if (!pinAutosave.drafts.size && !pinAutosave.hasDrafts.size) return true;
-      if (state.modelBusy || state.fetchingModels || state.candidateBusy || reasoningMappingBusy) {
-        pinAutosave.timer = setTimeout(flushPinModels, 200);
-        return false;
-      }
-      state.modelBusy = true;
-      pinAutosave.flight = (async () => {
-        try {
-          while (pinAutosave.drafts.size || pinAutosave.hasDrafts.size) {
-            const edits = new Map(pinAutosave.drafts);
-            const hasEdits = new Map(pinAutosave.hasDrafts);
-            // `has` is only sent when the operator edited it or the model already
-            // carries one, so untouched models keep their stored shape.
-            const next = state.models.map((model) => {
-              const key = modelKey(model);
-              const entry = { ...model, providers: edits.has(key) ? parseProviders(edits.get(key)) : [...model.providers] };
-              if (hasEdits.has(key)) entry.has = parseHas(hasEdits.get(key));
-              return entry;
-            });
-            const changed = next.some((model, index) => JSON.stringify(model.providers) !== JSON.stringify(state.models[index].providers)
-              || JSON.stringify(model.has ?? []) !== JSON.stringify(state.models[index].has ?? []));
-            pinSaveState('pinModelsState', '正在保存…', 'saving');
-            let saved = { models: next };
-            if (changed) {
-              saved = await api('/models', { method: 'PUT', body: { models: next } });
-              if (!Array.isArray(saved?.models)) saved = await api('/models');
-              if (!Array.isArray(saved?.models)) throw new Error('保存响应缺少模型列表，请重试');
-            }
-            for (const [key, value] of edits) {
-              if (pinAutosave.drafts.get(key) !== value) continue;
-              const model = saved.models.find((item) => modelKey(item) === key);
-              if (model && JSON.stringify(model.providers || []) !== JSON.stringify(parseProviders(value))) throw new Error('服务端返回的白名单与本次修改不一致，请重试');
-              pinAutosave.drafts.delete(key);
-            }
-            for (const [key, value] of hasEdits) {
-              if (pinAutosave.hasDrafts.get(key) !== value) continue;
-              const model = saved.models.find((item) => modelKey(item) === key);
-              if (model && JSON.stringify(model.has || []) !== JSON.stringify(parseHas(value))) throw new Error('服务端返回的能力过滤与本次修改不一致，请重试');
-              pinAutosave.hasDrafts.delete(key);
-            }
-            renderModels(saved, false);
-          }
-          pinSaveState('pinModelsState', '已保存', 'saved');
-          return true;
-        } catch (error) {
-          pinSaveState('pinModelsState', `保存失败：${error.message}`, 'error');
-          return false;
-        } finally { state.modelBusy = false; }
-      })();
-      try { return await pinAutosave.flight; }
-      finally {
-        pinAutosave.flight = null;
-        syncProviderProbeControls();
-        syncPinModelTests();
-      }
-    }
-    function providerProbeHTML(model) {
-      const key = providerProbeKey(model);
-      const probe = state.providerProbes.get(key);
-      if (state.providerProbePending.get(model.id)?.key === key) return '<div class="subtext">正在探测上游…</div>';
-      if (!probe) return '<div class="subtext">尚无当前凭据与策略的探测结果，点击「探测上游」获取</div>';
-      const providers = Array.isArray(probe.providers) ? probe.providers : [];
-      const chips = providers.map((provider) => model.routing_mode === 'custom' || (state.config?.provider_policy || 'none') === 'none' || probe.has_applied === false ? `<span class="badge">${esc(provider)}</span>` : `<button class="button compact provider-chip" type="button" data-provider="${esc(provider)}" ${state.modelBusy && !pinAutosave.flight ? 'disabled' : ''}>${buttonIcon('plus')}${esc(provider)}</button>`).join('');
-      const error = String(probe.error || '');
-      const summary = error.split(/\r?\n/).find((line) => line.trim()) || '探测失败';
-      return `${chips ? `<div class="provider-chips">${chips}</div>` : ''}<div class="subtext">${esc(probe.note)}${probe.served_by ? ` · 本次由 ${esc(probe.served_by)} 服务` : ''}${probe.credential_label || probe.credential_id ? ` · 凭据 ${esc(probe.credential_label || probe.credential_id)}` : ''}</div>${probe.routing_fallback ? '<span class="badge warn">路由参数被拒绝，已改为自动选路</span>' : ''}${probe.has_applied === false ? '<span class="badge">未应用能力过滤</span>' : ''}${probe.ok === false ? '<span class="badge bad">探测失败</span>' : ''}${error ? `<details class="model-test-error"><summary><span>${esc(summary)}</span><span>完整错误</span></summary><pre>${esc(error)}</pre></details>` : ''}`;
-    }
-    function syncProviderProbeControls() {
-      const credential = $('pinProbeCredential').value;
-      $('probeAllModels').disabled = state.providerProbeBatch || state.providerProbePending.size > 0 || !credential || !state.models.length;
-      for (const button of $('pinModelList').querySelectorAll('.probe-providers')) {
-        const pending = state.providerProbePending.has(button.dataset.model);
-        button.disabled = pending || state.providerProbeBatch || !credential;
-        setButtonLabel(button, pending ? '探测中…' : '探测上游', 'search');
-        button.setAttribute('aria-busy', String(pending));
-      }
-    }
-    function updateProviderProbeRow(model) {
-      const index = state.models.findIndex((item) => item.id === model.id);
-      const result = $(`pinProbeResult-${index}`);
-      if (result && index >= 0) result.innerHTML = providerProbeHTML(state.models[index]);
-      syncProviderProbeControls();
-    }
-    function syncProviderProbeResults() {
-      state.models.forEach((model, index) => {
-        const result = $(`pinProbeResult-${index}`);
-        if (result) result.innerHTML = providerProbeHTML(model);
-      });
-      syncProviderProbeControls();
-    }
-    function renderPinModelRows() {
-      $('pinModelList').innerHTML = state.models.length ? orderedPinModels(state.models).map(({ model, index }) => {
-        const custom = model.routing_mode === 'custom';
-        const unpinned = (state.config?.provider_policy || 'none') === 'none';
-        const value = pinAutosave.drafts.get(modelKey(model)) ?? model.providers.join(', ');
-        const providers = parseProviders(value);
-        const hasValue = pinAutosave.hasDrafts.get(modelKey(model)) ?? (model.has || []).join(', ');
-        const capabilities = parseHas(hasValue);
-        const preset = deepseekPinPreset(model) ? `<button class="button compact pin-deepseek-preset" type="button" data-index="${index}" title="将允许列表设为 deepseek，能力过滤设为 vision, implicit-caching，并自动保存">${buttonIcon('pin')}应用 DeepSeek 预设</button>` : '';
-        return `<div class="model-row" data-model-key="${esc(modelKey(model))}">
-          <div class="model-main"><div class="primary-text mono">${shown(model.id)}</div><div class="subtext mono">→ ${shown(model.upstream_id)}</div></div>
-          <span class="badge pin-routing-badge ${!unpinned && !custom && providers.length ? 'good' : ''}">${unpinned ? '不钉 · 配置保留' : custom ? '自定义 JSON' : providers.length > 1 ? '白名单配置' : providers.length ? '提供方配置' : '自动路由'}</span>
-          <div class="row-actions">
-            <button class="button compact pin-routing-options" type="button" data-index="${index}" aria-haspopup="dialog">${buttonIcon('gear')}编辑参数</button>
-            <button class="button compact probe-providers" type="button" data-model="${esc(model.id)}" aria-label="${esc(`探测 ${model.id} 上游`)}" aria-controls="pinProbeResult-${index}">${buttonIcon('search')}探测上游</button>
-            <button class="button compact pin-test-model" type="button" data-index="${index}" aria-label="${esc(`测试 ${model.id}`)}" aria-controls="pinModelTest-${index}" title="使用当前所选凭据测试模型，测试前会先完成自动保存">${buttonIcon('test')}测试模型</button>
-          </div>
-          ${custom ? `<div class="pin-custom-summary">providerOptions · ${esc(Object.keys(model.provider_options || {}).join(' · ') || '空对象')}</div>` : ''}
-          <div class="field pin-editor" ${custom ? 'hidden' : ''}><label for="pinProviders-${index}">允许的上游</label><input class="control mono" id="pinProviders-${index}" data-index="${index}" data-model-key="${esc(modelKey(model))}" value="${esc(value)}" ${custom ? 'disabled' : ''} autocomplete="off" spellcheck="false" aria-describedby="pinInputHint pinSemantics"></div>
-          <div class="field pin-editor" ${custom ? 'hidden' : ''}><div class="pin-editor-heading"><label for="pinHas-${index}">能力过滤（可选）</label>${preset}</div><input class="control mono" id="pinHas-${index}" data-index="${index}" data-has-key="${esc(modelKey(model))}" value="${esc(hasValue)}" ${custom ? 'disabled' : ''} placeholder="如 vision, implicit-caching" autocomplete="off" spellcheck="false" aria-describedby="pinHasHint pinSemantics"><div class="subtext pin-has-badge ${!unpinned && capabilities.length ? 'good' : ''}" id="pinHasBadge-${index}">${capabilities.length ? `${unpinned ? '已保存，未启用' : '能力'}：${esc(capabilities.join(', '))}` : '未设置能力过滤'}</div></div>
-          <div class="pin-editor" id="pinProbeResult-${index}" role="status" aria-live="polite">${providerProbeHTML(model)}</div>
-          <div class="pin-model-test" id="pinModelTest-${index}" role="status" aria-live="polite"></div>
-        </div>`;
-      }).join('') : '<div class="empty"><strong>暂无模型映射</strong>请前往模型映射标签添加模型。</div>';
-      syncProviderProbeControls();
-      syncPinModelTests();
-    }
-    async function probeModelProviders(model, credentialID = $('pinProbeCredential').value) {
-      if (!credentialID) return;
-      const saved = await Promise.all([flushPinModels(), flushProviderPolicy()]);
-      if (saved.some((ok) => !ok)) return;
-      model = state.models.find((item) => modelKey(item) === modelKey(model));
-      if (!model) return;
-      if (state.providerProbePending.has(model.id)) return state.providerProbePending.get(model.id).promise;
-      const key = providerProbeKey(model, credentialID);
-      const credentialLabel = credentialView.items.find((item) => item.id === credentialID)?.label || credentialID;
-      const pending = Promise.resolve().then(async () => {
-        try {
-          const result = await api('/models/providers', { method: 'POST', fullError: true, body: { model: model.id, credential_id: credentialID } });
-          if (typeof result?.ok !== 'boolean') throw new Error('探测接口返回了无效结果');
-          if (result.upstream_id && result.upstream_id !== model.upstream_id) throw new Error('模型映射在探测时发生变化，请重新探测');
-          const effectiveHas = model.routing_mode === 'custom' ? model.provider_options?.gateway?.has : model.has;
-          if (result.has_applied !== false && Object.hasOwn(result, 'has') && JSON.stringify(result.has ?? []) !== JSON.stringify(effectiveHas ?? [])) throw new Error('能力条件在探测时发生变化，请重新探测');
-          state.providerProbes.set(key, { ...result, credential_id: result.credential_id || credentialID, credential_label: result.credential_label || credentialLabel });
-        } catch (error) {
-          state.providerProbes.set(key, { ok: false, providers: [], note: '探测请求失败', error: error.message, credential_id: credentialID, credential_label: credentialLabel });
-        } finally {
-          state.providerProbePending.delete(model.id);
-          updateProviderProbeRow(model);
-        }
-        return state.providerProbes.get(key);
-      });
-      state.providerProbePending.set(model.id, { key, promise: pending });
-      updateProviderProbeRow(model);
-      return pending;
-    }
-    $('probeAllModels').addEventListener('click', async () => {
-      const credentialID = $('pinProbeCredential').value;
-      if (state.providerProbeBatch || state.providerProbePending.size || !credentialID || !state.models.length) return;
-      const saved = await Promise.all([flushPinModels(), flushProviderPolicy()]);
-      if (saved.some((ok) => !ok) || state.providerProbeBatch) return;
-      const models = state.models.map((model) => ({ ...model }));
-      state.providerProbeBatch = true;
-      syncProviderProbeControls();
-      let completed = 0, failed = 0;
-      try {
-        for (const model of models) {
-          setButtonLabel('probeAllModels', `正在探测 ${completed + 1}/${models.length}…`);
-          $('pinProbeState').textContent = `正在探测 ${completed + 1}/${models.length}：${model.id}`;
-          const result = await probeModelProviders(model, credentialID);
-          completed++;
-          if (result?.ok !== true) failed++;
-        }
-        $('pinProbeState').textContent = `探测完成 ${completed}/${models.length} · 失败 ${failed} 个，详情见各模型结果`;
-      } catch (error) { $('pinProbeState').textContent = `探测中断 ${completed}/${models.length}：${error.message}`; }
-      finally {
-        state.providerProbeBatch = false;
-        setButtonLabel('probeAllModels', '探测全部模型');
-        syncProviderProbeControls();
-      }
-    });
-    $('pinProbeCredential').addEventListener('change', () => { syncProviderProbeResults(); syncPinModelTests(); });
-    $('pinModelList').addEventListener('click', async (event) => {
-      const options = event.target.closest('.pin-routing-options');
-      if (options) {
-        if (state.modelBusy && !pinAutosave.flight) return;
-        const model = state.models[Number(options.dataset.index)];
-        if (model) await openPinRouting(model);
-        return;
-      }
-      const preset = event.target.closest('.pin-deepseek-preset');
-      if (preset) {
-        if (state.modelBusy && !pinAutosave.flight) return;
-        const model = state.models[Number(preset.dataset.index)];
-        if (model) applyDeepseekPinPreset(model);
-        return;
-      }
-      const test = event.target.closest('.pin-test-model');
-      if (test) {
-        if (test.disabled || (state.modelBusy && !pinAutosave.flight)) return;
-        const index = Number(test.dataset.index);
-        const model = state.models[index];
-        if (!model) return;
-        const saved = await Promise.all([flushPinModels(), flushProviderPolicy()]);
-        if (saved.some((ok) => !ok)) return;
-        const current = state.models.find((item) => modelKey(item) === modelKey(model));
-        if (current) testMappedModel(current, $('pinProbeCredential').value, '');
-        return;
-      }
-      const probe = event.target.closest('.probe-providers');
-      if (probe) {
-        if (probe.disabled || (state.modelBusy && !pinAutosave.flight) || state.providerProbeBatch) return;
-        const model = state.models.find((item) => item.id === probe.dataset.model);
-        if (model) probeModelProviders(model);
-        return;
-      }
-      const chip = event.target.closest('.provider-chip');
-      if (!chip || (state.modelBusy && !pinAutosave.flight)) return;
-      const input = chip.closest('.model-row').querySelector('input[data-model-key]');
-      input.value = parseProviders(`${input.value}, ${chip.dataset.provider}`).join(', ');
-      input.focus();
-      queuePinSave(input, true);
-    });
-    $('pinModelList').addEventListener('input', (event) => {
-      if (!event.target.matches('input[data-model-key]') && !event.target.matches('input[data-has-key]')) return;
-      if (event.isComposing) {
-        clearTimeout(pinAutosave.timer);
-        const capability = event.target.dataset.hasKey !== undefined;
-        (capability ? pinAutosave.hasDrafts : pinAutosave.drafts).set(capability ? event.target.dataset.hasKey : event.target.dataset.modelKey, event.target.value);
-        pinSaveState('pinModelsState', '待保存…', 'pending');
-      } else queuePinSave(event.target);
-    });
-    $('pinModelList').addEventListener('compositionend', (event) => {
-      if (event.target.matches('input[data-model-key]') || event.target.matches('input[data-has-key]')) queuePinSave(event.target);
-    });
-    $('pinModelList').addEventListener('focusout', (event) => {
-      if (event.target.matches('input[data-model-key]') || event.target.matches('input[data-has-key]')) queuePinSave(event.target, true);
-    });
-    $('pinModelsForm').addEventListener('submit', (event) => {
-      event.preventDefault();
-      flushPinModels();
-    });
-    $('retryPinModels').addEventListener('click', flushPinModels);
-    $('pinRoutingMode').addEventListener('change', syncPinRoutingMode);
-    $('pinRoutingForm').addEventListener('submit', (event) => { event.preventDefault(); return savePinRoutingSettings(); });
-    $('cancelPinRouting').addEventListener('click', () => { if (!pinRoutingEditor.busy) $('pinRoutingDialog').close(); });
-    $('pinRoutingDialog').addEventListener('cancel', (event) => { if (pinRoutingEditor.busy) event.preventDefault(); });
-    $('pinProviderOptions').addEventListener('input', () => { $('pinRoutingState').textContent = ''; });
-    $('fillPinPreset').addEventListener('click', () => {
-      const model = state.models.find((item) => modelKey(item) === pinRoutingEditor.key);
-      if (model && !pinRoutingEditor.busy) { $('pinProviderOptions').value = JSON.stringify(presetProviderOptions(model), null, 2); $('pinRoutingState').textContent = ''; }
-    });
-    $('formatPinOptions').addEventListener('click', () => {
-      try { $('pinProviderOptions').value = JSON.stringify(parsePinProviderOptions($('pinProviderOptions').value), null, 2); $('pinRoutingState').textContent = ''; }
-      catch (error) { $('pinRoutingState').textContent = `JSON 无效：${error.message}`; }
-    });
     function syncModelTestCredentials() {
       const available = credentialView.items.filter((item) => !credentialQuotaPaused(item));
-      for (const id of ['modelTestCredential', 'pinProbeCredential']) {
-        const field = $(id);
-        const selected = field.value;
-        field.replaceChildren(...(available.length ? available.map((item) => new Option(`${item.label || item.id} · ${item.id}${item.enabled === false ? ' · 人工停用' : ''}`, item.id)) : [new Option('暂无可用额度的凭据', '')]));
-        if (available.some((item) => item.id === selected)) field.value = selected;
-        dropdowns.get(id).sync();
-      }
+      const field = $('modelTestCredential');
+      const selected = field.value;
+      field.replaceChildren(...(available.length ? available.map((item) => new Option(`${item.label || item.id} · ${item.id}${item.enabled === false ? ' · 人工停用' : ''}`, item.id)) : [new Option('暂无可用额度的凭据', '')]));
+      if (available.some((item) => item.id === selected)) field.value = selected;
+      dropdowns.get('modelTestCredential').sync();
       renderModelRows();
-      syncProviderProbeResults();
     }
     $('modelTestCredential').addEventListener('change', renderModelRows);
     $('modelTestReasoning').addEventListener('change', renderModelRows);
@@ -2255,7 +1610,7 @@
         syncClearAffinityControls();
       }
     });
-    const usageLabels = { five_hour: '5 小时', weekly: '每周', monthly: '每月' };
+    const usageLabels = { five_hour: '5 小时', weekly: '每周', daily: '每天', monthly: '每月' };
     function usageDate(value) {
       const date = new Date(value);
       return value && Number.isFinite(date.getTime()) ? date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
@@ -2274,7 +1629,7 @@
         const text = value === null ? '—' : `${value.toLocaleString('zh-CN', { maximumFractionDigits: 1 })}%`;
         return `<div class="usage-meter ${value === null ? '' : value >= 90 ? 'bad' : value >= 70 ? 'warn' : 'good'}"><div class="usage-meter-head"><span>${esc(label)}</span><strong title="已使用${esc(text)}">${text}</strong></div><div class="usage-track" ${value === null ? 'aria-hidden="true"' : `role="progressbar" aria-label="${esc(label)}已用${esc(text)}${stale ? '，上次数据' : ''}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100, value)}"`}><span class="usage-fill" style="width:${value === null ? 0 : Math.min(100, value)}%"></span></div><div class="usage-reset">${reset ? `${esc(reset)} 重置${resetPassed ? ' · 待更新' : ''}` : '重置时间 —'}</div></div>`;
       }).join('');
-      return `<div class="usage-meters">${meters}</div><div class="credential-estimate-band"><div class="credential-estimate-label">额度估计<button class="estimate-info-button" type="button" data-estimate-id="${esc(item.id)}" aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7" r=".8" fill="currentColor" stroke="none"/></svg>采样依据与计价说明</button></div><div class="credential-estimate-values"><div class="usage-meters">${kinds.map((type) => usageEstimateHTML(item, type) || '<div></div>').join('')}</div></div></div>`;
+      return `<div class="usage-meters">${meters}</div>`;
     }
     function usageStatusHTML(item) {
       const usage = credentialView.usage.get(item.id);
@@ -2283,70 +1638,8 @@
       const limits = Array.isArray(usage?.limits) ? usage.limits : [];
       let status = loading ? '正在更新…' : usage?.error || (usage?.updated_at ? `更新于 ${usageDate(usage.updated_at)}` : '等待查询');
       if (stale) status = `上次数据 · ${usageDate(usage.updated_at)} · ${loading ? '正在更新…' : usage.error || '数据已过期，等待刷新'}`;
-      if (!loading && usage?.status === 'ok' && !limits.length) status = 'Cline 未返回用量窗口';
+      if (!loading && usage?.status === 'ok' && !limits.length) status = '上游未返回用量窗口';
       return `<div class="usage-status ${stale || usage?.error ? 'stale' : ''}" role="status">${esc(status)}</div>`;
-    }
-    function estimateMoney(range) {
-      if (!range || !Number.isFinite(range.low) || !Number.isFinite(range.high)) return '—';
-      const format = (value) => value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      return `$${format((range.low + range.high) / 2)}`;
-    }
-    function usageEstimateHTML(item, type) {
-      if (!Object.hasOwn(usageLabels, type)) return '';
-      const usage = credentialView.usage.get(item.id);
-      const value = usage?.estimate?.windows?.find((w) => w.type === type);
-      const money = value?.total ? `≈ ${estimateMoney(value.total)}` : '采样中';
-      const sourceHint = value?.derived_from === 'weekly' ? '月总额度 = 周总额度 × 2；采样次数、待校准请求及百分比变化均来自每周窗口。月剩余额度按实际月用量计算。' : '';
-      const preliminaryHint = `${sourceHint ? '周额度仍为初步估计，月额度随周额度折算。' : ''}初步估计：样本较少，数据可能不准。百分比取整可能造成较大误差，累计变化达到 2 个百分点后自动校准。`;
-      const warning = value?.total && value.preliminary ? `<span class="estimate-preliminary" role="img" tabindex="0" title="${esc(preliminaryHint)}" aria-label="${esc(preliminaryHint)}"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="#d8b45c" fill-opacity=".2" stroke="#d8b45c" stroke-width="1.5"/><path d="M10 5.8v4.8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="10" cy="13.8" r="1" fill="currentColor"/></svg></span>` : '';
-      const stale = usage?.status !== 'ok' || !usage?.updated_at || Date.now() - Date.parse(usage.updated_at) > 90000;
-      const hint = [value?.remaining && !stale ? `预计剩余 ≈ ${estimateMoney(value.remaining)}（USD 参考值）` : stale && value?.total ? '上次估算 · 等待用量更新' : '', sourceHint, value?.preliminary ? preliminaryHint : '', value?.note || '等待可用的额度变化', value?.pending_incomplete > 0 ? `待校准请求中有 ${Number(value.pending_incomplete).toLocaleString()} 次用量不完整` : '', '按全部额度消费均经 CPA 本插件记录计算，金额为单值估算。'].filter(Boolean).join(' · ');
-      const samples = `${value?.historical ? value.preliminary ? '历史初步采样' : '历史采样' : value?.preliminary ? '初步采样' : '已采样'} ${Number(value?.samples || 0).toLocaleString()} 段 · ${Number(value?.requests || 0).toLocaleString()} 次请求`;
-      const pending = value?.pending_requests > 0 ? ` · 待校准 ${Number(value.pending_requests).toLocaleString()} 次` : '';
-      return `<div class="usage-estimate"><span class="usage-estimate-amount"><span class="usage-estimate-value ${value?.total ? '' : 'waiting'}" title="${esc(hint)}">${esc(money)}</span>${warning}</span><div class="usage-estimate-samples" title="${esc(hint)}">${esc(samples + pending)}</div></div>`;
-    }
-    function estimateHTML(item) {
-      const usage = credentialView.usage.get(item.id), estimate = usage?.estimate;
-      const windows = Array.isArray(estimate?.windows) ? estimate.windows : [];
-      const actual = (value) => `<span class="estimate-actual">${esc(value)}</span>`;
-      const weekly = windows.find((entry) => entry.type === 'weekly');
-      const samples = Object.entries(usageLabels).map(([type, label]) => {
-        const w = windows.find((entry) => entry.type === type);
-        let formula = type === 'monthly' ? '等待周额度估值' : '等待用量变化后计算';
-        if (w?.total && type === 'monthly' && weekly?.total) {
-          formula = `周总额度 ${actual(estimateMoney(weekly.total))} × ${actual('2')} ≈ ${actual(estimateMoney(w.total))}`;
-        } else if (w?.total && w?.sample_cost && Number.isFinite(w.sample_cost.low) && Number.isFinite(w.sample_cost.high) && Number.isFinite(w.percent_change) && w.percent_change > 0) {
-          const cost = ((w.sample_cost.low + w.sample_cost.high) / 2).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 6 });
-          const delta = w.percent_change.toLocaleString('zh-CN', { maximumFractionDigits: 6 });
-          formula = `样本消费 ${actual(`$${cost}`)} ÷ 用量增量 ${actual(`${delta}%`)} ≈ ${actual(estimateMoney(w.total))}`;
-        }
-        const details = w?.samples ? `${Number(w.samples).toLocaleString()} 段样本 · ${Number(w.requests).toLocaleString()} 次请求 · ${Number(w.tokens).toLocaleString()} tokens${usageDate(w.updated_at) ? ` · 样本更新于 ${usageDate(w.updated_at)}` : ''}` : '';
-        const status = [w?.historical ? '沿用历史样本' : '', w?.preliminary ? '初步估计' : ''].filter(Boolean).join(' · ');
-        return `<div><strong>${esc(label)}</strong><span title="${esc(details)}"><span class="estimate-formula">${formula}</span>${status ? `<span class="estimate-sample-state">${esc(status)}</span>` : ''}</span></div>`;
-      }).join('');
-      const shared = estimate?.shared_credentials > 1 ? `同账号 ${actual(Number(estimate.shared_credentials).toLocaleString())} 个凭据合并采样。` : '';
-      return `<div class="estimate-samples">${samples}</div>
-<p><strong>估算范围：</strong>以上为估计总额度，与卡片金额一致。同账号多个 Key 共享额度并合并采样，不累加额度。${shared}仅统计经 CPA 本插件记录的请求，按全部消费均经本插件估算。</p>
-<p><strong>采样方式：</strong>后台约每分钟采样，关闭页面仍继续；用量累计增加 1 个百分点显示初步估计，达到 2 个百分点后校准。5 小时与每周独立采样；月总额度取周估值的 2 倍，等待周采样并跟随其初步／历史状态，月剩余按实际月已用百分比计算。</p>
-<p><strong>计价口径：</strong>采用 <a href="https://docs.cline.bot/getting-started/clinepass#reference-pricing" target="_blank" rel="noopener noreferrer">Cline 官方参考价 ↗</a> 的 2026-11-02 快照，按实际上游模型 ID 匹配，客户端别名不影响计价。普通输入从总输入扣除缓存读取与写入后计费，缓存读写单独计价；推理 token 已包含在输出中，不重复计费。金额为 USD 参考折算值，非订阅售价。</p>
-<p><strong>DeepSeek 峰谷：</strong>V4.1 Flash（含 1017）与 V4 Pro 按 <a href="https://api-docs.deepseek.com/quick_start/pricing/" target="_blank" rel="noopener noreferrer">DeepSeek 官方规则 ↗</a>：北京时间（UTC+8）周一至周五 09:00–12:00、14:00–18:00 为峰时（起点含、终点不含），公众假期除外；其余时间、周末及公众假期全天为半价谷时，周末补班仍按谷时。假期按 <a href="https://www.gov.cn/zhengce/content/202511/content_7047090.htm" target="_blank" rel="noopener noreferrer">政府 2026 年放假调休公告 ↗</a> 范围估算，并非已确认的供应商后台日历。请求跨档、缺少时间，或无法确认峰时日期是否为假期时，保留峰谷成本区间并取均值；确定的夜间、周末仍用谷价。</p>
-<p><strong>Kimi 写入：</strong>K3 的 5 分钟／1 小时缓存写入价为 3／6，K3.1 Pro 为 2／4（USD／百万 token）。未区分写入有效期时，仅对写入部分保留两档成本并取均值，输入、输出和缓存读取仍按确定价格计算。</p>
-<p><strong>写入数与长输入：</strong>Qwen、Kimi 必须显式返回缓存写入数（包括 0），缺失则标记用量不完整。分档按含缓存读写的总输入计算：Qwen3.7 Plus 超过 262,144 token 后整个请求采用高价档；MiniMax M3 超过 524,288 token 后整个请求的输入、输出、缓存读取价均翻倍。</p>
-<p><strong>不完整消费：</strong>未登记价格的模型 ID 不套用近似型号价格。缺失 usage、未知价格、失败或重试会标记不完整，保留同段可计价的已知消费，不丢弃整段采样，也不把缺失部分当作零消费；缺失消费可能使估值偏低。</p>
-<p><strong>周期与版本：</strong>周期重置后沿用历史估值，新周期样本校准后替换，不跨账号或套餐变更沿用。同价格版本重启保留估值，仅重建下一段基线；升级只有在价格版本变化时才重新采样，避免混用新旧价格。</p>${estimate?.persistence_error ? `<p class="error-text">${esc(estimate.persistence_error)}</p>` : ''}`;
-    }
-    function refreshEstimateDialog() {
-      const dialog = $('estimateDialog');
-      if (!dialog.open) return;
-      const item = credentialView.items.find((entry) => entry.id === dialog.dataset.credentialId);
-      if (!item) { dialog.close(); return; }
-      $('estimateDialogAccount').textContent = item.label || item.id;
-      const content = $('estimateDialogContent'), html = estimateHTML(item);
-      if (content.innerHTML !== html) {
-        const scroll = content.scrollTop;
-        content.innerHTML = html;
-        content.scrollTop = scroll;
-      }
     }
     function usagePlanHTML(id) {
       const usage = credentialView.usage.get(id);
@@ -2357,7 +1650,6 @@
       return `${esc(name)}${end ? ` · 本期至 ${esc(end)}` : ''}${outdated ? ' · 套餐信息待更新' : ''}`;
     }
     function updateUsageRow(id) {
-      if ($('estimateDialog').dataset.credentialId === id) refreshEstimateDialog();
       const item = credentialView.items.find((entry) => entry.id === id);
       const row = [...$('credentialList').children].find((node) => node.dataset.id === id);
       if (!item || !row) return;
@@ -2377,7 +1669,6 @@
         for (const id of credentialView.usage.keys()) if (!ids.has(id)) credentialView.usage.delete(id);
         for (const id of credentialView.pending.keys()) if (!ids.has(id)) credentialView.pending.delete(id);
         for (const id of credentialView.expanded) if (!ids.has(id)) credentialView.expanded.delete(id);
-        refreshEstimateDialog();
         syncModelTestCredentials();
         syncClearAffinityControls();
       }
@@ -2449,22 +1740,20 @@
     setInterval(() => { if (usageViewVisible()) refreshVisibleUsage(); }, 15000);
     async function loadConfig() {
       try {
-        const [config, models, credentials] = await Promise.all([api('/config'), api('/models'), api('/credentials')]);
+        const [config, models, credentials, vendorList] = await Promise.all([api('/config'), api('/models'), api('/credentials'), api('/vendors')]);
         state.config = config || {};
+        state.vendors = Array.isArray(vendorList?.items) ? vendorList.items : [];
+        syncVendorOptions();
         $('nonstreamMode').value = ['native', 'native-fallback', 'stream-aggregate'].includes(config?.nonstream_mode) ? config.nonstream_mode : 'stream-aggregate';
         dropdowns.get('nonstreamMode').sync();
         $('clientRetryCompatibility').checked = config?.client_retry_compatibility !== false;
         $('streamIdleCutoffEnabled').checked = config?.stream_idle_cutoff_enabled === true;
         $('streamIdleTimeoutSeconds').value = present(config?.stream_idle_timeout_seconds) ? config.stream_idle_timeout_seconds : 20;
-        $('providerPolicy').value = policyAutosave.desired ?? (['none', 'client', 'config'].includes(config?.provider_policy) ? config.provider_policy : 'none');
-        dropdowns.get('providerPolicy').sync();
-        updateProviderPolicyHint();
         $('timeoutSeconds').value = present(config?.timeout_seconds) ? config.timeout_seconds : 600;
         $('maxResponseMiB').value = present(config?.max_response_bytes) ? config.max_response_bytes / 1048576 : 64;
         $('logRetention').value = present(config?.log_retention) ? config.log_retention : 500;
         $('debugEnabled').checked = config?.debug === true;
         renderModels(models);
-        await loadModelServerTools();
         resetModelForm();
         renderCredentials(credentials);
         if (!$('credentialsPanel').hidden) loadCredentialScheduling();
@@ -2479,13 +1768,8 @@
     let tabRevision = 0;
     async function setTab(name) {
       const revision = ++tabRevision;
-      if (name === 'pin' && !$('pinPanel').hidden) return;
-      if (name !== 'pin' && !$('pinPanel').hidden) {
-        const saved = await Promise.all([flushPinModels(), flushProviderPolicy()]);
-        if (revision !== tabRevision || saved.some((ok) => !ok)) return;
-      }
       if (name === 'credentials' && $('credentialsPanel').hidden) credentialView.expanded.clear();
-      for (const tab of ['logs', 'pin', 'credentials', 'models', 'egress', 'config']) {
+      for (const tab of ['logs', 'credentials', 'models', 'egress', 'config']) {
         $(`${tab}Tab`).setAttribute('aria-selected', String(tab === name));
         $(`${tab}Panel`).hidden = tab !== name;
       }
@@ -2494,13 +1778,11 @@
       else if (name !== 'logs') loadConfig();
       else refreshLogsView();
     }
-    $('openPinEvidence').addEventListener('click', () => $('pinEvidenceDialog').showModal());
     $('openRetryCompatibilityHelp').addEventListener('click', () => $('retryCompatibilityDialog').showModal());
     $('closeRetryCompatibilityHelp').addEventListener('click', () => $('retryCompatibilityDialog').close());
     $('openStreamIdleHelp').addEventListener('click', () => $('streamIdleDialog').showModal());
     $('closeStreamIdleHelp').addEventListener('click', () => $('streamIdleDialog').close());
     $('logsTab').addEventListener('click', () => setTab('logs'));
-    $('pinTab').addEventListener('click', () => setTab('pin'));
     $('configTab').addEventListener('click', () => setTab('config'));
     $('credentialsTab').addEventListener('click', () => setTab('credentials'));
     $('modelsTab').addEventListener('click', () => setTab('models'));
@@ -2557,11 +1839,10 @@
     $('search').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.page = 0; loadLogs(); }, 280); });
     $('statusFilter').addEventListener('change', () => { state.page = 0; loadLogs(); });
     $('providerFilter').addEventListener('change', () => { state.page = 0; loadLogs(); });
-    $('networkOnly').addEventListener('change', () => { state.page = 0; loadLogs(); });
     $('degradedOnly').addEventListener('change', () => { state.page = 0; loadLogs(); });
     $('authButton').addEventListener('click', () => { renderAuthState(); $('authDialog').showModal(); });
     $('closeAuth').addEventListener('click', () => $('authDialog').close());
-    $('clearAuth').addEventListener('click', () => { state.key = ''; state.rememberAuth = false; window.PassBridgeClearAuth?.(); $('authKey').value = ''; $('rememberAuth').checked = false; pauseAuth(new Error('插件手动保存的管理密钥已清除，请重新验证')); toast('插件手动保存的管理密钥已清除'); });
+    $('clearAuth').addEventListener('click', () => { state.key = ''; state.rememberAuth = false; window.PlanBridgeClearAuth?.(); $('authKey').value = ''; $('rememberAuth').checked = false; pauseAuth(new Error('插件手动保存的管理密钥已清除，请重新验证')); toast('插件手动保存的管理密钥已清除'); });
     $('authForm').addEventListener('submit', async (event) => {
       event.preventDefault();
       if (authGate.flight || authGate.submitting || Date.now() < authGate.bannedUntil) return;
@@ -2597,7 +1878,9 @@
       for (const id of ['refreshModels', 'saveModel', 'cancelModelEdit']) $(id).disabled = true;
       $('modelDialogState').textContent = '正在获取上游模型…';
       try {
-        const result = await api('/models/refresh', { method: 'POST' });
+        const vendor = $('modelVendor').value;
+        if (!vendor) throw new Error('请选择厂商');
+        const result = await api('/models/refresh', { method: 'POST', body: { vendor } });
         if (!Array.isArray(result?.models)) throw new Error('模型目录响应缺少候选列表');
         const current = await api('/models');
         if (!Array.isArray(current?.models)) throw new Error('现有模型列表读取失败');
@@ -2682,9 +1965,12 @@
         state.editingModelIndex = index;
         $('modelId').value = model.id ?? '';
         $('upstreamId').value = model.upstream_id ?? '';
+        const prefix = String(model.upstream_id || '').split('/')[0];
+        if (state.vendors.some((vendor) => vendor.id === prefix)) $('modelVendor').value = prefix;
         $('modelFormTitle').textContent = '编辑模型映射';
         setButtonLabel('saveModel', '保存映射', 'save');
         $('refreshModels').hidden = true;
+        $('modelVendor').disabled = true;
       }
       $('modelDialog').showModal();
       $('modelId').focus();
@@ -2735,16 +2021,6 @@
       catch (error) { $('modelDialogState').textContent = `保存失败：${error.message}`; }
       finally { state.modelBusy = false; $('saveModel').disabled = false; $('cancelModelEdit').disabled = false; }
     });
-    $('providerPolicy').addEventListener('change', () => {
-      policyAutosave.desired = $('providerPolicy').value;
-      updateProviderPolicyHint();
-      flushProviderPolicy();
-    });
-    $('providerPolicyForm').addEventListener('submit', (event) => {
-      event.preventDefault();
-      flushProviderPolicy();
-    });
-    $('retryProviderPolicy').addEventListener('click', flushProviderPolicy);
     function selectedReasoningModel() {
       return state.models.find((model) => modelKey(model) === $('reasoningMappingModel').value);
     }
@@ -2909,21 +2185,43 @@
       catch (error) { $('streamIdleState').textContent = `保存失败：${error.message}`; }
       finally { $('saveStreamIdle').disabled = false; }
     });
+    function syncVendorOptions() {
+      for (const id of ['modelVendor', 'credentialVendor']) {
+        const field = $(id);
+        const selected = field.value;
+        field.replaceChildren(...(state.vendors.length ? state.vendors.map((vendor) => new Option(vendor.name || vendor.id, vendor.id)) : [new Option('暂无可用厂商', '')]));
+        if (state.vendors.some((vendor) => vendor.id === selected)) field.value = selected;
+        if (!dropdowns.has(id)) createDropdown(field, () => state.vendors.map((vendor) => ({ value: vendor.id, label: vendor.name || vendor.id })));
+        dropdowns.get(id).sync();
+      }
+      syncCredentialZDRField();
+    }
+    function syncCredentialZDRField() {
+      const vendor = state.vendors.find((item) => item.id === $('credentialVendor').value);
+      const supported = vendor?.supports_zdr === true;
+      $('credentialZDRField').hidden = !supported;
+      $('credentialZDR').disabled = !supported;
+      if (!supported) $('credentialZDR').checked = false;
+    }
     function openCredentialDialog(id = '', label = '') {
       state.editingCredentialId = id;
       $('credentialForm').reset();
       $('credentialLabel').value = label;
       const credential = credentialView.items.find((item) => item.id === id);
+      $('credentialVendor').value = credential?.vendor || state.vendors[0]?.id || '';
+      $('credentialZDR').checked = credential?.zdr === true;
+      syncCredentialZDRField();
       $('credentialPriority').value = credential?.priority || '';
       $('credentialKey').required = !id;
       $('credentialKey').placeholder = id ? '留空保持原有 Key' : '输入新的 API Key';
       $('credentialDialogTitle').textContent = id ? '编辑凭据' : '添加凭据';
-      $('credentialDialogHint').textContent = id ? '留空 API Key 仅更新名称和优先级。' : '输入名称和 API Key，可选设置优先级。';
+      $('credentialDialogHint').textContent = id ? '留空 API Key 仅更新名称、厂商和优先级。' : '输入名称、厂商和 API Key，可选设置优先级。';
       setButtonLabel('saveCredential', id ? '保存凭据' : '添加凭据', id ? 'save' : 'plus');
       $('credentialDialogState').textContent = '';
       $('credentialDialog').showModal();
       $('credentialLabel').focus();
     }
+    $('credentialVendor').addEventListener('change', syncCredentialZDRField);
     $('openCredential').addEventListener('click', () => openCredentialDialog());
     $('cancelCredential').addEventListener('click', () => $('credentialDialog').close());
     $('credentialDialog').addEventListener('cancel', (event) => { if (state.credentialBusy) event.preventDefault(); });
@@ -2940,6 +2238,8 @@
       const priority = Number($('credentialPriority').value);
       if (!$('credentialPriority').checkValidity() || !Number.isInteger(priority) || priority < 0 || priority > 100) { $('credentialDialogState').textContent = '优先级需为 0–100 的整数，或留空不设置'; return; }
       const apiKey = $('credentialKey').value.trim();
+      const vendor = $('credentialVendor').value;
+      if (!vendor) { $('credentialDialogState').textContent = '请选择厂商'; return; }
       const id = state.editingCredentialId;
       $('credentialKey').value = '';
       if (!label || (!id && !apiKey)) { $('credentialDialogState').textContent = '请输入名称和 API Key'; return; }
@@ -2948,7 +2248,7 @@
       $('cancelCredential').disabled = true;
       $('credentialDialogState').textContent = '正在保存…';
       try {
-        const body = { label, priority };
+        const body = { label, priority, vendor, zdr: $('credentialZDR').checked === true };
         if (apiKey) body.api_key = apiKey;
         const saved = await api('/credentials', { method: id ? 'PUT' : 'POST', query: id ? { id } : undefined, body });
         if (id && apiKey) { credentialView.usage.delete(id); credentialView.pending.delete(id); credentialView.queue.delete(id); }
@@ -2963,15 +2263,6 @@
       } finally { state.credentialBusy = false; $('saveCredential').disabled = false; $('cancelCredential').disabled = false; }
     });
     $('credentialList').addEventListener('click', async (event) => {
-      const estimateButton = event.target.closest('.estimate-info-button');
-      if (estimateButton) {
-        const item = credentialView.items.find((entry) => entry.id === estimateButton.dataset.estimateId);
-        if (!item) return;
-        $('estimateDialog').dataset.credentialId = item.id;
-        $('estimateDialog').showModal();
-        refreshEstimateDialog();
-        return;
-      }
       const refresh = event.target.closest('.refresh-usage');
       if (refresh) { queueUsage(refresh.dataset.id, true); pumpUsage(); return; }
       const edit = event.target.closest('.edit-credential');
@@ -2985,10 +2276,9 @@
       catch (error) { toast(`删除失败：${error.message}`); button.disabled = false; }
     });
     /*__SCHEDULING_MODULE__*/
-    /*__MODEL_TOOLS_MODULE__*/
     /*__ERROR_RULES_MODULE__*/
     /*__RELEASE_NOTICE_MODULE__*/
-    $('rememberAuth').checked = window.PassBridgeRememberAuth?.() || false;
+    $('rememberAuth').checked = window.PlanBridgeRememberAuth?.() || false;
     restoreStatisticsRange();
     if (!apiReady()) globalError('管理 API 路径尚未注入；请由宿主设置 __PLANBRIDGE_API_BASE__。');
     else refreshLogsView();

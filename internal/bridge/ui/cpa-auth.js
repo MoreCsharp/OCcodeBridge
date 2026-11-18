@@ -61,15 +61,15 @@
       return { key: saved.managementKey.trim(), base: server.href };
     } catch { return null; }
   }
-  window.PassBridgeAuthHeaders = () => {
+  window.PlanBridgeAuthHeaders = () => {
     for (const login of [readManualLogin(), readManualLogin(true), readSavedLogin()]) {
       const headers = authHeaders(login);
       if (Object.keys(headers).length) return headers;
     }
     return {};
   };
-  window.PassBridgeRememberAuth = () => Object.keys(authHeaders(readManualLogin(true))).length > 0;
-  window.PassBridgeSaveAuth = (key, type, remember = false) => {
+  window.PlanBridgeRememberAuth = () => Object.keys(authHeaders(readManualLogin(true))).length > 0;
+  window.PlanBridgeSaveAuth = (key, type, remember = false) => {
     const name = sessionKey();
     if (!name || typeof key !== 'string' || !key.trim()) return;
     const value = JSON.stringify({ key: key.trim(), type: type === 'x-management-key' ? type : 'bearer' });
@@ -79,7 +79,7 @@
       else localStorage.removeItem(name);
     } catch { /* One blocked store must not prevent using the other. */ }
   };
-  window.PassBridgeClearAuth = (rejectedHeaders) => {
+  window.PlanBridgeClearAuth = (rejectedHeaders) => {
     const name = sessionKey();
     if (!name) return;
     for (const persistent of [false, true]) {

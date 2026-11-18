@@ -54,7 +54,7 @@ func (s *Service) management(raw json.RawMessage) (any, error) {
 		if err != nil {
 			return nil, err
 		}
-		b = []byte(strings.ReplaceAll(string(b), "__CLINE_LOGO_DATA__", "data:image/png;base64,"+base64.StdEncoding.EncodeToString(logo)))
+		b = []byte(strings.ReplaceAll(string(b), "__PLANBRIDGE_LOGO_DATA__", "data:image/png;base64,"+base64.StdEncoding.EncodeToString(logo)))
 		authJS, err := ui.ReadFile("ui/cpa-auth.js")
 		if err != nil {
 			return nil, err
