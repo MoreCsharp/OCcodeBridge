@@ -37,11 +37,29 @@
 | 能力 | 当前 P0 行为 |
 | --- | --- |
 | 模型目录 | 由厂商 `ListModels` 提供；未实现时返回 501 并提示手填 |
-| 额度窗口 | 由厂商 `FetchUsage` 提供；未实现时凭据卡片显示不可用 |
+| 额度窗口 | 由厂商 `FetchUsage` 提供；两家厂商均已实现，查询失败时卡片保留旧值并标明状态 |
 | 限流分类 | 由厂商 `ClassifyLimitError` 决定，未识别时按通用 429 处理 |
 | 响应观察 | 由厂商 `ObserveResponse` 读取额度字段，未识别时不记录 |
 
 模型通过 CPA 的账号绑定路径注册。所有使用同一厂商的凭据都禁用后，对应模型会从 CPA 的 `/v1/models` 移除；重新启用后由 CPA 恢复注册。模型出现在列表中不代表上游请求一定成功，实际可用性仍受凭据额度、冷却和上游状态影响。
+
+### 厂商上游地址覆盖
+
+`base_url_overrides` 按厂商替换推理地址，一个厂商的覆盖不会改写另一个厂商的上游。未列出的厂商继续使用内置地址；值为空字符串等同于不覆盖。它只用于测试服务器或自建代理，不是常规设置。
+
+```yaml
+base_url_overrides:
+  opencode-go: https://proxy.example/opencode/v1
+  commandcode: https://proxy.example/commandcode/provider/v1
+```
+
+```json
+{"base_url_overrides":{"commandcode":"https://proxy.example/commandcode/provider/v1"}}
+```
+
+键必须是已知厂商 ID（`opencode-go`、`commandcode`），值只能是不带凭据、查询串或 fragment 的 `http(s)` 地址，否则保存返回 400。键存在时整张表替换，键不存在时保留已保存的值，所以 `PUT /v0/management/planbridge/config` 可以只提交其他字段。
+
+旧版的全局 `base_url` 字段不再读取，也不会写回：它曾同时改写两家上游，遗留的 `api.cline.bot` 地址会被直接忽略，请改用 `base_url_overrides`。旧的 `base_url` 覆盖只影响推理地址；厂商的用量与模型目录接口始终使用各厂商自己的地址。
 
 模型的上游 ID 必须带厂商前缀（`<厂商 ID>/<上游模型名>`）。插件发送请求时去掉第一段，只把剩下的模型名发给上游；前缀对应的厂商必须与凭据厂商一致，否则该凭据不会被这个模型选中。前缀未知时保存会被拒绝（400）。
 
@@ -214,9 +232,20 @@ models:
 ## 上游限流
 
 插件区分团队 token 限流、普通请求频率限制和套餐耗尽，分别记录为 `upstream_team_rate_limited`、`upstream_rate_limited` 和 `upstream_quota_exhausted`。
-
 团队限流会按凭据和上游模型开启短期退避，同一上游的多个别名共享窗口。优先采用上游等待时间，缺失时等待 60 秒。窗口内直接返回限流，到期放行一次恢复探测；插件重载后重新探测。
 
 团队限流错误带 `[planbridge:team_tpm_limit]` 标识，供 CPA 请求级 `stop` 规则识别。该链路在 CPA v8.0.4 验证；普通 429、认证失败及套餐耗尽继续沿用宿主策略。通过原版 CPA 字符串流错误接口传递时按默认 500 封装，状态规则需以宿主实际收到的错误为准。
 
 排查时可查看日志中的 `error_kind`、`retry_at`、`rate_limit_scope`、`upstream_skipped` 和 `stream_end`，区分上游限流、本地拦截与流中断。
+
+## 窗口额度保护
+
+「配置概览 → 窗口额度保护」控制用量轮询是否主动暂停窗口已用尽的凭据，配置字段为 `pause_on_window_limit`（JSON / YAML 布尔值）：
+
+```json
+{"pause_on_window_limit": true}
+```
+
+默认开启，旧配置缺少该字段时按开启处理，显式关闭后重启仍保持关闭。开启时，任一 5 小时/每周/每天/月窗口达到 100% 就暂停该凭据，直到窗口重置时间（多个窗口取最晚）。
+
+关闭时，用量轮询不再主动暂停，但上游返回窗口超限 429 时仍按额度暂停处理。暂停与恢复只作用于额度状态，不修改人工启停；窗口没有重置时间时仍在下次成功采样低于 100% 后恢复，并有 10 分钟兜底复查间隔。完整规则见 [套餐用量说明](plan-usage.md#暂停与恢复)。
