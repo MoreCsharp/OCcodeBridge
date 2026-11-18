@@ -21,10 +21,20 @@ const userAgent = "PlanBridge"
 type statusError struct {
 	status  int
 	message string
+	body    []byte
 }
 
 func (e *statusError) Error() string   { return e.message }
 func (e *statusError) StatusCode() int { return e.status }
+
+// The bridge reads the status through vendors.StatusCoder, even when the error is
+// wrapped. The body is kept so the bridge can reuse ClassifyLimitError on a
+// management call that a plan without API access rejected.
+var _ vendors.StatusCoder = (*statusError)(nil)
+
+// ResponseBody returns the upstream body the request failed with, which a limit
+// classifier needs; it is empty when no body was read.
+func (e *statusError) ResponseBody() []byte { return e.body }
 
 // getJSON performs one vendor GET and decodes a JSON body into out. A transport
 // error is returned unwrapped so the bridge's own status mapping still sees it.
@@ -57,6 +67,7 @@ func getJSON(ctx context.Context, c vendors.Credential, doer vendors.HTTPDoer, e
 		return &statusError{
 			status:  resp.StatusCode,
 			message: fmt.Sprintf("commandcode: %s returned HTTP %d", req.URL.Path, resp.StatusCode),
+			body:    body,
 		}
 	}
 	if out == nil {

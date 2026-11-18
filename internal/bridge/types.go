@@ -3,6 +3,7 @@ package bridge
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -359,12 +360,18 @@ func errorMessage(j map[string]any) string {
 	}
 	return "upstream request failed"
 }
+
+// statusOf reads the upstream status through the wrap chain, so a vendor error
+// keeps its own status after the bridge (or a vendor) wraps it.
 func statusOf(err error) int {
 	if err == nil {
 		return 200
 	}
-	if e, ok := err.(interface{ StatusCode() int }); ok && e.StatusCode() > 0 {
-		return e.StatusCode()
+	var coder vendors.StatusCoder
+	if errors.As(err, &coder) {
+		if status := coder.StatusCode(); status > 0 {
+			return status
+		}
 	}
 	return 502
 }

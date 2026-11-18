@@ -37,6 +37,10 @@ func (e *upstreamStatusError) Error() string {
 
 func (e *upstreamStatusError) StatusCode() int { return e.status }
 
+// The bridge reads the status through vendors.StatusCoder, even when the error is
+// wrapped on its way out of this package.
+var _ vendors.StatusCoder = (*upstreamStatusError)(nil)
+
 func (e *upstreamStatusError) Is(target error) bool {
 	if target != ErrUnauthorized {
 		return false

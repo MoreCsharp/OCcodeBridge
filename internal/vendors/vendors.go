@@ -119,6 +119,13 @@ type HTTPDoer interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
+// StatusCoder is implemented by a vendor error that carries the upstream HTTP
+// status. The bridge reads it with errors.As, so a vendor may wrap its error and
+// the status still survives the vendor boundary instead of becoming a generic 502.
+type StatusCoder interface {
+	StatusCode() int
+}
+
 // Vendor is one subscription provider. Implementations live in their own package.
 type Vendor interface {
 	// ID is the stable vendor id stored on credentials, e.g. "opencode-go".
