@@ -3,6 +3,7 @@ package bridge
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/url"
 	"strings"
 	"testing"
@@ -116,6 +117,52 @@ func TestQuotaProviderRejectsUnrelatedAndRevokedCredentials(t *testing.T) {
 				t.Fatalf("invalid quota target: %v", err)
 			}
 		})
+	}
+}
+
+// The money pair a vendor reports is exact, so it outranks its percentage, and a
+// day/month window keeps the contract's own spelling instead of a fixed window.
+func TestQuotaProviderPrefersReportedAmountsAndMapsEveryWindow(t *testing.T) {
+	s := usageTestService(t, func(map[string]any) (int, string) {
+		return 200, `{"planName":"Fixture Plan","windows":[
+			{"kind":"5h","percent":50,"used":9.5,"cap":10},
+			{"kind":"7d"},
+			{"kind":"daily","percent":40},
+			{"kind":"month","used":3,"cap":4},
+			{"kind":"month","percent":-1}
+		]}`
+	})
+	result, err := s.Handle("quota.fetch", quotaProviderRequest("one.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var response struct {
+		Groups []struct {
+			Buckets []struct {
+				Window            string  `json:"window"`
+				RemainingFraction float64 `json:"remainingFraction"`
+			} `json:"buckets"`
+		} `json:"groups"`
+	}
+	if json.Unmarshal(jsonBytes(result), &response) != nil || len(response.Groups) != 1 {
+		t.Fatalf("invalid normalized quota: %s", jsonBytes(result))
+	}
+	buckets := response.Groups[0].Buckets
+	want := []struct {
+		window    string
+		remaining float64
+	}{
+		{"5h", 0.05},      // used/cap wins over the 50% percentage
+		{"daily", 0.6},    // percentage only
+		{"monthly", 0.25}, // used/cap only
+	}
+	if len(buckets) != len(want) {
+		t.Fatalf("unexpected buckets: %s", jsonBytes(result))
+	}
+	for i, expected := range want {
+		if buckets[i].Window != expected.window || math.Abs(buckets[i].RemainingFraction-expected.remaining) > 1e-9 {
+			t.Fatalf("bucket %d = %s / %v, want %s / %v", i, buckets[i].Window, buckets[i].RemainingFraction, expected.window, expected.remaining)
+		}
 	}
 }
 

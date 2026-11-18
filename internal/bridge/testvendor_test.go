@@ -38,7 +38,7 @@ func (fixtureVendor) ListModels(context.Context, vendors.Credential, vendors.HTT
 }
 
 // FetchUsage GETs "<base>/usage" and expects
-// {"accountId","planName","windows":[{"kind","percent","resetAt"}],"balance"}.
+// {"accountId","planName","windows":[{"kind","percent","used","cap","resetAt"}],"balance"}.
 func (fixtureVendor) FetchUsage(ctx context.Context, c vendors.Credential, doer vendors.HTTPDoer) (vendors.Usage, error) {
 	request, err := http.NewRequestWithContext(ctx, "GET", fixtureBase+"/usage", nil)
 	if err != nil {
@@ -57,6 +57,9 @@ func (fixtureVendor) FetchUsage(ctx context.Context, c vendors.Credential, doer 
 		Windows   []struct {
 			Kind    string   `json:"kind"`
 			Percent *float64 `json:"percent"`
+			Used    *float64 `json:"used"`
+			Cap     *float64 `json:"cap"`
+			Status  string   `json:"status"`
 			ResetAt string   `json:"resetAt"`
 		} `json:"windows"`
 	}
@@ -69,7 +72,7 @@ func (fixtureVendor) FetchUsage(ctx context.Context, c vendors.Credential, doer 
 	}
 	usage := vendors.Usage{PlanName: body.PlanName, AccountID: body.AccountID, Balance: body.Balance, FetchedAt: time.Now().UTC()}
 	for _, window := range body.Windows {
-		parsed := vendors.Window{Kind: window.Kind, UsedPercent: window.Percent}
+		parsed := vendors.Window{Kind: window.Kind, UsedPercent: window.Percent, Used: window.Used, Cap: window.Cap, Status: window.Status}
 		if window.ResetAt != "" {
 			if at, err := time.Parse(time.RFC3339Nano, window.ResetAt); err == nil {
 				parsed.ResetAt = &at

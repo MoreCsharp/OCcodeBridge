@@ -78,17 +78,11 @@ func (s *Service) fetchQuota(raw json.RawMessage) (quotaResponse, error) {
 	}
 	group := quotaGroup{DisplayName: displayName, Buckets: []quotaBucket{}}
 	for _, limit := range value.Limits {
-		if limit.PercentUsed == nil || math.IsNaN(*limit.PercentUsed) || math.IsInf(*limit.PercentUsed, 0) || *limit.PercentUsed < 0 {
+		used, ok := quotaUsedFraction(limit)
+		if !ok {
 			continue
 		}
-		window := limit.Type
-		switch limit.Type {
-		case "five_hour":
-			window = "5h"
-		case "weekly":
-			window = "7d"
-		}
-		bucket := quotaBucket{Window: window, RemainingFraction: 1 - min(*limit.PercentUsed, 100)/100}
+		bucket := quotaBucket{Window: quotaWindowName(limit.Type), RemainingFraction: 1 - used}
 		if limit.ResetsAt != nil {
 			bucket.ResetTime = limit.ResetsAt.Format(time.RFC3339Nano)
 		}
@@ -98,8 +92,43 @@ func (s *Service) fetchQuota(raw json.RawMessage) (quotaResponse, error) {
 		return quotaResponse{}, fail(502, "PlanBridge returned no usable quota windows")
 	}
 	response := quotaResponse{Groups: []quotaGroup{group}}
+	// The plan name is the vendor's own label from the usage sample.
 	if value.Plan != nil && value.Plan.Name != "" {
 		response.Subscription = &quotaSubscription{Plan: value.Plan.Name}
 	}
 	return response, nil
+}
+
+// quotaUsedFraction prefers the exact money pair a vendor reported (used/cap)
+// over its percentage, and caps the result at a fully used window. It reports
+// false when neither source is usable, so no bucket claims a zero usage.
+func quotaUsedFraction(limit usageLimit) (float64, bool) {
+	finite := func(value *float64) bool {
+		return value != nil && !math.IsNaN(*value) && !math.IsInf(*value, 0) && *value >= 0
+	}
+	if finite(limit.Used) && finite(limit.Cap) && *limit.Cap > 0 {
+		return math.Min(*limit.Used / *limit.Cap, 1), true
+	}
+	if finite(limit.PercentUsed) {
+		return math.Min(*limit.PercentUsed/100, 1), true
+	}
+	return 0, false
+}
+
+// quotaWindowName maps the internal window type onto the name CPA's quota
+// contract accepts. "5h" and "7d" are the documented short windows; a day or a
+// calendar month has no dedicated value, so the contract's own spellings "daily"
+// and "monthly" are used rather than squeezing them into a fixed-length window.
+func quotaWindowName(kind string) string {
+	switch kind {
+	case "five_hour":
+		return "5h"
+	case "weekly":
+		return "7d"
+	case "daily":
+		return "daily"
+	case "monthly":
+		return "monthly"
+	}
+	return kind
 }

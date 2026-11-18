@@ -1183,6 +1183,16 @@
     function logCooldownText(log) {
       return { exempt: '未触发冷却', host_policy: '按错误规则处理', legacy_host_unknown: '处理结果未确认' }[log.cooldown_disposition] || '未记录';
     }
+    // 计入额度 is the allowance the vendor reported for this request, shown verbatim:
+    // the parsed object first, then the raw frame fragment when no object survived.
+    function allowanceText(log) {
+      if (present(log.allowance)) {
+        const value = log.allowance;
+        if (typeof value === 'object') { try { return JSON.stringify(value); } catch { return String(value); } }
+        return String(value);
+      }
+      return present(log.allowance_raw) ? String(log.allowance_raw) : '';
+    }
     function actualProvider(value, upstreamSkipped = false) {
       if (upstreamSkipped === true) return '本地退避';
       const provider = String(value ?? '').trim();
@@ -1251,6 +1261,7 @@
             ${present(log.cooldown_disposition) ? datum('冷却处理', logCooldownText(log)) : ''}
             ${local ? datum('本地拦截', `${number(count)} 次`) + datum('首次拦截', formatTime(log.time)) + datum('最近拦截', formatTime(lastTime)) + datum('退避窗口 ID', log.backoff_window_id, '—') : ''}
             ${limited ? datum('重试状态', limitLabel) + datum('限流范围', log.rate_limit_scope === 'upstream_team' ? '上游团队' : '当前凭据 / 模型') : ''}
+            ${allowanceText(log) ? datum('计入额度', esc(allowanceText(log))) : ''}
           </div>
           ${present(log.error) ? `<div class="attempts"><div class="datum-label">请求错误</div><div class="error-text">${esc(log.error)}</div></div>` : ''}
           ${debug ? `<div class="attempts"><strong>Debug 诊断</strong><div class="detail-grid">
