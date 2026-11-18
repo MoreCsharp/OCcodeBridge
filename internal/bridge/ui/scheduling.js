@@ -24,6 +24,9 @@ function compareCredentialDisplayOrder(a, b) {
 }
 function credentialQuotaRecoveryHTML(item, now = Date.now()) {
   if (!credentialQuotaPaused(item)) return '';
+  if (credentialSchedule(item.id)?.plan_unsupported === true || item.plan_unsupported === true) {
+    return `<span class="badge" title="套餐不支持 API 访问没有恢复时间；升级套餐后点「重新检测」">等待重新检测</span>`;
+  }
   const reset = credentialQuotaResetAt(item);
   let label = '恢复时间待确认';
   if (Number.isFinite(reset)) {
@@ -83,7 +86,12 @@ function schedulingReason(message) {
 function credentialScheduleBadges(item) {
   const a = credentialSchedule(item.id), badges = [];
   if (item.enabled === false) badges.push(schedulingBadge('人工停用'));
-  if (credentialQuotaPaused(item)) badges.push(schedulingBadge('额度耗尽 · 自动暂停', 'bad'));
+  if (a?.plan_unsupported === true || item.plan_unsupported === true) {
+    const reason = a?.quota_reason || item.quota_reason || '上游拒绝为该套餐提供接口访问；升级套餐后点「重新检测」';
+    badges.push(schedulingBadge('套餐不支持 API', 'bad', reason));
+  } else if (credentialQuotaPaused(item)) {
+    badges.push(schedulingBadge('额度耗尽 · 自动暂停', 'bad'));
+  }
   if (a?.persistence_error) badges.push(schedulingBadge('状态保存失败', 'bad'));
   if (item.enabled !== false && !credentialQuotaPaused(item)) {
     if (!a) badges.push(schedulingBadge('调度状态待查询'));
@@ -119,6 +127,11 @@ function updateCredentialScheduling() {
     toggle.closest('.credential-toggle').title = state.title;
     row.querySelector('.credential-toggle-label').textContent = state.label;
     row.querySelector('.reset-cooldown').disabled = item.enabled === false || credentialQuotaPaused(item) || state.disabled;
+    const recheck = row.querySelector('.recheck-credential');
+    if (recheck) {
+      recheck.hidden = credentialSchedule(item.id)?.plan_unsupported !== true && item.plan_unsupported !== true;
+      recheck.disabled = state.disabled;
+    }
   }
 }
 async function loadCredentialScheduling() {
@@ -169,6 +182,26 @@ async function changeCredentialScheduling(id, action, enabled) {
   } catch (error) { toast(error.message); }
   finally { credentialScheduling.revision++; credentialScheduling.pending.delete(id); updateCredentialScheduling(); await loadCredentialScheduling(); }
 }
+// A plan without API access is cleared only by a successful re-check, so the
+// console offers exactly that instead of a manual state switch.
+async function recheckCredential(id) {
+  if (credentialScheduling.pending.has(id)) return;
+  const item = credentialView.items.find(a => a.id === id);
+  if (!item) return;
+  credentialScheduling.revision++;
+  credentialScheduling.pending.add(id); updateCredentialScheduling();
+  try {
+    const result = await api('/credentials/recheck', { method: 'POST', body: { id } });
+    if (result?.cleared) {
+      toast('重新检测通过：已清除「套餐不支持 API」状态');
+      credentialView.usage?.delete(id);
+      credentialView.queue?.set(id, true);
+    } else {
+      toast(`仍不可用：${result?.error || result?.status || '上游未返回用量'}`);
+    }
+  } catch (error) { toast(error.message); }
+  finally { credentialScheduling.revision++; credentialScheduling.pending.delete(id); updateCredentialScheduling(); await loadCredentialScheduling(); }
+}
 $('credentialList').addEventListener('change', (event) => {
   const input = event.target.closest('.credential-enabled');
   if (input) changeCredentialScheduling(input.dataset.id, 'toggle', input.checked);
@@ -176,6 +209,8 @@ $('credentialList').addEventListener('change', (event) => {
 $('credentialList').addEventListener('click', (event) => {
   const button = event.target.closest('.reset-cooldown');
   if (button && !button.disabled) changeCredentialScheduling(button.dataset.id, 'reset');
+  const recheck = event.target.closest('.recheck-credential');
+  if (recheck && !recheck.disabled) recheckCredential(recheck.dataset.id);
 });
 setInterval(() => {
   if (!usageViewVisible()) return;

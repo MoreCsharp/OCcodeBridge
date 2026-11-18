@@ -277,8 +277,13 @@
     .usage-meter.warn strong { color: var(--warn); }
     .usage-meter.bad strong { color: var(--danger); }
     .usage-reset { color: var(--muted); font-size: 10px; overflow-wrap: anywhere; }
+    .usage-amount { color: var(--ink); font-size: 10px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .usage-derived { color: var(--warn); font-size: 10px; }
+    .usage-notes { display: flex; flex-wrap: wrap; gap: 3px 14px; margin-top: 8px; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+    .usage-notes b { color: var(--ink); font-variant-numeric: tabular-nums; }
     .usage-status { margin-top: 7px; font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
     .usage-status.stale { color: var(--warn); }
+    .usage-status .badge { margin-right: 6px; }
     .credential-bottom { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--inset-line); }
     .credential-plan { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
     .credential-bottom .button { min-height: 28px; font-size: 11px; }
@@ -1637,6 +1642,13 @@
       const date = new Date(value);
       return value && Number.isFinite(date.getTime()) ? date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
     }
+    function usageMoney(value) {
+      return typeof value === 'number' && Number.isFinite(value)
+        ? `$${value.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '';
+    }
+    // The vendor that produced the sample decides the extra fields: CommandCode
+    // bills a dollar balance that is spent automatically once a window is full.
+    function usageVendor(item, usage) { return String(usage?.vendor || item?.vendor || '').toLowerCase(); }
     function usageHTML(item) {
       const usage = credentialView.usage.get(item.id);
       const stale = !!usage?.updated_at && (usage.status !== 'ok' || Date.now() - Date.parse(usage.updated_at) > 90000);
@@ -1649,9 +1661,14 @@
         const resetPassed = reset && Date.parse(limit.resets_at) <= Date.now();
         const label = Object.hasOwn(usageLabels, type) ? usageLabels[type] : type;
         const text = value === null ? '—' : `${value.toLocaleString('zh-CN', { maximumFractionDigits: 1 })}%`;
-        return `<div class="usage-meter ${value === null ? '' : value >= 90 ? 'bad' : value >= 70 ? 'warn' : 'good'}"><div class="usage-meter-head"><span>${esc(label)}</span><strong title="已使用${esc(text)}">${text}</strong></div><div class="usage-track" ${value === null ? 'aria-hidden="true"' : `role="progressbar" aria-label="${esc(label)}已用${esc(text)}${stale ? '，上次数据' : ''}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100, value)}"`}><span class="usage-fill" style="width:${value === null ? 0 : Math.min(100, value)}%"></span></div><div class="usage-reset">${reset ? `${esc(reset)} 重置${resetPassed ? ' · 待更新' : ''}` : '重置时间 —'}</div></div>`;
+        const amounts = typeof limit?.used === 'number' && Number.isFinite(limit.used) && typeof limit?.cap === 'number' && Number.isFinite(limit.cap) && limit.cap > 0
+          ? `${usageMoney(limit.used)} / ${usageMoney(limit.cap)}` : '';
+        const derived = /derived/.test(String(limit?.status || '')) ? '<div class="usage-derived">按规则推算</div>' : '';
+        return `<div class="usage-meter ${value === null ? '' : value >= 90 ? 'bad' : value >= 70 ? 'warn' : 'good'}"><div class="usage-meter-head"><span>${esc(label)}</span><strong title="已使用${esc(text)}">${text}</strong></div><div class="usage-track" ${value === null ? 'aria-hidden="true"' : `role="progressbar" aria-label="${esc(label)}已用${esc(text)}${stale ? '，上次数据' : ''}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.min(100, value)}"`}><span class="usage-fill" style="width:${value === null ? 0 : Math.min(100, value)}%"></span></div>${amounts ? `<div class="usage-amount" title="已用 / 窗口上限">${esc(amounts)}</div>` : ''}<div class="usage-reset">${reset ? `${esc(reset)} 重置${resetPassed ? ' · 待更新' : ''}` : '重置时间 —'}</div>${derived}</div>`;
       }).join('');
-      return `<div class="usage-meters">${meters}</div>`;
+      const balance = usageVendor(item, usage) === 'commandcode' && typeof usage?.balance === 'number' && Number.isFinite(usage.balance) ? usageMoney(usage.balance) : '';
+      const notes = balance ? `<div class="usage-notes"><span title="付费余额：本周期窗口用尽后，上游会从这里自动扣用。">额外额度 <b>${esc(balance)}</b>（超窗口时会被自动扣用）</span></div>` : '';
+      return `<div class="usage-meters">${meters}</div>${notes}`;
     }
     function usageStatusHTML(item) {
       const usage = credentialView.usage.get(item.id);
@@ -1661,15 +1678,23 @@
       let status = loading ? '正在更新…' : usage?.error || (usage?.updated_at ? `更新于 ${usageDate(usage.updated_at)}` : '等待查询');
       if (stale) status = `上次数据 · ${usageDate(usage.updated_at)} · ${loading ? '正在更新…' : usage.error || '数据已过期，等待刷新'}`;
       if (!loading && usage?.status === 'ok' && !limits.length) status = '上游未返回用量窗口';
-      return `<div class="usage-status ${stale || usage?.error ? 'stale' : ''}" role="status">${esc(status)}</div>`;
+      const failed = !!usage?.error || (!!usage?.checked_at && usage?.status !== 'ok');
+      const badge = failed ? '<span class="badge bad">查询失败</span>' : '';
+      return `<div class="usage-status ${stale || usage?.error ? 'stale' : ''}" role="status">${badge}${esc(status)}</div>`;
     }
-    function usagePlanHTML(id) {
-      const usage = credentialView.usage.get(id);
-      if (!usage) return '套餐信息待查询';
+    const usageVendorNames = { 'opencode-go': 'OpenCode Go', commandcode: 'CommandCode' };
+    function usageVendorName(item, usage) {
+      const id = usageVendor(item, usage);
+      return usageVendorNames[id] || id || '厂商未知';
+    }
+    function usagePlanHTML(item) {
+      const usage = credentialView.usage.get(item.id);
+      const vendor = usageVendorName(item, usage);
+      if (!usage) return `${esc(vendor)} · 套餐信息待查询`;
       const name = usage.plan?.name || (usage.plan_updated_at && !usage.plan_error ? '暂无有效套餐' : '套餐信息暂不可用');
       const end = usageDate(usage.plan?.current_period_end);
       const outdated = usage.plan_error || (usage.plan_updated_at && Date.now() - Date.parse(usage.plan_updated_at) > 360000);
-      return `${esc(name)}${end ? ` · 本期至 ${esc(end)}` : ''}${outdated ? ' · 套餐信息待更新' : ''}`;
+      return `${esc(vendor)} · ${esc(name)}${end ? ` · 本期至 ${esc(end)}` : ''}${outdated ? ' · 套餐信息待更新' : ''}`;
     }
     function updateUsageRow(id) {
       const item = credentialView.items.find((entry) => entry.id === id);
@@ -1677,7 +1702,7 @@
       if (!item || !row) return;
       row.querySelector('.credential-usage').innerHTML = usageHTML(item);
       row.querySelector('.credential-status').innerHTML = usageStatusHTML(item);
-      row.querySelector('.credential-plan').innerHTML = usagePlanHTML(id);
+      row.querySelector('.credential-plan').innerHTML = usagePlanHTML(item);
       const button = row.querySelector('.refresh-usage');
       button.disabled = credentialView.pending.has(id) || credentialView.queue.has(id);
       setButtonLabel(button, credentialView.pending.has(id) || credentialView.queue.has(id) ? '更新中…' : '刷新', 'refresh');
@@ -1706,7 +1731,7 @@
       credentialView.visible = filtered.slice(credentialView.page * CREDENTIAL_PAGE_SIZE, (credentialView.page + 1) * CREDENTIAL_PAGE_SIZE);
       const visibleIDs = new Set(credentialView.visible.map((item) => item.id));
       for (const id of credentialView.queue.keys()) if (!visibleIDs.has(id)) credentialView.queue.delete(id);
-      $('credentialList').innerHTML = credentialView.visible.length ? credentialView.visible.map((item) => `<div class="credential-row${credentialQuotaPaused(item) ? ' quota-paused' : ''}" data-id="${esc(item.id)}"><div class="credential-main"><div class="credential-title"><span class="primary-text" title="${esc(item.label)}">${shown(item.label, '未命名')}</span><span class="credential-schedule-badges">${credentialScheduleBadges(item)}</span></div><div class="subtext mono credential-id" title="${esc(item.id)}">${esc(item.id)}</div><div class="subtext credential-priority"><span class="badge">优先级 ${esc(item.priority || 0)}</span><span class="credential-quota-recovery">${credentialQuotaRecoveryHTML(item)}</span></div><div class="credential-schedule-detail">${credentialScheduleDetail(item)}</div><div class="credential-status">${usageStatusHTML(item)}</div></div><div class="credential-usage">${usageHTML(item)}</div><div class="credential-bottom"><div class="credential-plan">${usagePlanHTML(item.id)}</div><div class="row-actions">${credentialToggleHTML(item)}<button class="button compact reset-cooldown" type="button" data-id="${esc(item.id)}" ${item.enabled === false || credentialQuotaPaused(item) || credentialToggleState(item).disabled ? 'disabled' : ''} title="清除插件与宿主冷却，不改变上游额度">${buttonIcon('undo')}清除冷却</button><button class="button compact refresh-usage" type="button" data-id="${esc(item.id)}" ${credentialView.pending.has(item.id) ? 'disabled' : ''}>${buttonIcon('refresh')}刷新</button><button class="button compact edit-credential" type="button" data-id="${esc(item.id)}" data-label="${esc(item.label)}">${buttonIcon('edit')}编辑</button><button class="button compact danger remove-credential" type="button" data-id="${esc(item.id)}" data-label="${esc(item.label)}">${buttonIcon('trash')}删除</button></div></div></div>`).join('') : `<div class="empty">${query ? '没有匹配的凭据' : '尚未添加凭据'}</div>`;
+      $('credentialList').innerHTML = credentialView.visible.length ? credentialView.visible.map((item) => `<div class="credential-row${credentialQuotaPaused(item) ? ' quota-paused' : ''}" data-id="${esc(item.id)}"><div class="credential-main"><div class="credential-title"><span class="primary-text" title="${esc(item.label)}">${shown(item.label, '未命名')}</span><span class="credential-schedule-badges">${credentialScheduleBadges(item)}</span></div><div class="subtext mono credential-id" title="${esc(item.id)}">${esc(item.id)}</div><div class="subtext credential-priority"><span class="badge">优先级 ${esc(item.priority || 0)}</span><span class="credential-quota-recovery">${credentialQuotaRecoveryHTML(item)}</span></div><div class="credential-schedule-detail">${credentialScheduleDetail(item)}</div><div class="credential-status">${usageStatusHTML(item)}</div></div><div class="credential-usage">${usageHTML(item)}</div><div class="credential-bottom"><div class="credential-plan">${usagePlanHTML(item)}</div><div class="row-actions">${credentialToggleHTML(item)}<button class="button compact reset-cooldown" type="button" data-id="${esc(item.id)}" ${item.enabled === false || credentialQuotaPaused(item) || credentialToggleState(item).disabled ? 'disabled' : ''} title="清除插件与宿主冷却，不改变上游额度">${buttonIcon('undo')}清除冷却</button><button class="button compact recheck-credential" type="button" data-id="${esc(item.id)}" hidden title="重新查询用量；查询成功即清除「套餐不支持 API」状态">重新检测</button><button class="button compact refresh-usage" type="button" data-id="${esc(item.id)}" ${credentialView.pending.has(item.id) ? 'disabled' : ''}>${buttonIcon('refresh')}刷新</button><button class="button compact edit-credential" type="button" data-id="${esc(item.id)}" data-label="${esc(item.label)}">${buttonIcon('edit')}编辑</button><button class="button compact danger remove-credential" type="button" data-id="${esc(item.id)}" data-label="${esc(item.label)}">${buttonIcon('trash')}删除</button></div></div></div>`).join('') : `<div class="empty">${query ? '没有匹配的凭据' : '尚未添加凭据'}</div>`;
       $('credentialCount').textContent = query ? `${filtered.length} / ${credentialView.items.length} 个凭据` : `${filtered.length} 个凭据`;
       for (const row of $('credentialList').children) {
         const item = credentialView.visible.find((entry) => entry.id === row.dataset.id);
