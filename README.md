@@ -93,13 +93,17 @@ CommandCode 的凭据可以打开 **ZDR**（零数据保留），插件会把 `x
 
 项目使用 Go 1.26，插件是动态库（`-buildmode=c-shared`），需要 C 工具链。
 
-Linux amd64，装好 Docker 后在仓库根目录执行：
+Linux amd64，在装有 gcc 的发行版（Debian 13 / Ubuntu，`build-essential`）上执行：
+
+```bash
+scripts/build-linux.sh      # 产物 dist/occodebridge.so，打印字节数与 sha256
+```
+
+该脚本的构建参数与发布工作流一致（`-trimpath -buildvcs=false -buildmode=c-shared -ldflags="-s -w"`），并校验产物是 ELF64 x86-64 共享库。也可以改用容器构建，产物同样是 `dist/occodebridge.so`：
 
 ```bash
 docker build --platform linux/amd64 -f Dockerfile.build --output type=local,dest=dist .
 ```
-
-产物是 `dist/occodebridge.so`。
 
 Windows amd64，用本地 winlibs MinGW-w64 gcc：
 
@@ -114,7 +118,23 @@ pwsh -NoProfile -File scripts/build-windows.ps1 -Zip   # 另打 occodebridge_<�
 pwsh -NoProfile -File scripts/check.ps1
 ```
 
-其他平台（Linux arm64、macOS amd64/arm64）的打包方式见[发布工作流](.github/workflows/release.yml)。仓库里还有 `scripts/e2e-native.ps1`：用本地假上游和真 CPA 进程跑一遍原生验收（需要 Python 3 与本地 CPA 可执行文件），不会访问真实上游。
+其他平台（Linux arm64、macOS amd64/arm64）的打包方式见[发布工作流](.github/workflows/release.yml)。
+
+### 原生验收
+
+仓库里有两个原生验收脚本：用本地假上游和真 CPA 进程跑完整链路（插件加载、凭据导入、模型映射、流式/非流式请求、请求日志、配额错误、宿主日志），不会访问真实上游。
+
+- `scripts/e2e-native.ps1`：Windows，需要 Python 3 与本地 CPA 可执行文件。
+- `scripts/e2e-linux.py`：Linux，只需 Python 3 标准库，21 项断言与 Windows 版等价。CPA 可执行文件默认 `/opt/cpa-v8.0.67/cli-proxy-api`，可用 `--cpa-exe` 或 `$OCCODEBRIDGE_CPA_EXE` 指定；运行目录默认 `<仓库>/.runtime/occodebridge-e2e`，可用 `--root` 或 `$OCCODEBRIDGE_E2E_ROOT` 指定。
+
+```bash
+python3 scripts/e2e-linux.py                     # 先构建 .so，再跑全部断言
+python3 scripts/e2e-linux.py --no-build          # 复用 dist/occodebridge.so
+python3 scripts/e2e-linux.py --no-build --root /tmp/occodebridge-run \
+    --cpa-exe /opt/cpa-v8.0.67/cli-proxy-api     # 指定运行目录与 CPA
+```
+
+脚本为 CPA 子进程屏蔽真实外网（`HTTP(S)_PROXY` 指向关闭的回环端口、`NO_PROXY=127.0.0.1`），端口随机，每项断言打印 `[PASS]/[FAIL] 名称 - 证据`（key 打码），结束时输出 `RESULT: PASS (21/21)` 并清理自己启动的进程（失败和 SIGINT/SIGTERM 同样清理）。失败时以非零码退出，日志留在运行目录的 `logs/`。
 
 ## 许可与致谢
 

@@ -4,7 +4,24 @@ OCcodeBridge 使用 JSON ABI v1，按 [README](../README.md#安装与配置) 安
 
 ## 原版接口与提前截流
 
-原版 CPA **v8.0.13** 已提供 `host.http.stream_close`，**v8.0.29** 也沿用该接口，插件可主动关闭上游流。「流式卡住时提前截流」是本版本自带能力，可在原版宿主上独立使用。本版本的插件加载、凭据导入、模型注册、流式/非流式请求与配额接口已在官方 **v8.0.67** 的本地进程上做过一次原生验收（本地假上游，未访问真实厂商）。
+原版 CPA **v8.0.13** 已提供 `host.http.stream_close`，**v8.0.29** 也沿用该接口，插件可主动关闭上游流。「流式卡住时提前截流」是本版本自带能力，可在原版宿主上独立使用。
+
+本版本的插件加载、凭据导入、模型注册、流式/非流式请求与配额接口已在官方 **v8.0.67** 的本地进程上做过原生验收（本地假上游，未访问真实厂商）：
+
+- Windows amd64：`scripts/e2e-native.ps1`。
+- Linux amd64（Debian 13 x86_64，gcc 14.2，Go 1.26.5）：官方 CPA v8.0.67 `linux_amd64` 可执行文件，大小 76176616 字节，sha256 `6b1f68e1571dd9af3b504dee885b9ac7fdb436cd08bdc3ff540accb88ec701e9`；插件用 `scripts/build-linux.sh` 构建（`dist/occodebridge.so`，ELF64 x86-64），由 `scripts/e2e-linux.py` 跑完 21 项断言全部 PASS。
+
+Linux 验收脚本只要 Python 3 标准库，CPA 可执行文件默认 `/opt/cpa-v8.0.67/cli-proxy-api`：
+
+```bash
+scripts/build-linux.sh
+python3 scripts/e2e-linux.py --no-build --root /tmp/occodebridge-e2e \
+    --cpa-exe /opt/cpa-v8.0.67/cli-proxy-api
+```
+
+脚本为 CPA 子进程屏蔽真实外网（`HTTP(S)_PROXY` 指向关闭的回环端口、`NO_PROXY=127.0.0.1`），端口随机，不读写宿主侧其他文件；结束后清理自己启动的 CPA 与假上游进程。
+
+这些证据覆盖上述已测链路，不代表所有瞬时故障均已在生产环境验证。
 
 当前默认关闭，默认空闲阈值仍为 20 秒。首次安装或配置缺少字段时使用默认值；显式保存的 `true`、`false` 和自定义秒数在升级、重启后继续保留。开启后从首段有效输出后计时；思考、正文和工具增量重置计时，heartbeat、role 和空帧不重置，下游发送耗时不计入空闲时间。适用于上游 SSE 请求，包括非流式聚合；原生非流式不适用，也不缩短首字等待。Debug 另有独立开关，默认关闭，按需采集额外流诊断。配置见 [进阶配置](configuration.md#流式卡住时提前截流)。
 

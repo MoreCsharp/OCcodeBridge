@@ -1,5 +1,7 @@
 /dist/
 /data/
+/.runtime/
+__pycache__/
 *.so
 *.dll
 *.dylib
