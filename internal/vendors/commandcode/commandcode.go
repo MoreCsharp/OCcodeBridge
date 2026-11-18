@@ -1,12 +1,9 @@
-// Package commandcode implements the CommandCode vendors. This stage only carries
-// the identity, inference base and request headers; the catalog, usage and
-// limit-error work belongs to the CommandCode stage.
+// Package commandcode implements the CommandCode vendor: the documented Provider
+// API for inference and the CLI's /alpha endpoints for subscription usage.
 package commandcode
 
 import (
-	"context"
 	"net/http"
-	"time"
 
 	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
 )
@@ -16,6 +13,11 @@ const ID = "commandcode"
 
 // ZDRHeader switches the upstream to zero data retention providers.
 const ZDRHeader = "x-cmd-zdr"
+
+// SessionHeader carries the session id. The CLI sends it on every request named
+// x-session-id (buildCommandAuthHeaders in cli.mjs), and forwarding the client's
+// own id keeps upstream caching and rate accounting stable.
+const SessionHeader = "x-session-id"
 
 // BaseURL is the inference endpoint; the /alpha usage calls live on the host root.
 const BaseURL = "https://api.commandcode.ai/provider/v1"
@@ -36,19 +38,12 @@ func (Vendor) Headers(r vendors.Request) http.Header {
 	if r.Credential.ZDR {
 		h.Set(ZDRHeader, "1")
 	}
+	if r.SessionHint != "" {
+		h.Set(SessionHeader, r.SessionHint)
+	}
 	return h
 }
 
-func (Vendor) ListModels(context.Context, vendors.Credential, vendors.HTTPDoer) ([]vendors.Model, error) {
-	return nil, vendors.ErrNotImplemented
-}
-
-func (Vendor) FetchUsage(context.Context, vendors.Credential, vendors.HTTPDoer) (vendors.Usage, error) {
-	return vendors.Usage{}, vendors.ErrNotImplemented
-}
-
-// ClassifyLimitError reports nothing yet. CommandCode also returns 403 for plans
-// without API access, which is a vendor classification, not a transient limit.
-func (Vendor) ClassifyLimitError(int, []byte, time.Time) *vendors.LimitBlock { return nil }
-
+// ObserveResponse reports nothing: CommandCode response frames carry no vendor
+// owned usage facts. Window limits come from the billing endpoints.
 func (Vendor) ObserveResponse(map[string]any) *vendors.Observation { return nil }

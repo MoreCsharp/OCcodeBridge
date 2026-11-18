@@ -1,0 +1,23 @@
+{
+  "success": true,
+  "credits": {
+    "monthlyCredits": 40,
+    "purchasedCredits": 12.5,
+    "freeCredits": 2.5,
+    "planId": "individual_goat"
+  },
+  "windowLimits": {
+    "limited": true,
+    "fiveHour": {
+      "used": 5,
+      "cap": 20,
+      "resetAt": 1794992776000
+    },
+    "weekly": {
+      "used": 10,
+      "cap": 50,
+      "resetAt": 1794993000
+    }
+  },
+  "sandboxMinutes": 120
+}
