@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sort"
@@ -27,7 +28,7 @@ func (s *Service) registerManagement(raw json.RawMessage) (any, error) {
 	for _, p := range []string{"status", "logs", "statistics", "models", "config", "credentials", "credentials/usage", "scheduling", "egress", "error-rules", "vendors"} {
 		routes = append(routes, map[string]string{"Method": "GET", "Path": apiBase + "/" + p})
 	}
-	for _, p := range []string{"models/refresh", "models/test", "credentials", "credentials/clear-affinity", "statistics/reset", "scheduling/reset", "error-rules/sync", "error-rules/reset"} {
+	for _, p := range []string{"models/refresh", "models/test", "credentials", "credentials/clear-affinity", "credentials/recheck", "statistics/reset", "scheduling/reset", "error-rules/sync", "error-rules/reset"} {
 		routes = append(routes, map[string]string{"Method": "POST", "Path": apiBase + "/" + p})
 	}
 	for _, p := range []string{"models", "models/reasoning", "config", "credentials", "scheduling/credential", "egress", "error-rules"} {
@@ -188,6 +189,8 @@ func (s *Service) management(raw json.RawMessage) (any, error) {
 		return managementJSON(200, map[string]any{"items": items})
 	case "POST /credentials/clear-affinity":
 		return s.clearAffinity(r)
+	case "POST /credentials/recheck":
+		return s.recheckCredential(r)
 	case "GET /credentials":
 		return managementJSON(200, map[string]any{"items": s.credentials()})
 	case "GET /credentials/usage":
@@ -403,6 +406,11 @@ func (s *Service) updateCredential(r ManagementRequest) (any, error) {
 		if len(key) < 8 || strings.ContainsAny(key, "\r\n") {
 			return managementJSON(400, map[string]any{"error": "invalid API key"})
 		}
+		if key != c.APIKey {
+			// A replaced key speaks for another subscription, so an old quota
+			// block, including a plan without API access, no longer applies.
+			c.QuotaBlock, c.QuotaIdentity, c.QuotaRevision = nil, nil, ""
+		}
 		c.APIKey = key
 	}
 	if filename == "" {
@@ -417,6 +425,29 @@ func (s *Service) updateCredential(r ManagementRequest) (any, error) {
 	}
 	return managementJSON(200, map[string]any{"id": c.ID, "label": c.Label, "vendor": c.Vendor, "enabled": !c.Disabled, "priority": c.Priority})
 }
+
+// recheckCredential runs one usage query and clears a plan-unsupported state when
+// the vendor answers normally. A failing query keeps the state and reports why.
+func (s *Service) recheckCredential(r ManagementRequest) (any, error) {
+	var in struct {
+		ID string `json:"id"`
+	}
+	if json.Unmarshal(r.Body, &in) != nil || in.ID == "" {
+		return managementJSON(400, map[string]any{"error": "请选择要重新检测的凭据"})
+	}
+	value, err := s.credentialUsage(ManagementRequest{Query: url.Values{"id": {in.ID}, "refresh": {"1"}}, HostCallbackID: r.HostCallbackID})
+	if err != nil {
+		return managementJSON(statusOf(err), map[string]any{"error": safeError(err)})
+	}
+	if value.Status != "ok" {
+		return managementJSON(200, map[string]any{"cleared": false, "status": value.Status, "error": value.Error})
+	}
+	if err := s.clearPermanentQuota(in.ID); err != nil {
+		return managementJSON(statusOf(err), map[string]any{"error": safeError(err)})
+	}
+	return managementJSON(200, map[string]any{"cleared": true, "status": value.Status})
+}
+
 func (s *Service) deleteCredential(credentialID string) (any, error) {
 	s.credentialMu.Lock()
 	defer s.credentialMu.Unlock()

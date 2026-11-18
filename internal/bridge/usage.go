@@ -172,6 +172,30 @@ func usageFailure(err error) (string, string) {
 	}
 }
 
+// vendorErrorBody is implemented by a vendor error that kept the upstream body.
+// It lets a failed management call go through the same ClassifyLimitError rules a
+// failed request uses, instead of a second detector in the bridge.
+type vendorErrorBody interface {
+	ResponseBody() []byte
+}
+
+// usageLimitBlock classifies a failed usage call with the vendor's own limit
+// rules. Only a 403 or 429 can be a limit; everything else stays a query failure.
+func usageLimitBlock(v vendors.Vendor, err error, now time.Time) *vendors.LimitBlock {
+	status := statusOf(err)
+	if status != 403 && status != 429 {
+		return nil
+	}
+	body := []byte(err.Error())
+	var carrier vendorErrorBody
+	if errors.As(err, &carrier) {
+		if raw := carrier.ResponseBody(); len(raw) > 0 {
+			body = raw
+		}
+	}
+	return v.ClassifyLimitError(status, body, now)
+}
+
 // fetchCredentialUsage delegates to the credential's vendor and maps its sample
 // onto the console/quota structure. Fields the vendor leaves nil stay nil.
 func (s *Service) fetchCredentialUsage(callbackID string, c Credential, value credentialUsage, deadline time.Time) credentialUsage {
@@ -185,6 +209,13 @@ func (s *Service) fetchCredentialUsage(callbackID string, c Credential, value cr
 	usage, err := v.FetchUsage(ctx, vendorCredential(c), s.vendorDoer(c, callbackID, deadline))
 	if err != nil {
 		value.Status, value.Error = usageFailure(err)
+		if block := usageLimitBlock(v, err, time.Now().UTC()); block != nil && block.Permanent {
+			// A plan without API access rejects every management call too, so polling
+			// detects it without waiting for a failed inference request.
+			value.Error = block.Reason
+			value.Status = "plan_unsupported"
+			_ = s.markPlanUnsupported(c, block.Reason)
+		}
 		return value // Keep last successful values with their original timestamp.
 	}
 	limits := []usageLimit{}

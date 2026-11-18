@@ -64,6 +64,8 @@ func (s *Service) fetchQuota(raw json.RawMessage) (quotaResponse, error) {
 		switch value.Status {
 		case "unauthorized":
 			status = 401
+		case "plan_unsupported":
+			status = 403
 		case "rate_limited":
 			status = 429
 		case "timeout":

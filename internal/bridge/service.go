@@ -487,12 +487,16 @@ func (s *Service) selectedCredential(r ExecutorRequest) (Credential, error) {
 	if _, err := vendorFor(c); err != nil {
 		return c, err
 	}
-	if normalizeQuotaCredential(c).QuotaBlock != nil {
+	if block := normalizeQuotaCredential(c).QuotaBlock; block != nil {
 		var retryAt time.Time
-		if c.QuotaBlock.RetryAt != nil {
-			retryAt = *c.QuotaBlock.RetryAt
+		if block.RetryAt != nil {
+			retryAt = *block.RetryAt
 		}
-		return c, &upstreamError{APIError: &APIError{429, "quota_blocked", quotaBlockMarker + " PlanBridge account quota exhausted; waiting for a successful usage check"}, Local: true, Scope: "account", RetryAt: retryAt}
+		message := quotaBlockMarker + " PlanBridge account quota exhausted; waiting for a successful usage check"
+		if block.Permanent {
+			message = quotaBlockMarker + " PlanBridge plan does not provide API access; re-check the credential after the plan changes"
+		}
+		return c, &upstreamError{APIError: &APIError{429, "quota_blocked", message}, Local: true, Scope: "account", RetryAt: retryAt}
 	}
 	return c, nil
 }

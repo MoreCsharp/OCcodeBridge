@@ -37,22 +37,29 @@ func (s *Service) schedulingResponse() (any, error) {
 		blocked := c.QuotaBlock != nil
 		account := map[string]any{"id": c.ID, "label": c.Label, "enabled": !c.Disabled, "priority": priorityValue(c), "quota_blocked": blocked, "backoffs": windows}
 		if c.QuotaBlock != nil {
-			labels := map[string]string{"five_hour": "五小时", "weekly": "每周", "monthly": "每月"}
-			reasons := []string{}
-			var retry time.Time
-			for _, limit := range c.QuotaBlock.Limits {
-				label := labels[limit.Type]
-				if label == "" {
-					label = limit.Type
+			if c.QuotaBlock.Permanent {
+				// A permanent block has no window and no reset time; the console
+				// shows the reason and offers an explicit re-check.
+				account["plan_unsupported"] = true
+				account["quota_reason"] = c.QuotaBlock.Reason
+			} else {
+				labels := map[string]string{"five_hour": "五小时", "weekly": "每周", "daily": "每天", "monthly": "每月"}
+				reasons := []string{}
+				var retry time.Time
+				for _, limit := range c.QuotaBlock.Limits {
+					label := labels[limit.Type]
+					if label == "" {
+						label = limit.Type
+					}
+					reasons = append(reasons, label)
+					if limit.ResetsAt != nil && limit.ResetsAt.After(retry) {
+						retry = *limit.ResetsAt
+					}
 				}
-				reasons = append(reasons, label)
-				if limit.ResetsAt != nil && limit.ResetsAt.After(retry) {
-					retry = *limit.ResetsAt
+				account["quota_reason"] = strings.Join(reasons, "、") + "额度耗尽"
+				if !retry.IsZero() {
+					account["retry_at"] = retry
 				}
-			}
-			account["quota_reason"] = strings.Join(reasons, "、") + "额度耗尽"
-			if !retry.IsZero() {
-				account["retry_at"] = retry
 			}
 		}
 		account["persistence_error"] = s.quotaStatus(c.ID)["persistence_error"]
