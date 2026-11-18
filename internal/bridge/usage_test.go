@@ -12,10 +12,12 @@ import (
 	"time"
 )
 
+// usageTestService serves the fixture vendor's usage endpoint through CPA's host
+// HTTP bridge, so the whole vendor→egress→DTO path is exercised.
 func usageTestService(t *testing.T, respond func(map[string]any) (int, string)) *Service {
 	t.Helper()
 	s := registeredService(t, "")
-	s.creds["one"] = Credential{ID: "one", Type: Provider, APIKey: "secret-test-key"}
+	s.creds["one"] = Credential{ID: "one", Type: Provider, APIKey: "secret-test-key", Vendor: testVendorID}
 	var mu sync.Mutex
 	streams := map[string]string{}
 	next := 0
@@ -54,8 +56,7 @@ func usageTestRequest() ManagementRequest {
 	return ManagementRequest{Method: "GET", Path: apiBase + "/credentials/usage", Query: url.Values{"id": {"one"}}, HostCallbackID: "usage-callback"}
 }
 
-const testLimits = `{"success":true,"data":{"limits":[{"type":"five_hour","percentUsed":0,"resetsAt":"2026-09-25T11:21:35.329131025Z"},{"type":"weekly","percentUsed":11},{"type":"future_window","percentUsed":101.5}]}}`
-const testPlan = `{"success":true,"data":{"userId":"private-user","subscriptionId":"private-subscription","currentPeriodEnd":"2026-10-22T14:08:10Z","plan":{"displayName":"Cline Pass (Monthly)"}}}`
+const testLimits = `{"accountId":"private-user","planName":"Fixture Plan","balance":12.5,"windows":[{"kind":"5h","percent":0,"resetAt":"2026-09-25T11:21:35.329131025Z"},{"kind":"7d","percent":11},{"kind":"unsupported","percent":101.5}]}`
 
 func TestCredentialUsageCacheErrorsAndKeyReplacement(t *testing.T) {
 	calls, status := 0, 200
@@ -68,10 +69,7 @@ func TestCredentialUsageCacheErrorsAndKeyReplacement(t *testing.T) {
 		if status != 200 {
 			return status, `{"error":{"message":"secret-test-key private-error"}}`
 		}
-		if strings.HasSuffix(str(req["url"]), "/usage-limits") {
-			return 200, testLimits
-		}
-		return 200, testPlan
+		return 200, testLimits
 	})
 	req := usageTestRequest()
 	raw, err := s.management(jsonBytes(req))
@@ -80,24 +78,24 @@ func TestCredentialUsageCacheErrorsAndKeyReplacement(t *testing.T) {
 	}
 	response := raw.(ManagementResponse)
 	var first credentialUsage
-	if response.StatusCode != 200 || json.Unmarshal(response.Body, &first) != nil || first.Status != "ok" || first.Plan.Name != "Cline Pass (Monthly)" || len(first.Limits) != 3 || *first.Limits[0].PercentUsed != 0 || first.Limits[0].ResetsAt == nil {
+	if response.StatusCode != 200 || json.Unmarshal(response.Body, &first) != nil || first.Status != "ok" || first.Plan == nil || first.Plan.Name != "Fixture Plan" || first.Vendor != testVendorID || len(first.Limits) != 2 || *first.Limits[0].PercentUsed != 0 || first.Limits[0].ResetsAt == nil || first.Balance == nil || *first.Balance != 12.5 {
 		t.Fatalf("bad usage response: %s", response.Body)
 	}
-	for _, secret := range []string{"secret-test-key", "private-user", "private-subscription"} {
+	for _, secret := range []string{"secret-test-key", "private-user"} {
 		if strings.Contains(string(response.Body), secret) {
 			t.Fatal("private field exposed")
 		}
 	}
 	req.Query.Set("refresh", "1")
 	s.credentialUsage(req)
-	if calls != 2 {
-		t.Fatalf("refresh ignored short cache: %d", calls)
+	if calls != 1 {
+		t.Fatalf("a request inside the short cache window re-queried: %d", calls)
 	}
 	past := time.Now().Add(-2 * time.Minute)
 	s.usageCache["one"].value.CheckedAt = &past
 	status = 429
 	failed, _ := s.credentialUsage(req)
-	if failed.Status != "rate_limited" || failed.UpdatedAt == nil || !failed.UpdatedAt.Equal(*first.UpdatedAt) || len(failed.Limits) != 3 || calls != 3 || strings.Contains(failed.Error, "secret") {
+	if failed.Status != "rate_limited" || failed.UpdatedAt == nil || !failed.UpdatedAt.Equal(*first.UpdatedAt) || len(failed.Limits) != 2 || calls != 2 || strings.Contains(failed.Error, "secret") {
 		t.Fatalf("lost stale data or leaked upstream error: %+v", failed)
 	}
 	status = 200
@@ -105,32 +103,29 @@ func TestCredentialUsageCacheErrorsAndKeyReplacement(t *testing.T) {
 	c.APIKey = "replacement-key"
 	s.creds["one"] = c
 	replaced, _ := s.credentialUsage(req)
-	if replaced.Status != "ok" || calls != 5 {
+	if replaced.Status != "ok" || calls != 3 {
 		t.Fatalf("old key cache reused: %+v, calls %d", replaced, calls)
 	}
 	c.Disabled = true
 	s.creds["one"] = c
 	disabled, _ := s.credentialUsage(req)
-	if disabled.Status != "ok" || calls != 5 || !disabled.UpdatedAt.Equal(*replaced.UpdatedAt) || !s.creds["one"].Disabled {
+	if disabled.Status != "ok" || calls != 3 || !disabled.UpdatedAt.Equal(*replaced.UpdatedAt) || !s.creds["one"].Disabled {
 		t.Fatal("manual disable discarded usage or changed the manual flag")
 	}
 	c.Disabled = false
 	c.ProxyURL = "http://fixture-user:fixture-password@127.0.0.1:1"
 	s.creds["one"] = c
 	proxy, _ := s.credentialUsage(req)
-	if proxy.Status != "unavailable" || calls != 5 {
+	if proxy.Status != "unavailable" || calls != 3 {
 		t.Fatal("credential proxy silently bypassed")
 	}
 }
 
 func TestCredentialUsageDisabledQuotaRecoveryPreservesManualState(t *testing.T) {
 	percent, calls := 100, 0
-	s := usageTestService(t, func(req map[string]any) (int, string) {
+	s := usageTestService(t, func(map[string]any) (int, string) {
 		calls++
-		if strings.HasSuffix(str(req["url"]), "/usage-limits") {
-			return 200, fmt.Sprintf(`{"success":true,"data":{"limits":[{"type":"weekly","percentUsed":%d}]}}`, percent)
-		}
-		return 200, testPlan
+		return 200, fmt.Sprintf(`{"accountId":"acct","planName":"Fixture Plan","windows":[{"kind":"7d","percent":%d}]}`, percent)
 	})
 	c := s.creds["one"]
 	c.Disabled = true
@@ -149,14 +144,14 @@ func TestCredentialUsageDisabledQuotaRecoveryPreservesManualState(t *testing.T) 
 		return value
 	}
 	first := query()
-	if calls != 2 || *first.Limits[0].PercentUsed != 100 || s.creds[c.ID].QuotaBlock == nil || !s.creds[c.ID].Disabled {
+	if calls != 1 || *first.Limits[0].PercentUsed != 100 || s.creds[c.ID].QuotaBlock == nil || !s.creds[c.ID].Disabled {
 		t.Fatal("disabled account did not fetch current usage and persist quota protection")
 	}
 	percent = 3
 	past := time.Now().Add(-2 * usageTTL)
 	s.usageCache[c.ID].value.CheckedAt = &past
 	recovered := query()
-	if calls != 3 || *recovered.Limits[0].PercentUsed != 3 || s.creds[c.ID].QuotaBlock != nil || !s.creds[c.ID].Disabled {
+	if calls != 2 || *recovered.Limits[0].PercentUsed != 3 || s.creds[c.ID].QuotaBlock != nil || !s.creds[c.ID].Disabled {
 		t.Fatal("fresh usage recovery changed manual disable or left stale quota state")
 	}
 	status := s.quotaStatus(c.ID)
@@ -173,12 +168,9 @@ func TestCredentialUsageDisabledQuotaRecoveryPreservesManualState(t *testing.T) 
 
 func TestCredentialUsageConcurrentReaders(t *testing.T) {
 	var calls atomic.Int32
-	s := usageTestService(t, func(req map[string]any) (int, string) {
+	s := usageTestService(t, func(map[string]any) (int, string) {
 		calls.Add(1)
-		if strings.HasSuffix(str(req["url"]), "/usage-limits") {
-			return 200, testLimits
-		}
-		return 200, testPlan
+		return 200, testLimits
 	})
 	var wg sync.WaitGroup
 	for i := 0; i < 12; i++ {
@@ -192,7 +184,7 @@ func TestCredentialUsageConcurrentReaders(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-	if calls.Load() != 2 {
+	if calls.Load() != 1 {
 		t.Fatalf("duplicate upstream fetches: %d", calls.Load())
 	}
 }
@@ -200,14 +192,11 @@ func TestCredentialUsageConcurrentReaders(t *testing.T) {
 func TestCredentialUsageRejectsOldInFlightKey(t *testing.T) {
 	started, release := make(chan struct{}), make(chan struct{})
 	s := usageTestService(t, func(req map[string]any) (int, string) {
-		if strings.HasSuffix(str(req["url"]), "/usage-limits") {
-			if req["headers"].(http.Header).Get("Authorization") == "Bearer secret-test-key" {
-				close(started)
-				<-release
-			}
-			return 200, testLimits
+		if req["headers"].(http.Header).Get("Authorization") == "Bearer secret-test-key" {
+			close(started)
+			<-release
 		}
-		return 200, testPlan
+		return 200, testLimits
 	})
 	done := make(chan error, 1)
 	go func() { _, err := s.credentialUsage(usageTestRequest()); done <- err }()
@@ -231,31 +220,36 @@ func TestCredentialUsageRejectsOldInFlightKey(t *testing.T) {
 	}
 }
 
-func TestCredentialUsageMissingFieldsAndPartialPlanFailure(t *testing.T) {
-	for _, tc := range []struct {
-		name, limits, plan string
-		want               string
-		planError          bool
-	}{
-		{"missing limits", `{"success":true,"data":{}}`, testPlan, "unavailable", false},
-		{"empty limits no plan", `{"success":true,"data":{"limits":[]}}`, `{"success":true,"data":null}`, "ok", false},
-		{"plan failure keeps limits", testLimits, `{"success":false}`, "ok", true},
-		{"unknown percent", `{"success":true,"data":{"limits":[{"type":"weekly","resetsAt":"invalid"}]}}`, testPlan, "ok", false},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			s := usageTestService(t, func(req map[string]any) (int, string) {
-				if strings.HasSuffix(str(req["url"]), "/usage-limits") {
-					return 200, tc.limits
-				}
-				return 200, tc.plan
-			})
-			value, err := s.credentialUsage(usageTestRequest())
-			if err != nil || value.Status != tc.want || (value.PlanError != "") != tc.planError {
-				t.Fatalf("unexpected response: %+v, %v", value, err)
-			}
-			if tc.name == "unknown percent" && (value.Limits[0].PercentUsed != nil || value.Limits[0].ResetsAt != nil) {
-				t.Fatal("missing usage fabricated as zero")
-			}
-		})
+func TestCredentialUsageUnknownWindowsStayUnknown(t *testing.T) {
+	s := usageTestService(t, func(map[string]any) (int, string) {
+		return 200, `{"windows":[{"kind":"7d"},{"kind":"unmapped","percent":5},{"kind":"5h","percent":-4}]}`
+	})
+	value, err := s.credentialUsage(usageTestRequest())
+	if err != nil || value.Status != "ok" {
+		t.Fatalf("unexpected response: %+v, %v", value, err)
+	}
+	if len(value.Limits) != 2 || value.Limits[0].Type != "weekly" || value.Limits[0].PercentUsed != nil || value.Limits[1].Type != "five_hour" || value.Limits[1].PercentUsed != nil {
+		t.Fatalf("missing or negative usage was fabricated: %+v", value.Limits)
+	}
+}
+
+// A credential without a vendor cannot be scheduled, so its usage query must say
+// so instead of guessing an upstream.
+func TestCredentialUsageRequiresVendor(t *testing.T) {
+	s := usageTestService(t, func(map[string]any) (int, string) {
+		t.Error("a credential without a vendor reached the upstream")
+		return 200, testLimits
+	})
+	s.mu.Lock()
+	c := s.creds["one"]
+	c.Vendor = ""
+	s.creds["one"] = c
+	s.mu.Unlock()
+	value, err := s.credentialUsage(usageTestRequest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value.Status != "unavailable" || !strings.Contains(value.Error, "厂商") || value.Limits == nil {
+		t.Fatalf("vendor-less credential query = %+v", value)
 	}
 }

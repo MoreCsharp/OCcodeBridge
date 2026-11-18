@@ -23,7 +23,7 @@ func TestQuotaHostSaveRoundTripPreservesManualState(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := NewService()
-			c := Credential{ID: "round-trip", APIKey: "fixture-round-trip-key", Disabled: tc.manualDisabled}
+			c := Credential{ID: "round-trip", APIKey: "fixture-round-trip-key", Vendor: testVendorID, Disabled: tc.manualDisabled}
 			quotaTestAuth(t, s, c)
 			observed := time.Now().UTC()
 			exhausted := quotaTestRoom("round-trip-account", observed)

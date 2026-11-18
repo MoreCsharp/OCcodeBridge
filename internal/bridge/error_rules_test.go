@@ -272,12 +272,9 @@ func assertErrorRulesAuth(t *testing.T, auth map[string]any, rules []RequestErro
 func TestErrorRulesSettingsAndLateSamplerPreserveCurrentPolicy(t *testing.T) {
 	started, release := make(chan struct{}), make(chan struct{})
 	var once sync.Once
-	s := usageTestService(t, func(req map[string]any) (int, string) {
-		if strings.HasSuffix(str(req["url"]), "/usage-limits") {
-			once.Do(func() { close(started); <-release })
-			return 200, `{"success":true,"data":{"limits":[{"type":"weekly","percentUsed":100}]}}`
-		}
-		return 200, testPlan
+	s := usageTestService(t, func(map[string]any) (int, string) {
+		once.Do(func() { close(started); <-release })
+		return 200, `{"windows":[{"kind":"7d","percent":100}]}`
 	})
 	c := s.creds["one"]
 	c.Disabled = true

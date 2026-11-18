@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 	"time"
 )
@@ -56,16 +55,14 @@ func quotaTestRoom(account string, at time.Time) credentialUsage {
 		Limits: []usageLimit{{Type: "weekly", PercentUsed: &percent}}}
 }
 
-func TestQuotaNamedLimitsAndUnknown429(t *testing.T) {
+// Vendor window limits arrive through ClassifyLimitError; the vendor-agnostic
+// classifier only recognizes a generic account quota.
+func TestQuotaGenericClassificationAndUnclassified429(t *testing.T) {
 	now := time.Now().UTC()
 	for _, tc := range []struct{ message, kind string }{
-		{"You have reached your weekly Clinepass limit. The limit resets in 2d 10h, please try again later.", "weekly"},
-		{"You have reached your five_hour Clinepass limit", "five_hour"},
-		{"You have exceeded your five-hour Cline Pass limit", "five_hour"},
-		{"You have reached your monthly Clinepass limit", "monthly"},
 		{"quota exhausted", "quota"},
+		{"You have insufficient credits for this request", "quota"},
 		{"upstream request failed", ""},
-		{"weekly Clinepass limit is available", ""},
 		{"You have reached this team's limit for tokens per minute", ""},
 	} {
 		t.Run(tc.message, func(t *testing.T) {
@@ -77,9 +74,7 @@ func TestQuotaNamedLimitsAndUnknown429(t *testing.T) {
 			if tc.kind != "" && (upstream.Kind != "upstream_quota_exhausted" || upstream.Scope != "account") {
 				t.Fatal("quota must have account scope")
 			}
-			if tc.kind == "weekly" && (upstream.QuotaResetAt == nil || upstream.QuotaResetAt.Sub(now) != 58*time.Hour) {
-				t.Fatal("multi-day reset was lost")
-			}
+
 		})
 	}
 }
@@ -90,14 +85,14 @@ func TestQuotaFailedPersistenceRetainsBlockAndFreshRecovery(t *testing.T) {
 		t.Errorf("quota unexpectedly called %s", method)
 		return fmt.Errorf("unexpected host callback")
 	})
-	one := Credential{ID: "one", APIKey: "fixture-one"}
-	two := Credential{ID: "two", APIKey: "fixture-two", Disabled: true}
+	one := Credential{ID: "one", APIKey: "fixture-one", Vendor: testVendorID}
+	two := Credential{ID: "two", APIKey: "fixture-two", Vendor: testVendorID, Disabled: true}
 	for _, c := range []*Credential{&one, &two} {
 		c.QuotaIdentity = &QuotaIdentity{AccountHash: "verified-account", KeyHash: quotaKeyHash(*c)}
 	}
 	old := quotaTestAuth(t, s, one)
 	quotaTestAuth(t, s, two)
-	quotaTestAuth(t, s, Credential{ID: "unknown", APIKey: one.APIKey})
+	quotaTestAuth(t, s, Credential{ID: "unknown", APIKey: one.APIKey, Vendor: testVendorID})
 	path := filepath.Join(s.authDir, "one.json")
 	if err := os.Rename(path, path+".bak"); err != nil {
 		t.Fatal(err)
@@ -177,7 +172,7 @@ func TestQuotaAlwaysPausedAndKeyRotation(t *testing.T) {
 	if err := decodeConfigJSON([]byte(`{"quota_auto_pause":false}`), &s.cfg); err != nil {
 		t.Fatal(err)
 	}
-	c := Credential{ID: "one", APIKey: "fixture-old", RoutingID: "rotated-routing-id"}
+	c := Credential{ID: "one", APIKey: "fixture-old", Vendor: testVendorID, RoutingID: "rotated-routing-id"}
 	quotaTestAuth(t, s, c)
 	quotaErr := &upstreamError{APIError: &APIError{429, "upstream_quota_exhausted", "quota exhausted"}, QuotaType: "weekly"}
 	if err := s.observeQuotaError(c, quotaErr); err != nil {
@@ -222,11 +217,8 @@ func TestQuotaAlwaysPausedAndKeyRotation(t *testing.T) {
 }
 
 func TestQuotaUsage100StopsCPAAndRemainsSamplingTarget(t *testing.T) {
-	s := usageTestService(t, func(req map[string]any) (int, string) {
-		if strings.HasSuffix(str(req["url"]), "/users/me/plan") {
-			return 200, testPlan
-		}
-		return 200, `{"success":true,"data":{"limits":[{"type":"weekly","percentUsed":100}]}}`
+	s := usageTestService(t, func(map[string]any) (int, string) {
+		return 200, `{"accountId":"acct","planName":"Fixture Plan","windows":[{"kind":"7d","percent":100}]}`
 	})
 	quotaTestAuth(t, s, s.creds["one"])
 	value, err := s.credentialUsage(usageTestRequest())

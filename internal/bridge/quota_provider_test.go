@@ -45,12 +45,9 @@ func TestQuotaProviderRegistration(t *testing.T) {
 
 func TestQuotaProviderFetchSharesUsageAndPreservesDisabledAccount(t *testing.T) {
 	calls := 0
-	s := usageTestService(t, func(req map[string]any) (int, string) {
+	s := usageTestService(t, func(map[string]any) (int, string) {
 		calls++
-		if strings.HasSuffix(str(req["url"]), "/usage-limits") {
-			return 200, `{"success":true,"data":{"limits":[{"type":"five_hour","percentUsed":0,"resetsAt":"2026-10-18T12:00:00.123456789Z"},{"type":"weekly","percentUsed":25},{"type":"monthly","percentUsed":110},{"type":"unknown","percentUsed":null}]}}`
-		}
-		return 200, testPlan
+		return 200, `{"accountId":"acct","planName":"Fixture Plan","windows":[{"kind":"5h","percent":0,"resetAt":"2026-10-18T12:00:00.123456789Z"},{"kind":"7d","percent":25},{"kind":"month","percent":110},{"kind":"unsupported","percent":null}]}`
 	})
 	c := s.creds["one"]
 	c.Disabled = true
@@ -70,7 +67,7 @@ func TestQuotaProviderFetchSharesUsageAndPreservesDisabledAccount(t *testing.T) 
 		} `json:"groups"`
 	}
 	body := jsonBytes(result)
-	if json.Unmarshal(body, &response) != nil || len(response.Groups) != 1 || len(response.Groups[0].Buckets) != 3 || response.Subscription.Plan != "Cline Pass (Monthly)" {
+	if json.Unmarshal(body, &response) != nil || len(response.Groups) != 1 || len(response.Groups[0].Buckets) != 3 || response.Subscription.Plan != "Fixture Plan" {
 		t.Fatalf("invalid normalized quota: %s", body)
 	}
 	buckets := response.Groups[0].Buckets
@@ -86,7 +83,7 @@ func TestQuotaProviderFetchSharesUsageAndPreservesDisabledAccount(t *testing.T) 
 		t.Fatal(err)
 	}
 	value, err := s.credentialUsage(ManagementRequest{Query: url.Values{"id": {"one"}}, HostCallbackID: "usage-callback"})
-	if err != nil || value.Status != "ok" || calls != 2 || !s.creds["one"].Disabled {
+	if err != nil || value.Status != "ok" || calls != 1 || !s.creds["one"].Disabled {
 		t.Fatalf("quota bypassed shared usage or changed manual state: calls=%d err=%v", calls, err)
 	}
 }
@@ -122,21 +119,14 @@ func TestQuotaProviderRejectsUnrelatedAndRevokedCredentials(t *testing.T) {
 	}
 }
 
-func TestQuotaProviderOmitsPlanWhenOnlyPlanLookupFails(t *testing.T) {
-	s := usageTestService(t, func(req map[string]any) (int, string) {
-		if strings.HasSuffix(str(req["url"]), "/usage-limits") {
-			return 200, testLimits
-		}
-		return 500, `{}`
+func TestQuotaProviderOmitsPlanWhenVendorReportsNone(t *testing.T) {
+	s := usageTestService(t, func(map[string]any) (int, string) {
+		return 200, `{"windows":[{"kind":"7d","percent":25}]}`
 	})
-	past := time.Now().Add(-10 * time.Minute)
-	s.usageCache["one"] = &usageCacheEntry{fingerprint: usageFingerprint(s.creds["one"]), value: credentialUsage{
-		Plan: &usagePlan{Name: "previous-plan"}, PlanUpdatedAt: &past,
-	}}
 	result, err := s.Handle("quota.fetch", quotaProviderRequest("one.json"))
 	var response map[string]json.RawMessage
 	if err != nil || json.Unmarshal(jsonBytes(result), &response) != nil || response["subscription"] != nil || response["groups"] == nil {
-		t.Fatalf("valid windows lost or stale plan published: %v, %v", result, err)
+		t.Fatalf("valid windows lost or an empty plan published: %v, %v", result, err)
 	}
 }
 
@@ -151,9 +141,9 @@ func TestQuotaProviderReportsFailureInsteadOfStaleOrUnknownQuota(t *testing.T) {
 		{"rate limited", 429, `{}`, 429},
 		{"timeout", 504, `{}`, 504},
 		{"upstream failure", 500, `{}`, 502},
-		{"invalid response", 200, `{"success":true,"data":{}}`, 502},
-		{"no windows", 200, `{"success":true,"data":{"limits":[]}}`, 502},
-		{"unknown usage", 200, `{"success":true,"data":{"limits":[{"type":"five_hour","percentUsed":null}]}}`, 502},
+		{"invalid response", 200, `not-json`, 502},
+		{"no windows", 200, `{"windows":[]}`, 502},
+		{"unknown usage", 200, `{"windows":[{"kind":"5h"}]}`, 502},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			s := usageTestService(t, func(map[string]any) (int, string) { return tc.status, tc.body })
