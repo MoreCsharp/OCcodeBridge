@@ -12,7 +12,7 @@ import (
 func probeService(t *testing.T) *Service {
 	t.Helper()
 	s := registeredService(t, "native")
-	s.creds["probe-account"] = Credential{ID: "probe-account", Label: "测试账号", APIKey: "test-secret-123"}
+	s.creds["probe-account"] = Credential{ID: "probe-account", Label: "测试账号", APIKey: "test-secret-123", Vendor: requestVendorID}
 	return s
 }
 
@@ -128,7 +128,7 @@ func TestModelProbeReasoningAliasesIndependent(t *testing.T) {
 			t.Fatalf("%s outbound requests = %d, want 1", tc.alias, len(bodies))
 		}
 		body := <-bodies
-		if body["model"] != upstream || body["reasoning_effort"] != tc.want || body["stream"] != true {
+		if body["model"] != "deepseek-v4.1-flash" || body["reasoning_effort"] != tc.want || body["stream"] != true {
 			t.Errorf("%s outbound body = %s, want reasoning_effort=%s", tc.alias, jsonBytes(body), tc.want)
 		}
 	}
@@ -175,7 +175,7 @@ func TestModelProbeStreamsConfiguredModelAndLogsUsage(t *testing.T) {
 				t.Error(err)
 				return err
 			}
-			if body["model"] != "opencode-go/deepseek-v4.1-flash" || body["stream"] != true || body["max_tokens"] != float64(64) || len(list(body["messages"])) != 1 || request["host_callback_id"] != "probe-callback" || request["headers"].(http.Header).Get("Authorization") != "Bearer test-secret-123" {
+			if body["model"] != "deepseek-v4.1-flash" || body["stream"] != true || body["max_tokens"] != float64(64) || len(list(body["messages"])) != 1 || request["host_callback_id"] != "probe-callback" || request["headers"].(http.Header).Get("Authorization") != "Bearer test-secret-123" {
 				t.Error("probe did not use configured model, credential, callback and bounded streaming message")
 			}
 		}

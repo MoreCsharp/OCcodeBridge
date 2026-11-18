@@ -76,7 +76,7 @@ func TestOnlyConfiguredClientNamesRouteAndPersist(t *testing.T) {
 		_, err := s.Handle(method, jsonBytes(ExecutorRequest{
 			Model: "opencode-go/deepseek-v4.1-flash", StreamID: "test-stream",
 			Payload:     []byte(`{"messages":[{"role":"user","content":"hello"}]}`),
-			StorageJSON: jsonBytes(Credential{Type: Provider, ID: "test", APIKey: "test-key"}),
+			StorageJSON: jsonBytes(Credential{Type: Provider, ID: "test", APIKey: "test-key", Vendor: requestVendorID}),
 		}))
 		if statusOf(err) != 400 || len(h.opened) != 0 {
 			t.Fatalf("unconfigured client name reached upstream: method=%s err=%v calls=%d", method, err, len(h.opened))

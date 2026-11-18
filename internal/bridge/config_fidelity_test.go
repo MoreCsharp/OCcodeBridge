@@ -249,7 +249,7 @@ func TestConfigFidelityLegacyQuotaAutoPauseIgnored(t *testing.T) {
 			if err != nil || result.(ManagementResponse).StatusCode != 404 {
 				t.Fatalf("removed scheduling write endpoint is still accepted: %v", err)
 			}
-			c := Credential{ID: "one", APIKey: "quota-key"}
+			c := Credential{ID: "one", APIKey: "quota-key", Vendor: requestVendorID}
 			now := time.Now().UTC()
 			c.QuotaBlock = &QuotaBlock{KeyHash: quotaKeyHash(c), Source: "usage", BlockedAt: now, ObservedAt: now, Limits: []QuotaBlockLimit{{Type: "weekly"}}}
 			if authData(c, "one.json").(map[string]any)["Disabled"] != true {

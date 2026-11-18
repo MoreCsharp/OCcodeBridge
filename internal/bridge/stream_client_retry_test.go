@@ -43,7 +43,7 @@ func checkStreamRetryCompatibilityBoundaries(t *testing.T, retryableErr error) {
 		{name: "unclassified local failure", path: "/v1/chat/completions", phase: "after_output", err: fail(502, original)},
 		{name: "non-service status", path: "/v1/chat/completions", phase: "after_output", err: requestFault(418, upstreamServiceKind, original)},
 		{name: "authentication", path: "/v1/chat/completions", phase: "after_output", err: classifyUpstreamError(401, nil, map[string]any{"error": original}, time.Now())},
-		{name: "account quota", path: "/v1/chat/completions", phase: "after_output", err: classifyUpstreamError(502, nil, map[string]any{"error": "reached your weekly Clinepass limit"}, time.Now())},
+		{name: "account quota", path: "/v1/chat/completions", phase: "after_output", err: classifyUpstreamError(502, nil, map[string]any{"error": "quota exhausted"}, time.Now())},
 		{name: "model failure", path: "/v1/chat/completions", phase: "after_output", err: classifyUpstreamError(502, nil, map[string]any{"error": map[string]any{"code": "model_not_found", "message": original}}, time.Now())},
 		{name: "account scoped service error", path: "/v1/chat/completions", phase: "after_output", err: &upstreamError{APIError: &APIError{Status: 502, Kind: upstreamServiceKind, Message: original}, Scope: "account"}},
 		{name: "account scoped EOF", path: "/v1/chat/completions", phase: "after_output", err: &upstreamError{APIError: &APIError{Status: 502, Kind: upstreamNetworkKind, Message: original}, Scope: "account", TransportKind: "eof"}},

@@ -383,7 +383,7 @@ func TestEgressDisabledRetainsHostPathAndManagementOptIn(t *testing.T) {
 	})
 	var request ExecutorRequest
 	_ = json.Unmarshal(executorRequest(""), &request)
-	request.StorageJSON = jsonBytes(Credential{Type: Provider, ID: "credential-1", APIKey: "test-key", ProxyURL: "http://old-host-proxy:8080"})
+	request.StorageJSON = jsonBytes(Credential{Type: Provider, ID: "credential-1", APIKey: "test-key", Vendor: requestVendorID, ProxyURL: "http://old-host-proxy:8080"})
 	if _, err := s.execute(request); err != nil || len(h.opened) != 1 {
 		t.Fatal("disabled pool changed the original host HTTP path", err)
 	}

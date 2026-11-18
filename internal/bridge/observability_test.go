@@ -363,7 +363,7 @@ func TestRequestJournalClearAndRetentionReplay(t *testing.T) {
 
 func TestObservabilityConcurrentLocalBackoff(t *testing.T) {
 	s := observabilityService(t, "")
-	c := Credential{Type: Provider, ID: "credential-1", Label: "fixture", APIKey: "offline-key"}
+	c := Credential{Type: Provider, ID: "credential-1", Label: "fixture", APIKey: "offline-key", Vendor: requestVendorID}
 	now := time.Now().UTC()
 	s.rateLimits.clock = func() time.Time { return now }
 	lease, err := s.rateLimits.acquire(c, "opencode-go/deepseek-v4.1-flash")

@@ -54,11 +54,16 @@ func (h *samplerHost) call(method string, payload, out any) error {
 		}
 		path := ""
 		if parsed, err := url.Parse(str(req["url"])); err == nil {
-			path = parsed.Path
+			// The vendor base carries a path prefix; the endpoint is what matters.
+			if strings.HasSuffix(parsed.Path, samplerUsagePath) {
+				path = samplerUsagePath
+			} else {
+				path = parsed.Path
+			}
 		}
 		h.mu.Lock()
 		h.requests = append(h.requests, samplerRequest{str(req["method"]), path, key, str(req["host_callback_id"])})
-		if str(req["method"]) != "GET" || !strings.HasSuffix(path, samplerUsagePath) {
+		if str(req["method"]) != "GET" || path != samplerUsagePath {
 			h.mu.Unlock()
 			return fmt.Errorf("sampler host rejected %s %s", str(req["method"]), str(req["url"]))
 		}

@@ -164,7 +164,7 @@ func TestErrorRulesPhysicalSyncFailureRetryAndFieldPreservation(t *testing.T) {
 func TestErrorRulesHostFallbackPreservesUnknownAndRedactsFailure(t *testing.T) {
 	s := registeredService(t, "")
 	const key = "private-fixture-key"
-	raw := []byte(`{"type":"cline-pass","id":"account","api_key":"private-fixture-key","disabled":true,"unknown":{"serial":9007199254740993},"quota_revision":"keep"}`)
+	raw := []byte(`{"type":"planbridge","vendor":"opencode-go","id":"account","api_key":"private-fixture-key","disabled":true,"unknown":{"serial":9007199254740993},"quota_revision":"keep"}`)
 	if _, err := s.parseAuth(jsonBytes(map[string]any{"FileName": "account.json", "RawJSON": raw})); err != nil {
 		t.Fatal(err)
 	}
@@ -212,7 +212,7 @@ func TestErrorRulesRestartParseRefreshNewAccountAndEmpty(t *testing.T) {
 			if !reflect.DeepEqual(restarted.currentErrorRules(), rules) {
 				t.Fatal("restart restored obsolete defaults")
 			}
-			stale := Credential{Type: Provider, ID: "old", APIKey: "fixture-existing-key", Disabled: true, RequestScopedErrors: requestErrorRules()}
+			stale := Credential{Type: Provider, ID: "old", APIKey: "fixture-existing-key", Vendor: requestVendorID, Disabled: true, RequestScopedErrors: requestErrorRules()}
 			raw := quotaTestAuth(t, restarted, stale)
 			auth := quotaTestParse(t, restarted, stale.ID, raw)
 			assertErrorRulesAuth(t, auth, rules)
@@ -242,7 +242,7 @@ func TestErrorRulesRestartParseRefreshNewAccountAndEmpty(t *testing.T) {
 				}
 				return json.Unmarshal(jsonBytes(map[string]any{"path": path}), out)
 			})
-			response := errorRulesRequest(t, restarted, "POST", "/credentials", []byte(`{"label":"new","api_key":"fixture-new-key"}`), 201)
+			response := errorRulesRequest(t, restarted, "POST", "/credentials", []byte(`{"label":"new","api_key":"fixture-new-key","vendor":"opencode-go"}`), 201)
 			var imported struct{ ID string }
 			_ = json.Unmarshal(response.Body, &imported)
 			if !reflect.DeepEqual(restarted.creds[imported.ID].RequestScopedErrors, rules) {

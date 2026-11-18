@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors"
+	"github.com/xiao-qiu-qiu/PlanBridge/internal/vendors/opencodego"
 )
 
 // The bridge tests exercise the request/usage path against this fixture vendor
@@ -15,6 +16,10 @@ import (
 // test can describe a usage sample or a window limit in a few lines, and P1/P2
 // keep their own vendor tests inside their own packages.
 const testVendorID = "fixture"
+
+// requestVendorID is the vendor the request-path fixtures use: the real OpenCode
+// Go package, whose headers are implemented and whose base URL is a real endpoint.
+const requestVendorID = opencodego.ID
 
 type fixtureVendor struct{}
 

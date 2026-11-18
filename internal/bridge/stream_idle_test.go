@@ -324,7 +324,7 @@ func TestStreamIdlePreservesParentCancellation(t *testing.T) {
 func TestStreamIdleDoesNotRetreatRecoveryProbe(t *testing.T) {
 	now := time.Now()
 	l := rateLimiter{clock: func() time.Time { return now }}
-	c := Credential{ID: "fixture", APIKey: "fixture-key"}
+	c := Credential{ID: "fixture", APIKey: "fixture-key", Vendor: requestVendorID}
 	lease, err := l.acquire(c, "model")
 	if err != nil {
 		t.Fatal(err)

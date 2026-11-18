@@ -238,7 +238,7 @@ func TestQuotaWatcherStaleSnapshotPreservesManualEdits(t *testing.T) {
 	for _, change := range []string{"disable", "rotate-key"} {
 		t.Run(change, func(t *testing.T) {
 			s := NewService()
-			old := quotaTestAuth(t, s, Credential{ID: "one", APIKey: "fixture-before"})
+			old := quotaTestAuth(t, s, Credential{ID: "one", APIKey: "fixture-before", Vendor: testVendorID})
 			baseline := s.creds["one"]
 			updated := baseline
 			if change == "disable" {

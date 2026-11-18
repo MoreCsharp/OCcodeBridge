@@ -35,8 +35,8 @@ func TestReasoningMappingDefaults(t *testing.T) {
 		{ID: "deepseek-alias-only", UpstreamID: "opencode-go/other-model"},
 		{ID: "other", UpstreamID: "opencode-go/other-model"},
 		{ID: "explicit-empty", UpstreamID: "opencode-go/empty", ReasoningMapping: &ReasoningMappingConfig{Enabled: true, Rules: map[string]string{}}},
-		{ID: "explicit-nil-rules", UpstreamID: "deepseek/nil", ReasoningMapping: &ReasoningMappingConfig{Enabled: true}},
-		{ID: "explicit-partial", UpstreamID: "deepseek/partial", ReasoningMapping: &ReasoningMappingConfig{Enabled: true, Rules: partialRules}},
+		{ID: "explicit-nil-rules", UpstreamID: "opencode-go/nil", ReasoningMapping: &ReasoningMappingConfig{Enabled: true}},
+		{ID: "explicit-partial", UpstreamID: "opencode-go/partial", ReasoningMapping: &ReasoningMappingConfig{Enabled: true, Rules: partialRules}},
 	}
 	if err := cfg.validate(); err != nil {
 		t.Fatal(err)
@@ -111,12 +111,12 @@ func TestReasoningMappingRequiresMatchingAliasAndUpstream(t *testing.T) {
 	}{
 		{"first-alias", "first", upstream, "high"},
 		{"second-alias-same-upstream", "second", upstream, "max"},
-		{"other-model-explicit-mapping", "other", "vendor/other", "low"},
+		{"other-model-explicit-mapping", "other", "opencode-go/other", "low"},
 		{"unknown-alias", "unknown", upstream, ""},
 		{"missing-alias", "", upstream, ""},
 		{"missing-upstream", "first", "", ""},
-		{"changed-upstream", "first", "deepseek/changed", ""},
-		{"another-model-upstream", "first", "vendor/other", ""},
+		{"changed-upstream", "first", "opencode-go/changed", ""},
+		{"another-model-upstream", "first", "opencode-go/other", ""},
 		{"disabled", "disabled", upstream, ""},
 		{"missing-mapping", "missing-mapping", upstream, ""},
 		{"empty-rules", "empty-rules", upstream, ""},
@@ -159,9 +159,9 @@ func TestReasoningMappingLegacyMigration(t *testing.T) {
 				{ID: "flash-second", UpstreamID: "opencode-go/deepseek-v4.1-flash"},
 				{ID: "mixed-case", UpstreamID: "opencode-go/DeepSeek-reasoner"},
 				{ID: "deepseek-alias-only", UpstreamID: "opencode-go/other-model"},
-				{ID: "explicit-partial", UpstreamID: "deepseek/explicit", ReasoningMapping: &ReasoningMappingConfig{Rules: map[string]string{"low": "high"}}},
+				{ID: "explicit-partial", UpstreamID: "opencode-go/explicit", ReasoningMapping: &ReasoningMappingConfig{Rules: map[string]string{"low": "high"}}},
 				{ID: "explicit-empty", UpstreamID: "opencode-go/empty", ReasoningMapping: &ReasoningMappingConfig{Enabled: true, Rules: map[string]string{}}},
-				{ID: "explicit-nil-rules", UpstreamID: "deepseek/nil", ReasoningMapping: &ReasoningMappingConfig{Enabled: true}},
+				{ID: "explicit-nil-rules", UpstreamID: "opencode-go/nil", ReasoningMapping: &ReasoningMappingConfig{Enabled: true}},
 				{ID: "other-explicit", UpstreamID: "opencode-go/other-model", ReasoningMapping: &ReasoningMappingConfig{Enabled: true, Rules: map[string]string{"low": "max"}}},
 			}
 			if err := cfg.validate(); err != nil {
@@ -356,7 +356,7 @@ func TestReasoningMappingExecutorOutbound(t *testing.T) {
 				}
 				body := <-bodies
 				value, present := body["reasoning_effort"]
-				if present != (tc.want != "") || str(value) != tc.want || body["stream"] != transport.stream || body["model"] != "opencode-go/deepseek-v4.1-flash" {
+				if present != (tc.want != "") || str(value) != tc.want || body["stream"] != transport.stream || body["model"] != "deepseek-v4.1-flash" {
 					t.Errorf("outbound body = %s", jsonBytes(body))
 				}
 				if got := object(object(body["providerOptions"])["deepseek"])["reasoningEffort"]; got != "xhigh" {
@@ -734,7 +734,7 @@ func TestReasoningMappingBackoffSeparatesSources(t *testing.T) {
 	s.cfg.Models[0].ReasoningMapping.Enabled = true
 	now := time.Now().UTC()
 	s.rateLimits.clock = func() time.Time { return now }
-	c := Credential{Type: Provider, ID: "credential-1", Label: "test credential", APIKey: "test-key"}
+	c := Credential{Type: Provider, ID: "credential-1", Label: "test credential", APIKey: "test-key", Vendor: requestVendorID}
 	lease, err := s.rateLimits.acquire(c, "opencode-go/deepseek-v4.1-flash")
 	if err != nil {
 		t.Fatal(err)

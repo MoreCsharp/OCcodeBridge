@@ -13,7 +13,7 @@ func deletionFixture(t *testing.T) (*Service, Credential, string, []byte) {
 	root := t.TempDir()
 	s.cfg.DataDir = filepath.Join(root, "state")
 	s.authDir = filepath.Join(root, "auth")
-	c := Credential{Type: Provider, ID: "deletion-fixture", Label: "Fixture", APIKey: "fixture-key-original"}
+	c := Credential{Type: Provider, ID: "deletion-fixture", Label: "Fixture", APIKey: "fixture-key-original", Vendor: requestVendorID}
 	path := filepath.Join(s.authDir, "fixture.json")
 	if err := atomicJSON(path, c); err != nil {
 		t.Fatal(err)

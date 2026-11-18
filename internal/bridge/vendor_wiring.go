@@ -112,7 +112,9 @@ func (d hostDoer) Do(req *http.Request) (*http.Response, error) {
 		_ = req.Body.Close()
 	}
 	payload := map[string]any{"host_callback_id": d.callbackID, "method": req.Method, "url": req.URL.String(), "headers": req.Header, "body": body}
-	up, err := d.service.openUpstream(d.service.egressCredentialPayload(payload, d.credential, d.callbackID != ""), d.deadline)
+	// Vendor management calls (usage, catalog) are management-plane requests, so a
+	// credential proxy applies even when no management callback id was supplied.
+	up, err := d.service.openUpstream(d.service.egressCredentialPayload(payload, d.credential, true), d.deadline)
 	if err != nil {
 		return nil, err
 	}

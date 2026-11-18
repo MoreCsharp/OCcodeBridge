@@ -136,7 +136,7 @@ func TestErrorPolicyProtectedWireIsolatesTransportText(t *testing.T) {
 				message string
 			}{
 				{"auth", 401, marker}, {"payment", 402, marker}, {"permission", 403, marker}, {"rate", 429, marker},
-				{"quota", 502, marker + " reached your weekly Clinepass limit"},
+				{"quota", 502, marker + " quota exhausted"},
 				{"team", 429, marker + " " + teamLimitMessage},
 			} {
 				err := classifyUpstreamError(tc.status, http.Header{"Retry-After": {"120"}}, map[string]any{"error": tc.message}, time.Now())

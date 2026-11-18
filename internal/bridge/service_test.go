@@ -156,7 +156,8 @@ func simpleSSE() []byte {
 }
 
 func TestModelNamesArePreservedAndRegistered(t *testing.T) {
-	for _, upstream := range []string{"deepseek-v4.1-flash", "opencode-go/deepseek-v4.1-flash", "opencode-go/opencode-go/deepseek-v4.1-flash", " custom-name "} {
+	// Names are stored verbatim; only the vendor prefix must be a known vendor.
+	for _, upstream := range []string{"opencode-go/deepseek-v4.1-flash", "opencode-go/opencode-go/deepseek-v4.1-flash", "commandcode/deepseek/deepseek-v4-flash"} {
 		cfg := defaultConfig()
 		cfg.Models = []Model{{ID: " my-alias ", UpstreamID: upstream}}
 		if err := cfg.validate(); err != nil {
@@ -165,6 +166,12 @@ func TestModelNamesArePreservedAndRegistered(t *testing.T) {
 		if cfg.Models[0].ID != " my-alias " || cfg.Models[0].UpstreamID != upstream {
 			t.Fatalf("validation rewrote user model: %#v", cfg.Models[0])
 		}
+	}
+	// An unknown prefix is a configuration error, not a silent guess.
+	cfg := defaultConfig()
+	cfg.Models = []Model{{ID: "alias", UpstreamID: "deepseek-v4.1-flash"}}
+	if err := cfg.validate(); statusOf(err) != 400 {
+		t.Fatalf("a model without a vendor prefix was accepted: %v", err)
 	}
 	s := registeredService(t, "native-fallback")
 	got, err := s.resolveModel("deepseek-flash")
@@ -605,7 +612,7 @@ func TestHeaderDeadlineCleansUpLateUpstreamStream(t *testing.T) {
 func TestDeletedCredentialRejectsStaleStorageJSON(t *testing.T) {
 	s := registeredService(t, "native-fallback")
 	authDir := t.TempDir()
-	credential := Credential{Type: Provider, ID: "credential-1", Label: "test credential", APIKey: "test-key-123"}
+	credential := Credential{Type: Provider, ID: "credential-1", Label: "test credential", APIKey: "test-key-123", Vendor: requestVendorID}
 	authPath := filepath.Join(authDir, credential.ID+".json")
 	if err := os.WriteFile(authPath, jsonBytes(credential), 0600); err != nil {
 		t.Fatal(err)
@@ -639,7 +646,7 @@ func TestDeletedCredentialRejectsStaleStorageJSON(t *testing.T) {
 
 func TestUpdateCredentialPreservesMigratedFileAndEffectiveKey(t *testing.T) {
 	s := registeredService(t, "native-fallback")
-	original := Credential{Type: Provider, ID: "credential-1", Label: "original", APIKey: "old-key-1234"}
+	original := Credential{Type: Provider, ID: "credential-1", Label: "original", APIKey: "old-key-1234", Vendor: requestVendorID}
 	const filename = "migrated-file.json"
 	if _, err := s.Handle("auth.parse", jsonBytes(map[string]any{
 		"Provider": Provider, "FileName": filename, "RawJSON": jsonBytes(original),
@@ -719,71 +726,38 @@ func TestUpdateCredentialPreservesMigratedFileAndEffectiveKey(t *testing.T) {
 	}
 }
 
-func TestCatalogRefreshUsesPassOffersAndPreservesAliases(t *testing.T) {
+// A catalog refresh asks the credential's vendor, never the upstream directly, and
+// it must not overwrite the operator's saved mappings.
+func TestCatalogRefreshUsesVendorCatalogAndPreservesAliases(t *testing.T) {
 	s := registeredService(t, "native-fallback")
 	s.mu.Lock()
 	s.cfg.Models = append(s.cfg.Models, Model{ID: "my-deepseek-alias", UpstreamID: "opencode-go/deepseek-v4.1-flash"})
 	s.mu.Unlock()
-	credential := Credential{Type: Provider, ID: "credential-1", Label: "test credential", APIKey: "test-key-123"}
-	if _, err := s.Handle("auth.parse", jsonBytes(map[string]any{
-		"Provider": Provider, "FileName": credential.ID + ".json", "RawJSON": jsonBytes(credential),
-	})); err != nil {
-		t.Fatalf("parse credential for registry refresh: %v", err)
-	}
 	originalModels := s.config().Models
+	// A YAML-only install has no settings file yet; the refresh must not create one.
 	settingsPath := filepath.Join(s.config().DataDir, "settings.json")
-	beforeSettings, err := os.ReadFile(settingsPath)
-	if err != nil {
-		t.Fatalf("read settings before catalog refresh: %v", err)
-	}
-	catalog := map[string]any{
-		"clinePass": []any{
-			map[string]any{"id": "opencode-go/deepseek-v4.1-flash"},
-			map[string]any{"id": "opencode-go/new-offer"},
-			map[string]any{"id": "byok-only-model"},
-		},
-		"models": []any{map[string]any{"id": "opencode-go/decoy-from-models"}},
-		"byok":   []any{map[string]any{"id": "opencode-go/decoy-from-byok"}},
-	}
-	var requestedURL, requestedMethod, callbackID string
-	var hadAuthorization bool
+	beforeSettings, beforeErr := os.ReadFile(settingsPath)
+	// The fixture vendor's catalog needs a credential to list it.
+	s.creds["catalog"] = Credential{Type: Provider, ID: "catalog", Label: "catalog", APIKey: "catalog-key", Vendor: testVendorID}
 	var savedAuth []string
-	readCount := 0
 	s.SetHost(func(method string, payload, out any) error {
 		request, _ := payload.(map[string]any)
 		switch method {
-		case "host.http.do_stream":
-			requestedURL = str(request["url"])
-			requestedMethod = str(request["method"])
-			callbackID = str(request["host_callback_id"])
-			if headers, ok := request["headers"].(http.Header); ok {
-				hadAuthorization = headers.Get("Authorization") != ""
-			}
-			*out.(*upstreamStream) = upstreamStream{StatusCode: 200, StreamID: "catalog", Headers: http.Header{"Content-Type": []string{"application/json"}}}
-		case "host.http.stream_read":
-			readCount++
-			if readCount == 1 {
-				*out.(*readChunk) = readChunk{Payload: jsonBytes(catalog), Done: true}
-			} else {
-				return errors.New("catalog was read more than once")
-			}
-		case "host.http.stream_close":
-			return nil
+		case "host.http.do_stream", "host.http.stream_read", "host.http.stream_close":
+			return fmt.Errorf("the fixture catalog must not reach the network: %s", method)
 		case "host.auth.save":
 			savedAuth = append(savedAuth, str(request["name"]))
+			return nil
 		default:
 			return fmt.Errorf("unexpected host callback %s", method)
 		}
-		return nil
 	})
 	result, err := s.Handle("management.handle", jsonBytes(ManagementRequest{
 		Method: "POST", Path: apiBase + "/models/refresh", HostCallbackID: "catalog-callback",
+		Body: jsonBytes(map[string]any{"vendor": testVendorID}),
 	}))
 	if err != nil || result.(ManagementResponse).StatusCode != 200 {
-		t.Fatalf("refresh Pass catalog: %#v, %v", result, err)
-	}
-	if requestedURL != "https://api.cline.bot/api/v1/ai/cline/recommended-models" || requestedMethod != "GET" || callbackID != "catalog-callback" || hadAuthorization {
-		t.Fatalf("catalog request = %q %q callback=%q authorization=%v", requestedMethod, requestedURL, callbackID, hadAuthorization)
+		t.Fatalf("refresh vendor catalog: %#v, %v", result, err)
 	}
 	var response struct {
 		Models []Model `json:"models"`
@@ -791,43 +765,52 @@ func TestCatalogRefreshUsesPassOffersAndPreservesAliases(t *testing.T) {
 	if err := json.Unmarshal(result.(ManagementResponse).Body, &response); err != nil {
 		t.Fatalf("decode model candidates: %v", err)
 	}
-	if len(response.Models) != 2 || response.Models[0].ID != "deepseek-v4.1-flash" || response.Models[0].UpstreamID != "opencode-go/deepseek-v4.1-flash" || response.Models[1].ID != "new-offer" || response.Models[1].UpstreamID != "opencode-go/new-offer" {
-		t.Fatalf("unexpected Pass candidates: %#v", response.Models)
+	if len(response.Models) != 1 || response.Models[0].ID != "fixture-model" || response.Models[0].UpstreamID != "fixture/fixture-model" {
+		t.Fatalf("unexpected vendor candidates: %#v", response.Models)
 	}
 	models := s.config().Models
-	if len(models) != 2 || !bytes.Equal(jsonBytes(models), jsonBytes(originalModels)) || len(savedAuth) != 0 {
+	if len(models) != len(originalModels) || !bytes.Equal(jsonBytes(models), jsonBytes(originalModels)) || len(savedAuth) != 0 {
 		t.Fatalf("candidate refresh changed registered models or saved auth: models=%#v saved=%#v", models, savedAuth)
 	}
-	afterSettings, err := os.ReadFile(settingsPath)
-	if err != nil || !bytes.Equal(beforeSettings, afterSettings) {
-		t.Fatalf("candidate refresh changed settings: %v", err)
+	afterSettings, afterErr := os.ReadFile(settingsPath)
+	if beforeErr != nil && afterErr == nil || beforeErr == nil && (afterErr != nil || !bytes.Equal(beforeSettings, afterSettings)) {
+		t.Fatalf("candidate refresh changed settings: %v -> %v", beforeErr, afterErr)
 	}
-	selected := append(append([]Model(nil), models...), response.Models[1])
+	// Selecting a candidate keeps the existing alias untouched.
+	selected := append(append([]Model(nil), models...), response.Models[0])
 	result, err = s.Handle("management.handle", jsonBytes(ManagementRequest{
 		Method: "PUT", Path: apiBase + "/models", Body: jsonBytes(map[string]any{"models": selected}),
 	}))
 	if err != nil || result.(ManagementResponse).StatusCode != 200 {
 		t.Fatalf("save selected model: %#v, %v", result, err)
 	}
-	models = s.config().Models
-	byID := make(map[string]Model, len(models))
-	for _, model := range models {
+	byID := map[string]Model{}
+	for _, model := range s.config().Models {
 		byID[model.ID] = model
 	}
-	if len(models) != 3 || byID["my-deepseek-alias"].UpstreamID != "opencode-go/deepseek-v4.1-flash" || byID["new-offer"].UpstreamID != "opencode-go/new-offer" {
-		t.Fatalf("selected model lost alias/Pass offer: %#v", models)
+	if len(byID) != len(originalModels)+1 || byID["my-deepseek-alias"].UpstreamID != "opencode-go/deepseek-v4.1-flash" || byID["fixture-model"].UpstreamID != "fixture/fixture-model" {
+		t.Fatalf("selected model lost alias or vendor offer: %#v", s.config().Models)
 	}
-	if _, exists := byID["byok-only-model"]; exists {
-		t.Fatal("BYOK model was imported into Pass catalog")
+	if len(savedAuth) == 0 {
+		t.Fatal("model registration refresh did not persist auth")
 	}
-	if _, exists := byID["opencode-go/decoy-from-models"]; exists {
-		t.Fatal("ordinary models array was imported into Pass catalog")
+}
+
+// A vendor whose catalog is not implemented yet must say so instead of failing opaquely.
+func TestCatalogRefreshReportsUnimplementedVendor(t *testing.T) {
+	s := registeredService(t, "native")
+	s.creds["catalog"] = Credential{Type: Provider, ID: "catalog", Label: "catalog", APIKey: "catalog-key", Vendor: requestVendorID}
+	s.SetHost(func(method string, _, _ any) error { return fmt.Errorf("unexpected host callback %s", method) })
+	result, err := s.Handle("management.handle", jsonBytes(ManagementRequest{
+		Method: "POST", Path: apiBase + "/models/refresh",
+		Body: jsonBytes(map[string]any{"vendor": requestVendorID}),
+	}))
+	if err != nil {
+		t.Fatal(err)
 	}
-	if _, exists := byID["opencode-go/decoy-from-byok"]; exists {
-		t.Fatal("BYOK array was imported into Pass catalog")
-	}
-	if len(savedAuth) != 1 || savedAuth[0] != credential.ID+".json" {
-		t.Fatalf("model registration refresh did not persist auth: %#v", savedAuth)
+	response := result.(ManagementResponse)
+	if response.StatusCode != 501 || !bytes.Contains(response.Body, []byte("尚未实现")) {
+		t.Fatalf("unimplemented catalog refresh = %d / %s", response.StatusCode, response.Body)
 	}
 }
 

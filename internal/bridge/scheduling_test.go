@@ -45,16 +45,16 @@ func TestSchedulingOldHostAndProxySecretRedaction(t *testing.T) {
 
 func TestSchedulingQuotaManualStateAndHostProjection(t *testing.T) {
 	s := NewService()
-	c := Credential{ID: "quota", APIKey: "quota-key"}
+	c := Credential{ID: "quota", APIKey: "quota-key", Vendor: requestVendorID}
 	now := time.Now().UTC()
 	c.QuotaBlock = &QuotaBlock{KeyHash: quotaKeyHash(c), Source: "usage", BlockedAt: now, ObservedAt: now, Limits: []QuotaBlockLimit{{Type: "weekly"}}}
 	quotaTestAuth(t, s, c)
-	quotaTestAuth(t, s, Credential{ID: "manual", APIKey: "manual-key", Disabled: true})
+	quotaTestAuth(t, s, Credential{ID: "manual", APIKey: "manual-key", Vendor: requestVendorID, Disabled: true})
 	s.SetHost(func(method string, _, out any) error {
 		if method != "host.auth.list" {
 			t.Fatalf("unexpected scheduling callback: %s", method)
 		}
-		return json.Unmarshal([]byte(`{"files":[{"name":"quota.json","provider":"cline-pass","disabled":true,"status":"disabled"},{"name":"manual.json","provider":"cline-pass","disabled":true,"status":"disabled"}]}`), out)
+		return json.Unmarshal([]byte(`{"files":[{"name":"quota.json","provider":"planbridge","disabled":true,"status":"disabled"},{"name":"manual.json","provider":"planbridge","disabled":true,"status":"disabled"}]}`), out)
 	})
 	result, err := s.schedulingResponse()
 	if err != nil {
@@ -98,7 +98,7 @@ func TestSchedulingQuotaManualStateAndHostProjection(t *testing.T) {
 
 func TestSchedulingModelCooldownDoesNotHideOtherModels(t *testing.T) {
 	s := NewService()
-	quotaTestAuth(t, s, Credential{ID: "one", APIKey: "fixture-key"})
+	quotaTestAuth(t, s, Credential{ID: "one", APIKey: "fixture-key", Vendor: requestVendorID})
 	s.cfg.Models = []Model{{ID: "flash", UpstreamID: "opencode-go/deepseek-v4.1-flash"}, {ID: "kimi", UpstreamID: "opencode-go/kimi-k3"}}
 	now := time.Now().UTC()
 	s.SetHost(func(method string, _, out any) error {
@@ -108,7 +108,8 @@ func TestSchedulingModelCooldownDoesNotHideOtherModels(t *testing.T) {
 		return json.Unmarshal(jsonBytes(map[string]any{"files": []map[string]any{{
 			"name": "one.json", "provider": Provider, "unavailable": true,
 			"model_states_available": true, "model_states": map[string]any{
-				"opencode-go/flash": map[string]any{"unavailable": true, "next_retry_after": now.Add(time.Hour), "status_message": "upstream temporary failure"},
+				// CPA keys host model penalties by provider/client-model.
+				Provider + "/flash": map[string]any{"unavailable": true, "next_retry_after": now.Add(time.Hour), "status_message": "upstream temporary failure"},
 				"expired":           map[string]any{"unavailable": true, "next_retry_after": now.Add(-time.Hour)},
 			},
 		}}}), out)

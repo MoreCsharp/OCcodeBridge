@@ -26,7 +26,7 @@ func TestProviderTransportIncompleteClassification(t *testing.T) {
 		{"SSE 401 wins", transportIncompleteFixture, "upstream_auth_error", 200, 401, 401},
 		{"SSE 403 wins", transportIncompleteFixture, "upstream_auth_error", 200, 403, 403},
 		{"SSE 429 wins", transportIncompleteFixture, "upstream_rate_limited", 200, 429, 429},
-		{"account quota wins", transportIncompleteFixture + " reached your weekly Clinepass limit", "upstream_quota_exhausted", 200, 502, 0},
+		{"account quota wins", transportIncompleteFixture + " quota exhausted", "upstream_quota_exhausted", 200, 502, 0},
 		{"ordinary 502", "Fireworks service unavailable", upstreamServiceKind, 502, 502, 0},
 		{"generic truncation", "TransferEncodingError: response payload incomplete", upstreamServiceKind, 200, 502, 0},
 		{"missing provider signature", "APIConnectionError: response payload incomplete", upstreamServiceKind, 200, 502, 0},
@@ -182,7 +182,7 @@ func TestTransportIncompleteAggregateAndUsageFacts(t *testing.T) {
 func TestTransportIncompleteDoesNotRetreatRecoveryProbe(t *testing.T) {
 	now := time.Now()
 	l := rateLimiter{clock: func() time.Time { return now }}
-	c := Credential{ID: "fixture", APIKey: "fixture-key"}
+	c := Credential{ID: "fixture", APIKey: "fixture-key", Vendor: requestVendorID}
 	lease, err := l.acquire(c, "model")
 	if err != nil {
 		t.Fatal(err)
@@ -213,7 +213,7 @@ func TestStreamClosePreservesOrdinaryErrorPolicy(t *testing.T) {
 		{"authentication", 401, "credential_model", classifyUpstreamError(401, nil, map[string]any{"error": "invalid authentication"}, now), false},
 		{"rate limit", 429, "credential_model", classifyUpstreamError(429, nil, map[string]any{"error": "rate limited"}, now), false},
 		{"team limit", 429, "upstream_team", classifyUpstreamError(429, nil, map[string]any{"error": teamLimitMessage}, now), true},
-		{"account quota", 502, "account", classifyUpstreamError(502, nil, map[string]any{"error": "reached your weekly Clinepass limit"}, now), false},
+		{"account quota", 502, "account", classifyUpstreamError(502, nil, map[string]any{"error": "quota exhausted"}, now), false},
 		{"egress limit", 429, "egress_ip", &upstreamError{APIError: &APIError{429, "upstream_ip_rate_limited", "edge rate limit"}, Scope: "egress_ip", RetryAt: now.Add(time.Minute)}, true},
 	} {
 		t.Run(tt.name, func(t *testing.T) {

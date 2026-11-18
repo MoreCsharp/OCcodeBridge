@@ -36,7 +36,7 @@ func newAffinityFixture(t *testing.T) *affinityFixture {
 		// Stable IDs differ from generic filename IDs; one account is disabled.
 		fields := map[string]any{
 			"type": Provider, "id": fmt.Sprintf("stable-%d", i), "label": fmt.Sprintf("account-%d", i),
-			"api_key": fmt.Sprintf("fixture-key-%d", i), "priority": i + 1, "disabled": i == 1,
+			"api_key": fmt.Sprintf("fixture-key-%d", i), "vendor": requestVendorID, "priority": i + 1, "disabled": i == 1,
 			"unknown": json.RawMessage(`{"serial":9007199254740993,"nested":[null,{"enabled":true}]}`),
 		}
 		raw, err := json.MarshalIndent(fields, "", "  ")

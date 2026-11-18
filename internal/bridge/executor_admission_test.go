@@ -18,7 +18,7 @@ func TestExecutorLocal429ReturnsDirectly(t *testing.T) {
 				})
 				var retryAt time.Time
 				if scope == "team" {
-					c := Credential{Type: Provider, ID: "credential-1", APIKey: "test-key"}
+					c := Credential{Type: Provider, ID: "credential-1", APIKey: "test-key", Vendor: requestVendorID}
 					lease, err := s.rateLimits.acquire(c, "opencode-go/deepseek-v4.1-flash")
 					if err != nil {
 						t.Fatal(err)
