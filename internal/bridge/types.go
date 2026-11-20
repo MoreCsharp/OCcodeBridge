@@ -14,7 +14,7 @@ import (
 	"github.com/MoreCsharp/OCcodeBridge/internal/vendors"
 )
 
-const Version = "0.1.0"
+const Version = "0.1.1"
 const PluginID = "occodebridge"
 
 // Provider is the single CPA provider id this plugin registers; the subscription

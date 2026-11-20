@@ -7,7 +7,7 @@
       "logo": "https://raw.githubusercontent.com/MoreCsharp/OCcodeBridge/main/logo.png",
       "description": "把 OpenCode Go 与 CommandCode 订阅套餐接入 CPA：多凭据管理、5 小时 / 每周 / 每月额度显示（含 CPA 认证文件页）、窗口用尽自动暂停、模型映射、统一错误规则与请求日志。 / Connect OpenCode Go and CommandCode subscription plans to CPA with multi-credential management, 5-hour / weekly / monthly quota display (including the CPA auth-files page), automatic pause when a window is exhausted, model mapping, shared error rules and request logs.",
       "author": "MoreCsharp",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "repository": "https://github.com/MoreCsharp/OCcodeBridge",
       "homepage": "https://github.com/MoreCsharp/OCcodeBridge",
       "license": "MIT",
