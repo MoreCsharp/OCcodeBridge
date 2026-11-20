@@ -106,7 +106,7 @@ func (s *Service) testModel(r ManagementRequest) (any, error) {
 	}
 	entry := s.newLog(req, credential, upstream)
 	s.applyReasoningMapping(j, &entry)
-	attempt := Attempt{Mode: "model-test", Provider: "unknown", ProviderSource: "not_reported"}
+	attempt := Attempt{Mode: "model-test"}
 	diagnostics := &modelTestDiagnostics{limit: cfg.MaxResponseBytes}
 	var lease *rateLease
 	if err == nil {
@@ -158,7 +158,7 @@ func (s *Service) testModel(r ManagementRequest) (any, error) {
 		"credential_id": credential.ID, "credential_label": credential.Label,
 		"reasoning_effort":  entry.ReasoningEffort,
 		"reasoning_mapping": entry.ReasoningMapping,
-		"provider":          entry.Provider, "upstream_skipped": entry.UpstreamSkipped, "tested_at": time.Now().UTC(),
+		"upstream_skipped":  entry.UpstreamSkipped, "tested_at": time.Now().UTC(),
 	})
 }
 

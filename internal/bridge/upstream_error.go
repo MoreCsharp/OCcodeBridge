@@ -27,11 +27,6 @@ var wrappedBadRequest = regexp.MustCompile(`(?i)\brequest failed with status\s+4
 var wrappedRequestParam = regexp.MustCompile(`^\.?messages(?:\[[0-9]+\]|\.[a-zA-Z0-9_]+)+$`)
 var retrySecondsPattern = regexp.MustCompile(`(?i)retry after\s+(\d+(?:\.\d+)?)\s*s\b`)
 
-// Vercel reports the provider it routed to inside the response body. Failures
-// carry the same routing block as successes, but nested in the error text, so
-// the structured lookup is only a fallback-safe first attempt.
-var routingProviderPattern = regexp.MustCompile(`"(finalProvider|resolvedProvider)"\s*:\s*"([^"]+)"`)
-
 // Upstream errors retain the transport status separately from the error inside
 // a successful SSE response. The stable marker is matched by CPA's auth rules.
 type upstreamError struct {
@@ -43,8 +38,6 @@ type upstreamError struct {
 	Scope          string
 	Local          bool
 	WindowID       string
-	Provider       string
-	ProviderSource string
 	QuotaType      string
 	QuotaResetAt   *time.Time
 	RequestDetails *upstreamRequestDetails
@@ -65,9 +58,8 @@ func isProviderTransportIncomplete(body map[string]any) bool {
 	detail := object(body["error"])
 	text := strings.ToLower(errorMessage(body))
 	identity := text + " " + strings.ToLower(str(detail["code"])+" "+str(detail["type"]))
-	provider, _ := routingFacts(body)
 	if !strings.Contains(identity, "apiconnectionerror") ||
-		(!strings.Contains(identity, "fireworks") && !strings.Contains(identity, "litellm") && !strings.Contains(strings.ToLower(provider), "fireworks")) {
+		(!strings.Contains(identity, "fireworks") && !strings.Contains(identity, "litellm")) {
 		return false
 	}
 	return strings.Contains(text, "transferencodingerror") ||
@@ -75,35 +67,6 @@ func isProviderTransportIncomplete(body map[string]any) bool {
 		strings.Contains(text, "response payload incomplete") ||
 		strings.Contains(text, "response payload is incomplete") ||
 		strings.Contains(text, "upstream payload incomplete")
-}
-
-// responseRoutingProvider recovers the provider from explicit routing metadata.
-// Only explicit routing statements count; candidate lists never do.
-func responseRoutingProvider(body map[string]any) (string, string) {
-	for _, key := range []string{"finalProvider", "resolvedProvider"} {
-		for _, namespace := range []string{"provider_metadata", "providerMetadata"} {
-			routing := object(object(object(body[namespace])["gateway"])["routing"])
-			if p := str(routing[key]); p != "" {
-				return p, namespace + ".gateway.routing." + key
-			}
-		}
-	}
-	return "", ""
-}
-
-func routingFacts(body map[string]any) (string, string) {
-	if p, path := responseRoutingProvider(body); p != "" {
-		return p, path
-	}
-	matches := routingProviderPattern.FindAllStringSubmatch(errorMessage(body), -1)
-	for _, key := range []string{"finalProvider", "resolvedProvider"} {
-		for _, m := range matches {
-			if m[1] == key {
-				return m[2], "error.message." + key
-			}
-		}
-	}
-	return "", ""
 }
 
 func hasUpstreamErrorStatus(body map[string]any, except int) bool {
@@ -292,7 +255,6 @@ func classifyUpstreamError(httpStatus int, headers http.Header, body map[string]
 		}
 	}
 	result.APIError = &APIError{Status: status, Kind: kind, Message: message}
-	result.Provider, result.ProviderSource = routingFacts(body)
 	return result
 }
 
@@ -382,20 +344,11 @@ func logErrorDetails(entry *LogEntry, attempt *Attempt, err error) {
 	if !detail.RetryAt.IsZero() {
 		entry.RetryAt = &detail.RetryAt
 	}
-	// A failed request still says which provider refused it. Only fill a gap:
-	// a provider already read from a successful frame is more specific.
-	provider, source := detail.Provider, detail.ProviderSource
-	if provider != "" && (entry.Provider == "" || entry.Provider == "unknown") {
-		entry.Provider, entry.ProviderSource = provider, source
-	}
 	if attempt != nil {
 		attempt.ErrorKind = entry.ErrorKind
 		attempt.UpstreamHTTPStatus = entry.UpstreamHTTPStatus
 		attempt.UpstreamErrorStatus = entry.UpstreamErrorStatus
 		attempt.UpstreamSkipped = entry.UpstreamSkipped
-		if provider != "" && (attempt.Provider == "" || attempt.Provider == "unknown") {
-			attempt.Provider, attempt.ProviderSource = provider, source
-		}
 	}
 }
 

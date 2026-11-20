@@ -435,7 +435,7 @@ func TestObservabilityBackoffAggregationIsolation(t *testing.T) {
 	last, retry := first.Add(time.Second), first.Add(time.Minute)
 	base := LogEntry{
 		Time: first, Model: "alias-a", UpstreamModel: "upstream-a", CredentialID: "credential-a", Credential: "same label",
-		Stream: true, Status: 429, UpstreamSkipped: true, Provider: "unknown", ReasoningEffort: "high",
+		Stream: true, Status: 429, UpstreamSkipped: true, ReasoningEffort: "high",
 		BackoffWindowID: "window-a", RetryAt: &retry, ErrorKind: "upstream_team_rate_limited", RateLimitScope: "team_model",
 		Attempts: []Attempt{{Status: 429, UpstreamSkipped: true}},
 	}

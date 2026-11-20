@@ -281,7 +281,7 @@ func (s *Service) readJSONObserved(up upstreamStream, observe func(map[string]an
 	return b.Bytes(), nil
 }
 func (s *Service) newLog(r ExecutorRequest, c Credential, up string) LogEntry {
-	return LogEntry{DownstreamStarted: new(bool), PromptUsageReported: new(bool), CompletionUsageReported: new(bool), UpstreamAttempts: new(int), ReasoningEffort: requestReasoningEffort(r.Payload), CredentialID: c.ID, ID: id(), Time: time.Now().UTC(), Model: r.Model, UpstreamModel: up, Stream: r.Stream, Provider: "unknown", ProviderSource: "not_reported", Credential: c.Label, Attempts: []Attempt{}}
+	return LogEntry{DownstreamStarted: new(bool), PromptUsageReported: new(bool), CompletionUsageReported: new(bool), UpstreamAttempts: new(int), ReasoningEffort: requestReasoningEffort(r.Payload), CredentialID: c.ID, ID: id(), Time: time.Now().UTC(), Model: r.Model, UpstreamModel: up, Stream: r.Stream, Credential: c.Label, Attempts: []Attempt{}}
 }
 func (s *Service) execute(r ExecutorRequest) (any, error) {
 	if err := s.begin(); err != nil {
@@ -315,7 +315,7 @@ func (s *Service) execute(r ExecutorRequest) (any, error) {
 	wantStream := cfg.NonstreamMode == "stream-aggregate"
 	var body []byte
 	for n := 0; n < 2; n++ {
-		attempt := Attempt{Provider: "unknown", ProviderSource: "not_reported", Mode: "nonstream"}
+		attempt := Attempt{Mode: "nonstream"}
 		if wantStream {
 			attempt.Mode = "stream-aggregate"
 		}
@@ -497,7 +497,7 @@ func (s *Service) executeStream(r ExecutorRequest) (any, error) {
 	attemptStart := start
 	var lease *rateLease
 	upstreamOpened := false
-	attempt := Attempt{Mode: "stream", Provider: "unknown"}
+	attempt := Attempt{Mode: "stream"}
 	failEarly := func(err error) (any, error) {
 		defer s.active.Done()
 		_ = s.observeQuotaError(c, err)
@@ -546,7 +546,6 @@ func (s *Service) executeStream(r ExecutorRequest) (any, error) {
 	ready := make(chan error, 1)
 	go func() {
 		defer s.active.Done()
-		attempt.ProviderSource = "not_reported"
 		var err error
 		started := false
 		var pending [][]byte

@@ -21,9 +21,8 @@ const PluginID = "occodebridge"
 // vendor is a per-credential choice, not a second provider.
 const Provider = PluginID
 
-// localBackoffLabel is the label the UI shows, and filters by, for a request the
-// plugin suppressed locally. Such a request never reached an upstream, so it has
-// no provider of its own.
+// localBackoffLabel is the label the UI shows, and log search matches, for a
+// request the plugin suppressed locally. Such a request never reached an upstream.
 const localBackoffLabel = "本地退避"
 
 // maxCredentialPriority bounds the value handed to CPA's scheduler.
@@ -267,12 +266,9 @@ type Attempt struct {
 	UpstreamSkipped     bool   `json:"upstream_skipped,omitempty"`
 	Status              int    `json:"status"`
 	Mode                string `json:"mode"`
-	Provider            string `json:"provider"`
-	ProviderSource      string `json:"provider_source"`
 	DurationMS          int64  `json:"duration_ms"`
 	Error               string `json:"error,omitempty"`
 	ServedModel         string `json:"served_model,omitempty"`
-	Degraded            bool   `json:"degraded,omitempty"`
 }
 type LogEntry struct {
 	StreamDiagnostics           *StreamDiagnostics   `json:"stream_diagnostics,omitempty"`
@@ -314,12 +310,9 @@ type LogEntry struct {
 	Model            string    `json:"model"`
 	UpstreamModel    string    `json:"upstream_model"`
 	ServedModel      string    `json:"served_model,omitempty"`
-	Degraded         bool      `json:"degraded,omitempty"`
 	Stream           bool      `json:"stream"`
 	StreamEnd        string    `json:"stream_end,omitempty"`
 	Status           int       `json:"status"`
-	Provider         string    `json:"provider"`
-	ProviderSource   string    `json:"provider_source"`
 	DurationMS       int64     `json:"duration_ms"`
 	TTFTMS           int64     `json:"ttft_ms"`
 	PromptTokens     int64     `json:"prompt_tokens"`

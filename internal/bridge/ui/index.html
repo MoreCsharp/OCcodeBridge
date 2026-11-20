@@ -128,8 +128,6 @@
     .rate-history-hint { display: inline-grid; place-items: center; width: 15px; height: 15px; margin-left: 4px; border: 1px solid currentColor; border-radius: 50%; color: var(--warn); font-size: 10px; cursor: help; }
     .panel.log-controls { padding: 16px; margin-bottom: 16px; }
     .log-controls .toolbar { margin-bottom: 12px; }
-    .network-log-filter { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; color: var(--ink); font-size: 12px; cursor: pointer; }
-    .network-log-filter input { width: 15px; height: 15px; margin: 0; accent-color: var(--accent); }
     .badge.network-log-badge { margin-top: 4px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; background: color-mix(in srgb, #60a5fa 16%, var(--surface)); color: #2563eb; }
     :root[data-theme="dark"] .badge.network-log-badge { color: #93c5fd; }
     .notice { margin: 14px 0 0; padding: 10px 13px; border: 1px solid color-mix(in srgb, var(--warn) 30%, var(--line)); border-left: 3px solid var(--warn); border-radius: 4px; color: var(--ink); background: color-mix(in srgb, var(--warn) 7%, var(--surface)); }
@@ -158,7 +156,7 @@
     .toolbar .dropdown { flex: 0 1 155px; }
     .count { margin-left: auto; color: var(--muted); white-space: nowrap; font-size: 12px; }
     .log-head { display: grid; grid-template-columns: var(--log-columns); gap: 6px; padding: 0 13px 7px; color: var(--muted); font-size: 11px; font-weight: 700; }
-    #logsPanel { --log-columns: minmax(104px, .8fr) minmax(156px, 1.5fr) minmax(88px, .8fr) minmax(74px, .65fr) minmax(64px, .65fr) minmax(74px, .7fr) minmax(96px, .8fr) minmax(150px, 1.6fr) 14px; max-width: 1500px; margin-inline: auto; }
+    #logsPanel { --log-columns: minmax(104px, .8fr) minmax(156px, 1.5fr) minmax(88px, .8fr) minmax(74px, .65fr) minmax(64px, .65fr) minmax(96px, .8fr) minmax(150px, 1.6fr) 14px; max-width: 1500px; margin-inline: auto; }
     .log-list { display: grid; gap: 6px; }
     .log-entry { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
     .log-entry[open] { background: var(--inset-bg); box-shadow: inset 3px 0 var(--accent); }
@@ -196,7 +194,7 @@
     .datum-value { overflow-wrap: anywhere; font-size: 12px; }
     .source { display: inline-block; background: var(--code-bg); border-radius: 3px; padding: 1px 4px; }
     .attempts { margin-top: 17px; border-top: 1px solid var(--line); padding-top: 13px; }
-    .attempt { display: grid; grid-template-columns: 36px minmax(86px, .7fr) minmax(100px, 1fr) minmax(50px, .45fr) minmax(180px, 2fr); gap: 10px; border-bottom: 1px solid var(--line); padding: 9px 0; font-size: 12px; align-items: start; }
+    .attempt { display: grid; grid-template-columns: 36px minmax(86px, .7fr) minmax(50px, .45fr) minmax(180px, 2fr); gap: 10px; border-bottom: 1px solid var(--line); padding: 9px 0; font-size: 12px; align-items: start; }
     .attempt:last-child { border: 0; }
     .error-text { color: var(--danger); overflow-wrap: anywhere; white-space: pre-wrap; }
     .pagination { justify-content: flex-end; margin-top: 14px; color: var(--muted); font-size: 12px; }
@@ -239,7 +237,6 @@
     #pinProviderOptions { width: 100%; min-height: 270px; resize: vertical; tab-size: 2; line-height: 1.6; font-size: 13px; }
     @media (max-width: 740px) {
     }
-    .provider-chips { display: flex; flex-wrap: wrap; gap: 5px; }
     .model-test-tools { margin: 0 0 14px; display: grid; gap: 6px; }
     .model-test-tools label { font-size: 12px; font-weight: 600; color: var(--muted); }
     .model-test-tools .panel-hint { margin: 0; font-size: 11px; }
@@ -247,7 +244,6 @@
     .model-row > .model-main { flex: 1 1 180px; }
     .model-test-result { flex-basis: 100%; min-width: 0; padding-top: 10px; border-top: 1px solid var(--inset-line); display: grid; gap: 7px; }
     .model-test-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
-    .model-test-provider { max-width: min(260px, 100%); }
     .model-test-error { min-width: 0; color: var(--danger); font-size: 12px; }
     .model-test-error summary { cursor: pointer; display: flex; align-items: baseline; gap: 8px; }
     .model-test-error summary span:first-child { min-width: 0; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
@@ -408,7 +404,7 @@
       .row-main .cell:nth-child(8) { grid-column: 2; grid-row: 5; }
       .row-main .chevron { grid-column: 3; grid-row: 1; }
       .attempt { grid-template-columns: 24px minmax(80px, 1fr) minmax(80px, 1fr); }
-      .attempt > :nth-child(4), .attempt > :nth-child(5) { grid-column: 2 / -1; }
+      .attempt > :nth-child(4) { grid-column: 2 / -1; }
     }
     @media (max-width: 480px) {
       .summary-item { padding: 11px; }
@@ -530,16 +526,14 @@
     <section id="logsPanel" role="tabpanel" aria-labelledby="logsTab">
       <div class="panel log-controls">
       <div class="toolbar">
-        <input class="control search" id="search" type="search" placeholder="搜索模型、渠道或错误" aria-label="搜索请求日志">
+        <input class="control search" id="search" type="search" placeholder="搜索模型、凭据或错误" aria-label="搜索请求日志">
         <select class="control" id="statusFilter" aria-label="按状态筛选"><option value="">全部状态</option><option value="success">成功</option><option value="error">失败</option></select>
-        <input class="control provider-filter" id="providerFilter" placeholder="实际渠道" aria-label="按实际渠道筛选" autocomplete="off">
-        <label class="network-log-filter" title="仅显示上游回报的实际服务模型名匹配 fallback 后缀的请求"><input id="degradedOnly" type="checkbox">仅看降级池</label>
         <button class="button compact" id="refreshLogs" type="button" title="刷新日志和统计" data-icon="refresh">刷新</button>
         <span class="count" id="logCount">-- 条</span>
       </div>
       <form class="statistics-tools" id="statisticsForm">
         <input id="statisticsRange" type="hidden" value="all">
-        <div class="statistics-segments" id="statisticsSegments" role="group" aria-label="选择统计时段" title="独立永久累计，按请求完成时间以分钟查询；不受日志搜索、渠道、状态或保留条数影响。旧日志仅在首次启用时导入当时仍保留的部分。">
+        <div class="statistics-segments" id="statisticsSegments" role="group" aria-label="选择统计时段" title="独立永久累计，按请求完成时间以分钟查询；不受日志搜索、状态或保留条数影响。旧日志仅在首次启用时导入当时仍保留的部分。">
           <button class="statistics-segment" type="button" data-range="all" aria-pressed="true">全部</button>
           <button class="statistics-segment" type="button" data-range="today" aria-pressed="false">今天</button>
           <button class="statistics-segment" type="button" data-range="24h" aria-pressed="false">24 小时</button>
@@ -562,12 +556,13 @@
         <div class="summary-item" id="statTokenRateCard" tabindex="0" title="服务端按样本总输出 tokens ÷ 样本总有效时间计算，不是各行速率的简单平均。有效时间 = 总耗时 − 首字时间；首字未记录时使用总耗时。有效时间不足 0.5 秒的样本不计入平均速率，正好 0.5 秒计入；每行仍显示原始速率。"><div class="summary-label">平均 token 速率<span class="rate-history-hint" id="rateHistoryPartial" tabindex="0" aria-label="旧速率样本缺失：部分历史记录缺少速率明细，仅影响平均速率样本；累计请求数和 tokens 不变。" title="部分历史记录缺少速率明细，仅影响平均速率样本；累计请求数和 tokens 不变。" hidden>!</span></div><div class="summary-value" id="statTokenRate">—</div></div>
       </div>
       </div>
-      <div class="log-head" aria-hidden="true"><span>时间</span><span>客户端模型 / 上游</span><span>思考强度</span><span>结果</span><span>凭据</span><span>实际上游</span><span>首字 / 耗时</span><span>用量</span><span></span></div>
+      <div class="log-head" aria-hidden="true"><span>时间</span><span>客户端模型 / 上游</span><span>思考强度</span><span>结果</span><span>凭据</span><span>首字 / 耗时</span><span>用量</span><span></span></div>
       <div class="log-list" id="logList" aria-live="polite"><div class="empty">正在读取日志…</div></div>
       <div class="pagination"><button class="button compact" id="prevPage" type="button" data-icon="prev">上一页</button><span id="pageInfo">第 1 页</span><button class="button compact" id="nextPage" type="button" data-icon="next">下一页</button></div>
     </section>
 
     <section id="credentialsPanel" role="tabpanel" aria-labelledby="credentialsTab" hidden>
+      <div class="panel credentials-panel">
         <div class="panel-head"><div><h2 title="正常凭据按优先级从高到低排序；额度耗尽自动暂停的凭据置后，按预计恢复时间从早到晚排序。额度复查确认恢复后重新调度，人工停用独立保留。">凭据管理</h2><p class="panel-hint">厂商返回的额度窗口 · 同一账号的多个 Key 共享套餐</p></div><div class="row-actions"><button class="button compact" id="openErrorRules" type="button" data-icon="gear">错误规则</button><button class="button compact primary" id="openCredential" type="button" data-icon="plus">添加凭据</button></div></div>
         <div class="toolbar credential-tools">
           <input class="control search" id="credentialSearch" type="search" placeholder="搜索凭据名称或 ID" aria-label="搜索凭据">
@@ -842,7 +837,7 @@
     const API_BASE = document.querySelector('meta[name="cpa-api-base"]').content;
     const PAGE_SIZE = 50;
     const $ = (id) => document.getElementById(id);
-    const state = { key: '', authType: 'bearer', page: 0, total: 0, logsController: null, logsLoading: false, providers: new Set(), vendors: [], models: [], editingModelIndex: -1, modelBusy: false, config: null, toastTimer: 0, modelCandidates: [], selectedCandidates: new Set(), candidateBusy: false, candidateSnapshot: [], fetchingModels: false, editingCredentialId: '', credentialBusy: false };
+    const state = { key: '', authType: 'bearer', page: 0, total: 0, logsController: null, logsLoading: false, vendors: [], models: [], editingModelIndex: -1, modelBusy: false, config: null, toastTimer: 0, modelCandidates: [], selectedCandidates: new Set(), candidateBusy: false, candidateSnapshot: [], fetchingModels: false, editingCredentialId: '', credentialBusy: false };
     const modelTestResults = new Map();
     let reasoningMappingBusy = false;
     let reasoningMappingRevision = 0;
@@ -1053,7 +1048,6 @@
       } };
     }
     for (const field of document.querySelectorAll('select')) dropdowns.set(field.id, createDropdown(field, () => [...field.options].map((option) => ({ value: option.value, label: option.textContent }))));
-    dropdowns.set('providerFilter', createDropdown($('providerFilter'), () => [{ value: '', label: '全部渠道' }, ...[...state.providers].sort((a, b) => a.localeCompare(b)).map((provider) => ({ value: provider, label: provider }))], true));
     function toast(message) {
       $('toast').textContent = message;
       $('toast').hidden = false;
@@ -1210,11 +1204,6 @@
       }
       return present(log.allowance_raw) ? String(log.allowance_raw) : '';
     }
-    function actualProvider(value, upstreamSkipped = false) {
-      if (upstreamSkipped === true) return '本地退避';
-      const provider = String(value ?? '').trim();
-      return provider.toLowerCase() === 'unknown' ? '' : provider;
-    }
     function datum(label, value, fallback = '未记录') { return `<div><div class="datum-label">${label}</div><div class="datum-value">${shown(value, fallback)}</div></div>`; }
     function streamFrameLabel(kind) { return ({text: '正文', whitespace: '空白 / 换行', reasoning: '思考', tool: '工具调用', refusal: '拒绝内容', finish: '结束原因', done: '结束标记', error: '错误', metadata: '元数据 / 空增量'})[kind] || '未记录'; }
     function reasoningText(log) {
@@ -1234,7 +1223,6 @@
       const remaining = Math.max(0, Math.ceil((Date.parse(log.retry_at) - Date.now()) / 1000));
       const limitName = teamLimited ? '上游团队限流' : '请求限流';
       const limitLabel = limited ? (remaining > 0 ? `${limitName}，${remaining} 秒后可重试` : limitName) : incomplete ? `上游响应截断 · ${logCooldownText(log)}` : idleCutoff ? `流式卡住时提前截流 · ${logCooldownText(log)}` : '';
-      const actual = shown(actualProvider(log.provider, log.upstream_skipped), '未知');
       const responseModel = String(log.served_model ?? '').trim();
       const credential = present(log.credential) ? log.credential : present(log.credential_id) ? log.credential_id : '—';
       const attempts = !local && Array.isArray(log.attempts) ? log.attempts.filter((attempt) => attempt.upstream_skipped !== true) : [];
@@ -1244,7 +1232,7 @@
       const usageTitle = logUsageReported(log, 'prompt') && logUsageReported(log, 'completion') ? '输入 / 输出 tokens' : '上游未报告完整用量；已生成内容的请求仍可能产生消耗';
       const attemptMarkup = attempts.length ? attempts.map((attempt, index) => {
         const attemptStatus = statusInfo(attempt.status);
-        return `<div class="attempt"><span class="mono">${index + 1}.</span><span class="badge ${attemptStatus.cls}">${attemptStatus.label}</span><strong>${shown(actualProvider(attempt.provider), '未知')}</strong><span>${formatLogDuration(attempt.duration_ms)}</span><span class="error-text">${shown(attempt.error, '—')}</span></div>`;
+        return `<div class="attempt"><span class="mono">${index + 1}.</span><span class="badge ${attemptStatus.cls}">${attemptStatus.label}</span><span>${formatLogDuration(attempt.duration_ms)}</span><span class="error-text">${shown(attempt.error, '—')}</span></div>`;
       }).join('') : `<div class="subtext">${local ? '本地退避拦截，未发起上游请求' : '无尝试明细'}</div>`;
       return `<details class="log-entry" data-id="${esc(log.id)}"><summary class="row-main">
         <div class="cell"><span class="cell-label">时间</span><div class="primary-text mono">${local ? '首 ' : ''}${formatTime(log.time)}</div>${local ? `<div class="subtext mono">末 ${formatTime(lastTime)}</div>` : ''}</div>
@@ -1252,7 +1240,6 @@
         <div class="cell"><span class="cell-label">思考强度</span><span class="badge reasoning-badge" title="${log.reasoning_mapping ? (local ? '映射已计算；本次被本地退避拦截，未发往上游' : '插件收到的强度 → 发往上游的强度') : '未应用插件映射；— 表示未识别到显式强度'}">${esc(reasoningText(log))}</span></div>
         <div class="cell"><span class="cell-label">结果</span><span class="badge ${local ? 'warn' : status.cls}" title="${esc(limitLabel)}">${local ? `本地拦截 ×${number(count)}` : limited ? limitName : incomplete ? '响应截断' : idleCutoff ? '卡住截流' : log.error_kind === 'upstream_quota_exhausted' ? '额度耗尽' : status.label}</span><div class="subtext">${local ? '本地退避' : log.stream === true ? '流式' : log.stream === false ? '非流式' : '模式未知'}</div></div>
         <div class="cell"><span class="cell-label">凭据</span><div class="primary-text truncate" title="${esc(credential)}">${esc(credential)}</div></div>
-        <div class="cell"><span class="cell-label">实际上游</span><div class="primary-text truncate" title="${actual}">${actual}</div></div>
         <div class="cell"><span class="cell-label">首字 / 耗时</span><div class="log-latency">${latencyLine('首字', log.ttft_ms, 'ttft', local, log.completion_tokens)}${latencyLine('耗时', log.duration_ms, 'duration', local, log.completion_tokens)}</div></div>
         <div class="cell"><span class="cell-label">用量</span><div class="log-usage" title="${esc(usageTitle)}"><span>${logTokenValue(log, 'prompt_tokens')}</span><span>/ ${logTokenValue(log, 'completion_tokens')}</span></div><div class="subtext log-usage"><span>缓存 ${logTokenValue(log, 'cached_tokens')}</span><span class="log-cache-rate" title="本条请求缓存命中率 = 缓存 tokens ÷ 输入 tokens；没有有效输入用量或未调用上游时显示 —。">(${requestCacheRate(log)})</span><span class="log-speed" title="输出 tokens ÷（总耗时 − 首字时间）；首字未记录时使用总耗时。直接展示服务端原始速率，不应用平均速率的 0.5 秒阈值。">· ${speed}</span></div></div>
         <span class="chevron" aria-hidden="true">›</span></summary>
@@ -1261,7 +1248,6 @@
             ${datum('请求 ID', log.id, '—')}
             ${datum('最近请求 ID', log.last_request_id || log.id, '—')}
             ${datum(log.reasoning_mapping ? '思考强度（传入 → 发往上游）' : '思考强度', reasoningText(log))}
-            ${datum('实际上游', actualProvider(log.provider, log.upstream_skipped), '未知')}
             ${datum('真实响应模型', responseModel, '未报告')}
             ${datum('实际凭据', credential, '—')}
             ${datum('上游请求', `${number(upstreamAttempts)} 次`)}
@@ -1291,9 +1277,6 @@
           </div></div>` : ''}
           <div class="attempts"><strong>尝试明细 · ${attempts.length}</strong>${attemptMarkup}</div>
         </div></details>`;
-    }
-    function renderProviderOptions() {
-      dropdowns.get('providerFilter').sync();
     }
     const statistics = { controller: null, revision: 0, loading: false, resetting: false };
     const STATISTICS_STORAGE_KEY = 'occodebridge.statistics-range.v1';
@@ -1414,14 +1397,12 @@
       syncLogsRefreshButton();
       $('logList').innerHTML = '<div class="empty">正在读取日志…</div>';
       try {
-        const data = await api('/logs', { query: { limit: PAGE_SIZE, offset: state.page * PAGE_SIZE, search: $('search').value.trim(), status: $('statusFilter').value, provider: $('providerFilter').value, degraded: $('degradedOnly').checked ? 'yes' : '' }, signal: controller.signal });
+        const data = await api('/logs', { query: { limit: PAGE_SIZE, offset: state.page * PAGE_SIZE, search: $('search').value.trim(), status: $('statusFilter').value }, signal: controller.signal });
         if (controller !== state.logsController) return;
         state.logDebug = data?.debug === true;
         const items = Array.isArray(data?.items) ? data.items : [];
         state.total = Number.isFinite(Number(data?.total)) ? Number(data.total) : items.length;
         if (Number.isInteger(data?.offset) && data.offset >= 0) state.page = Math.floor(data.offset / PAGE_SIZE);
-        for (const log of items) if (actualProvider(log.provider, log.upstream_skipped)) state.providers.add(actualProvider(log.provider, log.upstream_skipped));
-        renderProviderOptions();
         $('logList').innerHTML = items.length ? items.map(logMarkup).join('') : '<div class="empty"><strong>没有匹配的请求</strong>调整筛选条件或稍后刷新</div>';
         $('logCount').textContent = `${number(state.total)} 条`;
         $('pageInfo').textContent = `第 ${state.page + 1} 页 · 共 ${Math.max(1, Math.ceil(state.total / PAGE_SIZE))} 页`;
@@ -1468,7 +1449,6 @@
     }
     function renderModels(data) {
       state.models = Array.isArray(data?.models) ? data.models.map((model) => ({ ...model })) : [];
-      renderProviderOptions();
       renderModelRows();
       renderReasoningModels();
       if (state.editingModelIndex >= state.models.length) resetModelForm();
@@ -1490,8 +1470,7 @@
       const label = test.ok ? '可用' : test.status === 504 ? '超时' : '失败';
       const error = String(test.error || '');
       const summary = error.split(/\r?\n/).find((line) => line.trim()) || '测试失败';
-      const provider = test.upstream_skipped === true ? '未调用（本地退避）' : actualProvider(test.provider) || '未知';
-      return `<div class="model-test-result"><div class="model-test-meta"><span class="badge ${tone}">${label} · ${time}</span><span class="model-test-provider truncate" title="实际上游：${esc(provider)}">实际上游 ${esc(provider)}</span><span>思考 ${esc(reasoningText(test))}</span><span>凭据 ${esc(test.credential_label || test.credential_id || '—')}</span>${test.status ? `<span>状态 ${esc(test.status)}</span>` : ''}<span>${formatTime(test.tested_at)}</span></div>${error ? `<details class="model-test-error"><summary><span>${esc(summary)}</span><span>完整错误</span></summary><pre>${esc(error)}</pre></details>` : ''}</div>`;
+      return `<div class="model-test-result"><div class="model-test-meta"><span class="badge ${tone}">${label} · ${time}</span>${test.upstream_skipped === true ? '<span>未调用（本地退避）</span>' : ''}<span>思考 ${esc(reasoningText(test))}</span><span>凭据 ${esc(test.credential_label || test.credential_id || '—')}</span>${test.status ? `<span>状态 ${esc(test.status)}</span>` : ''}<span>${formatTime(test.tested_at)}</span></div>${error ? `<details class="model-test-error"><summary><span>${esc(summary)}</span><span>完整错误</span></summary><pre>${esc(error)}</pre></details>` : ''}</div>`;
     }
     function renderModelRows() {
       const credential = $('modelTestCredential').value;
@@ -1900,8 +1879,6 @@
     let searchTimer;
     $('search').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.page = 0; loadLogs(); }, 280); });
     $('statusFilter').addEventListener('change', () => { state.page = 0; loadLogs(); });
-    $('providerFilter').addEventListener('change', () => { state.page = 0; loadLogs(); });
-    $('degradedOnly').addEventListener('change', () => { state.page = 0; loadLogs(); });
     $('authButton').addEventListener('click', () => { renderAuthState(); $('authDialog').showModal(); });
     $('closeAuth').addEventListener('click', () => $('authDialog').close());
     $('clearAuth').addEventListener('click', () => { state.key = ''; state.rememberAuth = false; window.OCcodeBridgeClearAuth?.(); $('authKey').value = ''; $('rememberAuth').checked = false; pauseAuth(new Error('插件手动保存的管理密钥已清除，请重新验证')); toast('插件手动保存的管理密钥已清除'); });

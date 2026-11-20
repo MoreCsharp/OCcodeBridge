@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"regexp"
 	"sort"
 	"strings"
 )
@@ -353,16 +351,7 @@ func unwrap(body []byte) (map[string]any, error) {
 	return j, nil
 }
 
-// degradedModelPattern matches the model name an upstream reports for a request it
-// served from a degraded pool rather than the one asked for: a suffix such as
-// "vmc/deepseek-v4p1-flash-1017-contributor-fallbacks". The pool is a routing
-// decision on the model tier, not on the provider: the same request can report
-// finalProvider "deepseek" and still be served here, so this name is the only
-// reliable signal that a request was degraded (2026-10-29, DeepSeek 1017).
-var degradedModelPattern = regexp.MustCompile(`(?i)contributor-fallbacks?$|/fallbacks?$|-fallbacks?$`)
-
-// observeServedModel records the model the upstream actually served and
-// whether that was a degraded pool. The response's own "model" field is the
+// observeServedModel records the model the upstream actually served. The response's own "model" field is the
 // only place the upstream reports it, and the executor overwrites that field with the
 // client's model name before anything downstream sees it, so it has to be read
 // off each raw frame here.
@@ -373,50 +362,10 @@ func observeServedModel(j map[string]any, entry *LogEntry, attempt *Attempt) {
 	}
 	entry.ServedModel = served
 	attempt.ServedModel = served
-	degraded := degradedModelPattern.MatchString(served)
-	entry.Degraded = degraded
-	attempt.Degraded = degraded
 }
 
-// Only explicit response routing facts count as actual providers. Candidate lists never do.
 func observeMetadata(j map[string]any, entry *LogEntry, attempt *Attempt) {
 	observeServedModel(j, entry, attempt)
-	apply := func(p, path string) {
-		if p != "" {
-			if strings.HasSuffix(attempt.ProviderSource, ".finalProvider") && !strings.HasSuffix(path, ".finalProvider") {
-				return
-			}
-			if strings.HasSuffix(attempt.ProviderSource, ".resolvedProvider") && path == "provider" {
-				return
-			}
-			entry.Provider = p
-			entry.ProviderSource = path
-			attempt.Provider = p
-			attempt.ProviderSource = path
-		}
-	}
-	if p := str(j["provider"]); p != "" {
-		apply(p, "provider")
-	}
-	roots := []struct {
-		v    map[string]any
-		path string
-	}{{j, ""}}
-	for i, ch := range list(j["choices"]) {
-		m := object(ch)
-		for _, k := range []string{"delta", "message"} {
-			if v := object(m[k]); v != nil {
-				roots = append(roots, struct {
-					v    map[string]any
-					path string
-				}{v, fmt.Sprintf("choices[%d].%s.", i, k)})
-			}
-		}
-	}
-	for _, root := range roots {
-		p, path := responseRoutingProvider(root.v)
-		apply(p, root.path+path)
-	}
 	if u := object(j["usage"]); u != nil {
 		// Some SSE frames contain only part of usage. Missing fields must not
 		// erase token counts already reported in a previous frame.

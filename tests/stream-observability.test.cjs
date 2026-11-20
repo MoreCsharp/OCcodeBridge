@@ -41,7 +41,7 @@ test('card identifies model cooldown without presenting account cooldown', () =>
 test('missing usage is distinct from explicitly reported zero usage', () => {
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   const start = html.indexOf('    function logUsageReported(');
-  const end = html.indexOf('    function actualProvider(', start);
+  const end = html.indexOf('    function datum(', start);
   const context = vm.createContext({ number: value => String(value), Number });
   vm.runInContext(html.slice(start, end), context);
   const missing = { prompt_tokens: 0, completion_tokens: 0, prompt_usage_reported: false, completion_usage_reported: false };

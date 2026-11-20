@@ -232,8 +232,6 @@ func (s *Service) logsResponse(r ManagementRequest) (any, error) {
 	}
 	search := strings.ToLower(r.Query.Get("search"))
 	status := r.Query.Get("status")
-	provider := r.Query.Get("provider")
-	degradedFilter := r.Query.Get("degraded")
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	filtered := []LogEntry{}
@@ -250,16 +248,8 @@ func (s *Service) logsResponse(r ManagementRequest) (any, error) {
 				reasoning += " 未设置"
 			}
 		}
-		if search != "" && !strings.Contains(strings.ToLower(v.ID+" "+v.LastRequestID+" "+v.Model+" "+v.UpstreamModel+" "+v.ServedModel+" "+v.Provider+" "+v.Error+" "+v.Credential+" "+reasoning+" "+v.ErrorKind+" "+label), search) {
+		if search != "" && !strings.Contains(strings.ToLower(v.ID+" "+v.LastRequestID+" "+v.Model+" "+v.UpstreamModel+" "+v.ServedModel+" "+v.Error+" "+v.Credential+" "+reasoning+" "+v.ErrorKind+" "+label), search) {
 			continue
-		}
-		if provider != "" && provider != "all" && !matchesProvider(provider, v) {
-			continue
-		}
-		if degradedFilter != "" && degradedFilter != "all" {
-			if degradedFilter == "yes" && !v.Degraded || degradedFilter == "no" && v.Degraded {
-				continue
-			}
 		}
 		if status != "" && status != "all" {
 			if status == "success" && v.Status >= 400 || status == "error" && v.Status < 400 {
@@ -300,15 +290,6 @@ func (s *Service) logsResponse(r ManagementRequest) (any, error) {
 		end = total
 	}
 	return managementJSON(200, map[string]any{"items": filtered[offset:end], "total": total, "summary": summary, "offset": offset, "debug": s.cfg.Debug})
-}
-
-// matchesProvider lets the UI filter by the label it shows for a locally
-// suppressed request, which has no upstream provider of its own.
-func matchesProvider(filter string, entry LogEntry) bool {
-	if filter == localBackoffLabel {
-		return entry.UpstreamSkipped
-	}
-	return strings.EqualFold(filter, entry.Provider)
 }
 
 func (s *Service) importCredential(r ManagementRequest) (any, error) {

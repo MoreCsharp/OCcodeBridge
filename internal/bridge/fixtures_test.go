@@ -6,10 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
-	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -192,24 +190,7 @@ func jsonErrorPlan(status int, body any) hostPlan {
 	return hostPlan{status: status, header: http.Header{"Content-Type": []string{"application/json"}}, chunks: []readChunk{{Payload: jsonBytes(body), Done: true}}}
 }
 
-func TestProviderIsRecoveredFromStructuredRoutingBlock(t *testing.T) {
-	s, err := registerService(t, modelConfig(t, ""))
-	if err != nil {
-		t.Fatalf("register: %v", err)
-	}
-	entry := errorEntry(t, s, jsonErrorPlan(429, map[string]any{
-		"error":            map[string]any{"message": "ordinary rate limit"},
-		"providerMetadata": map[string]any{"gateway": map[string]any{"routing": map[string]any{"resolvedProvider": "fireworks"}}},
-	}))
-	if entry.Provider != "fireworks" {
-		t.Errorf("provider = %q, want fireworks", entry.Provider)
-	}
-	if !strings.Contains(entry.ProviderSource, "resolvedProvider") {
-		t.Errorf("provider_source = %q, want it to name resolvedProvider", entry.ProviderSource)
-	}
-}
-
-func TestProviderIsRecoveredFromNestedErrorMessage(t *testing.T) {
+func TestNestedTeamRateLimitKeepsTransportStatus(t *testing.T) {
 	// The shape actually observed in production: HTTP 200 with an SSE error
 	// frame whose message embeds the routing block as text.
 	s, err := registerService(t, modelConfig(t, ""))
@@ -223,39 +204,10 @@ func TestProviderIsRecoveredFromNestedErrorMessage(t *testing.T) {
 		`{"originalModelId":"deepseek/deepseek-v4.1-flash","resolvedProvider":"baseten"}}}}`
 	plan := ssePlan(sseFrame(map[string]any{"error": map[string]any{"code": "stream_initialization_failed", "message": inner}}))
 	entry := errorEntry(t, s, plan)
-	if entry.Provider != "baseten" {
-		t.Errorf("provider = %q, want baseten", entry.Provider)
-	}
-	if !strings.Contains(entry.ProviderSource, "error.message") {
-		t.Errorf("provider_source = %q, want the message fallback", entry.ProviderSource)
-	}
 	if entry.RateLimitScope != "upstream_team" {
 		t.Errorf("rate_limit_scope = %q, want upstream_team", entry.RateLimitScope)
 	}
 	if entry.UpstreamHTTPStatus != 200 {
 		t.Errorf("upstream_http_status = %d, want the transport status 200", entry.UpstreamHTTPStatus)
-	}
-}
-
-func TestProviderStaysUnknownWhenUpstreamReportsNone(t *testing.T) {
-	s, err := registerService(t, modelConfig(t, ""))
-	if err != nil {
-		t.Fatalf("register: %v", err)
-	}
-	entry := errorEntry(t, s, jsonErrorPlan(500, map[string]any{"error": "empty response content"}))
-	if entry.Provider != "unknown" {
-		t.Errorf("provider = %q, want unknown", entry.Provider)
-	}
-}
-
-func TestSuccessfulProviderIsNotOverwritten(t *testing.T) {
-	// A locally synthesised rate limit carries no provider; the value already
-	// read from the successful frame must survive.
-	entry := LogEntry{Provider: "wafer", ProviderSource: "choices[0].delta.provider_metadata.gateway.routing.finalProvider"}
-	attempt := Attempt{Provider: "wafer"}
-	err := classifyUpstreamError(429, http.Header{}, map[string]any{"error": "rate limit exceeded for deepseek/deepseek-v4.1-flash"}, time.Now())
-	logErrorDetails(&entry, &attempt, err)
-	if entry.Provider != "wafer" || attempt.Provider != "wafer" {
-		t.Errorf("provider = %q/%q, want the earlier value preserved", entry.Provider, attempt.Provider)
 	}
 }

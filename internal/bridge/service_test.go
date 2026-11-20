@@ -216,9 +216,8 @@ func TestLogSummaryUsesFilteredRecordsBeforePagination(t *testing.T) {
 func TestWrappedNonstreamResponsePreservesToolsReasoningAndUsage(t *testing.T) {
 	s := registeredService(t, "native")
 	data := map[string]any{
-		"choices":  []any{map[string]any{"index": 0, "message": map[string]any{"role": "assistant", "content": "done", "reasoning_content": "thinking", "tool_calls": []any{map[string]any{"id": "call-1", "function": map[string]any{"name": "lookup", "arguments": "{}"}}}}}},
-		"usage":    map[string]any{"prompt_tokens": 20, "completion_tokens": 4, "prompt_tokens_details": map[string]any{"cached_tokens": 12}, "completion_tokens_details": map[string]any{"reasoning_tokens": 3}},
-		"provider": "deepseek",
+		"choices": []any{map[string]any{"index": 0, "message": map[string]any{"role": "assistant", "content": "done", "reasoning_content": "thinking", "tool_calls": []any{map[string]any{"id": "call-1", "function": map[string]any{"name": "lookup", "arguments": "{}"}}}}}},
+		"usage":   map[string]any{"prompt_tokens": 20, "completion_tokens": 4, "prompt_tokens_details": map[string]any{"cached_tokens": 12}, "completion_tokens_details": map[string]any{"reasoning_tokens": 3}},
 	}
 	h := newFakeHost(jsonPlan(map[string]any{"success": true, "data": data}))
 	s.SetHost(h.call)
@@ -238,8 +237,8 @@ func TestWrappedNonstreamResponsePreservesToolsReasoningAndUsage(t *testing.T) {
 	if number(object(usage["prompt_tokens_details"])["cached_tokens"]) != 12 || number(object(usage["completion_tokens_details"])["reasoning_tokens"]) != 3 {
 		t.Fatalf("response body lost usage details: %#v", usage)
 	}
-	if len(s.logs) != 1 || s.logs[0].CachedTokens != 12 || s.logs[0].ReasoningTokens != 3 || s.logs[0].Provider != "deepseek" {
-		t.Fatalf("request log lost actual usage/provider: %#v", s.logs)
+	if len(s.logs) != 1 || s.logs[0].CachedTokens != 12 || s.logs[0].ReasoningTokens != 3 {
+		t.Fatalf("request log lost actual usage: %#v", s.logs)
 	}
 }
 
@@ -337,27 +336,6 @@ func TestStreamErrorsAreReported(t *testing.T) {
 	}
 }
 
-func TestActualProviderRequiresResponseEvidence(t *testing.T) {
-	for _, test := range []struct {
-		name string
-		body map[string]any
-		want string
-	}{
-		{"candidate only", map[string]any{"provider_metadata": map[string]any{"gateway": map[string]any{"routing": map[string]any{"fallbackProviders": []any{"openai", "deepseek"}}}}}, "unknown"},
-		{"top level provider", map[string]any{"provider": "deepseek", "fallbackProviders": []any{"openai"}}, "deepseek"},
-		{"final provider", map[string]any{"provider_metadata": map[string]any{"gateway": map[string]any{"routing": map[string]any{"finalProvider": "openai", "fallbackProviders": []any{"deepseek"}}}}}, "openai"},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			entry := LogEntry{Provider: "unknown", ProviderSource: "not_reported"}
-			attempt := Attempt{Provider: "unknown", ProviderSource: "not_reported"}
-			observeMetadata(test.body, &entry, &attempt)
-			if entry.Provider != test.want || attempt.Provider != test.want {
-				t.Fatalf("actual provider = %q / %q, want %q", entry.Provider, attempt.Provider, test.want)
-			}
-		})
-	}
-}
-
 func TestDefaultNonstreamUsesOneStreamingAttempt(t *testing.T) {
 	s := registeredService(t, "") // No explicit setting: exercise the installation default.
 	h := newFakeHost(ssePlan(simpleSSE()))
@@ -413,8 +391,8 @@ func TestNativeEmptyResponseFallsBackOnceAndLogsBothAttempts(t *testing.T) {
 	if len(s.logs) != 1 || len(s.logs[0].Attempts) != 2 || s.logs[0].Attempts[0].Status != 500 || s.logs[0].Attempts[1].Status != 200 || s.logs[0].Status != 200 {
 		t.Fatalf("fallback attempt log = %#v", s.logs)
 	}
-	if s.logs[0].Provider != "unknown" || len(h.upstreamClosed) != 2 {
-		t.Fatalf("fallback provider/stream close = %q / %#v", s.logs[0].Provider, h.upstreamClosed)
+	if len(h.upstreamClosed) != 2 {
+		t.Fatalf("fallback stream close = %#v", h.upstreamClosed)
 	}
 }
 
@@ -456,7 +434,7 @@ func TestStreamingEmitsMultipleChunksAndHandlesClientCancel(t *testing.T) {
 			if len(closed) != 1 || len(callbackIDs) != 1 || callbackIDs[0] != "callback-1" {
 				t.Fatalf("stream callbacks: upstreamClosed=%#v callbackIDs=%#v", closed, callbackIDs)
 			}
-			if len(s.logs) != 1 || s.logs[0].Status != test.wantStatus || s.logs[0].Provider != "unknown" {
+			if len(s.logs) != 1 || s.logs[0].Status != test.wantStatus {
 				t.Fatalf("stream log = %#v", s.logs)
 			}
 			if test.emitFailAt == 0 {
